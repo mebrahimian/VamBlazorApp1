@@ -1,0 +1,30 @@
+﻿@page "/Counter"
+@layout MainLayout
+@inject DatabaseContext _Db
+@using DAL
+@using Microsoft.EntityFrameworkCore
+@using global::DAL
+
+
+
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var text = _Db.Persons.FirstOrDefaultAsync(p => p.Code == "00035");
+
+        if (text != null)  currentCount = 100;
+    }
+}

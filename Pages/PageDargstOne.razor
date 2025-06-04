@@ -1,0 +1,551 @@
+﻿@page "/pagedargstone/{ParamTypeVam}"
+@inject DatabaseContext _Db
+@inject DateService DateService
+@inject SandoghService SandoghService
+@inject ILogger<PageDargstOne> _logger
+@inject VamBlazor.Client.Application.Services.PersonServices PersonServices
+@inject IMapper Mapper
+@layout MainLayout
+@using AutoMapper
+@using System.Linq
+@using VamBlazor.Client.Application.CommonFunc
+@using Microsoft.Data.SqlClient
+@using Microsoft.EntityFrameworkCore
+@using VamBlazor.Client.Application.Dtos
+@using VamBlazor.Client.Application.Services
+@using VamBlazor.Client.Domain.Entities
+
+
+
+<MudContainer MaxWidth="MaxWidth.False" Class="mt-n2" Style="background-color:white">
+    <MudForm @ref="DarGstForm" Model="@CurrentPersonLastGstDto" @bind-IsValid="isDataCorrected" Spacing="4" Class="p-4">
+        <MudText Typo="Typo.body2" Align="Align.Center" Style="width:70%;height:25px;color:white; background-color:cadetblue" Class="mt-2">@titrPage</MudText>
+        <MudGrid Class="mr-n10 pr-10" Style="width:100%;background-color:white">
+
+            <MudItem xs="12" sm="6">
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudPaper Elevation="1" Class="pa-4 " Style="height: 50px;background-color:white">
+                            <MudAutocomplete T="PersonLastGstDto" Class="mt-n5"
+                            Label="سپرده گذار را انتخاب کنید ..."
+                            @bind-Value="selectedPerson"
+                            SearchFunc="@SearchPerson"
+                            ToStringFunc="@(_personSelectList => _personSelectList?.FullName ?? "")"
+                            Dense="true"
+                            Immediate="true"
+                            OnBlur="OnPCodeChanged"
+                            ShowProgressIndicator="true"
+                            MaxItems="50" />
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" Class="mt-n5">
+                        <MudPaper Elevation="0" Class="py-4 px-0" Style="height: 50px;background-color:white">
+                            <MudTextField T="string" Class="mt-n5"
+                            @bind-Value="@cVamInfoStr"
+                            Adornment="Adornment.End"
+                            AdornmentText="ریال"
+                            Label="مشخصات آخرین وام"
+                            Variant="Variant.Outlined"
+                            Typo="Typo.body1"
+                            Style="font-size: 1.25vw; background-color:white;color:purple"
+                            readonly="true" />
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" Class="mt-n5">
+                        <MudPaper Elevation="0" Class="py-4 px-0" Style="height: 50px;background-color:white">
+
+                            <MudTextField T="string" Class="mt-n5"
+                            @bind-Value="@cPersonInfoStr"                                
+                            Label="مانده وام و موجودی"
+                            Adornment="Adornment.End"
+                            AdornmentText="ریال"
+                            Variant="Variant.Outlined"
+                            Typo="Typo.body1"
+                            Style="font-size: 1.25vw; background-color:white;color:purple"
+                            readonly="true" />
+
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+            <MudItem xs="6" sm="3">
+                <MudPaper Elevation="0" Class="pa-4" Style="height: 160px">
+                    <div>
+                        <MudImage Src="@CurrentPersonPictureAddress" Alt="محل عکس" Elevation="25" Class="rounded-lg mt-n3" Style="width:150px;height:150px" />
+                    </div>
+                </MudPaper>
+            </MudItem>
+            <MudGrid Style="width: 72.5%; margin: 0">
+                <!-- ردیف اول -->
+                <MudItem xs="6" sm="2" md="2" Class="pa-0">
+                    <MudPaper Elevation="0" >
+                        <MudText class="mt-5 pl-2" Style="text-align:left;height:25px;"> شماره قسط</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="3" md="3" Class="pa-0">
+                    <MudPaper Elevation="0">
+                        <MudTextField T="byte?" class="mt-2" ReadOnly @bind-Value="@CurrentPersonLastGstDto.GstNo" Variant="Variant.Outlined" />
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="2" md="2" Class="pa-0">
+                    <MudPaper Elevation="0" >
+                        <MudText class="mt-5 pl-2" Style="text-align:left;height:25px;"> تاریخ سررسید</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="5" md="5" Class="pa-0">
+                    <MudPaper Elevation="0">
+                        <div class="mt-2" style="display: flex;">
+                            <!-- فیلد روز -->
+                            <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined" Class="py-0"
+                                Value= "@Gst_Day"
+                                Min="1"
+                                Max="31"
+                                Immediate="true"
+                                ReadOnly />
+                            </MudTooltip>
+
+                            <!-- فیلد ماه -->
+                            <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                Value="@Gst_Month"
+                                Min="1"
+                                Max="12" ReadOnly
+                                Immediate="true" />
+                            </MudTooltip>
+
+                            <!-- فیلد سال -->
+                            <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                Value="@Gst_Year" ReadOnly
+                                Style="width:125px"
+                                Min="1300"
+                                Max="1499"
+                                Immediate="true" />
+                            </MudTooltip>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- ردیف دوم -->
+                <MudItem xs="12" sm="5" md="5" Class="pa-0 mt-n2">
+                    <MudPaper Elevation="0">
+                        <MudTextField T="long" 
+                        @bind-Value="@MonthlyGst" 
+                        Label="مبلغ قسط" 
+                        Format="###,###"
+                        ReadOnly="!isValidGst"
+                        Variant="Variant.Outlined" />
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="2" md="2" Class="pa-0 ">
+                    <MudPaper Elevation="0" Class="py-3">
+
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="5" md="5" Class="pa-0 mt-n2">
+                    <MudPaper Elevation="0">
+                        <MudTextField T="long"
+                        @bind-Value="@MonthlyPas"
+                        Label=" مبلغ پس انداز"
+                        ReadOnly="!isValidGst"
+                        Format="###,###"
+                        Variant="Variant.Outlined" />
+                    </MudPaper>
+                </MudItem>
+
+                <!-- ردیف سوم -->
+
+                <MudItem xs="12" sm="3" md="3" Class="pa-0 ml-5">
+                    <MudPaper Elevation="0" >
+                        <MudButton Variant="Variant.Filled" 
+                        EndIcon="@Icons.Material.Filled.Save" 
+                        Disabled = "!isValidGst"
+                        startIcon="@Icons.Material.Filled.ArrowCircleRight" 
+                        IconColor="Color.Success" Size="Size.Small"
+                        Style="font-size:14px !important"
+                        OnClick="SaveAndNext">
+                            ذخیره وقسط بعدی  
+                        </MudButton>
+
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="1" md="1" Class="pa-0 mr-1">
+                    <MudPaper Elevation="0">
+                        <!--  <MudButton Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.ArrowCircleLeft" IconColor="Color.Success" Size="Size.Large" OnClick="PreviousPerson">بعدی</MudButton> -->
+                        <MudFab title="قسط بعد" Size="Size.Small" Color="Color.Tertiary" Disabled="false" StartIcon="@Icons.Material.Filled.ArrowCircleRight" IconSize="Size.Medium" OnClick="NextGst" />
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="1" md="1" Class="pa-0 mr-n4">
+                    <MudPaper Elevation="0">
+                        <!--  <MudButton Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.ArrowCircleLeft" IconColor="Color.Success" Size="Size.Large" OnClick="PreviousPerson">قبلی</MudButton> -->
+                        <MudFab title="قسط قبل" Size="Size.Small" Color="Color.Tertiary" Disabled="false" StartIcon="@Icons.Material.Filled.ArrowCircleLeft" IconSize="Size.Medium" OnClick="PreviousGst" />
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="2" md="2" Class="pa-0 mt-n2 mr-n2">
+                    <MudPaper Elevation="0" Class="py-4 pl-2">
+                        <MudText class="mt-1"  Style="text-align:left;"> تاریخ پرداخت</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="5" md="5" Class="pa-0 mt-n3">
+                    <MudPaper Elevation="0">
+                        <div class="mt-2" style=@styleSavedOrNot
+                            <!-- فیلد روز -->
+                            <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                Value="@Paid_Day"
+                                Min="1"
+                                Max="31"
+                                Immediate="true"/>
+                            </MudTooltip>
+
+                            <!-- فیلد ماه -->
+                            <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                Value="@Paid_Month"
+                                Min="1"
+                                Max="12" 
+                                Immediate="true" />
+                            </MudTooltip>
+
+                            <!-- فیلد سال -->
+                            <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                Value="@Paid_Year" 
+                                Style="width:125px"
+                                Min="1300"
+                                Max="1499"
+                                Immediate="true" />
+                            </MudTooltip>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" Class="mt-n5">
+                    <hr>
+                    <MudPaper Elevation="0" Class="py-4 px-0" Style="height: 50px;background-color:white">
+
+                        <MudTextField T="string" Class="mt-n5"
+                                      @bind-Value="@SandoghMojodiStr"
+                                      Label=" موجودی صندوق "
+                                      Adornment="Adornment.End"
+                                      AdornmentText="ریال"
+                                      Variant="Variant.Outlined"
+                                      Typo="Typo.body1"
+                                      Style="font-size: 1.2vw; background-color:white;color:purple"
+                                      readonly="true" />
+
+                    </MudPaper>
+                    <hr>
+
+                </MudItem>
+            </MudGrid>
+
+        </MudGrid>
+    </MudForm>
+</MudContainer>
+@code {
+    [Parameter] public string? ParamTypeVam { get; set; }
+    private string titrPage = " فرم واریز اقساط ";
+    private MudForm DarGstForm = new MudForm();
+    private PersonTotalGstDto CurrentPersonLastGstDto = new PersonTotalGstDto();
+    private PersonTotalGstDto PrevPersonLastGstDto = new PersonTotalGstDto();
+    private PersonTotalGstDto NextPersonLastGstDto = new PersonTotalGstDto();
+
+    private List<PersonLastGstDto> _personSelectList = new List<PersonLastGstDto>(); // لیست انتخاب حساب
+    private List<PersonTotalGstDto> _personOrderdList = new List<PersonTotalGstDto>(); // لیست متوالی به ترتیب حساب
+    private bool isValidGst = false;                                                                                   //   private List<PersonFullDataDto> _personFullDataList = new List<PersonFullDataDto>();
+    private bool isNeedUpdate { get; set; } = false;
+    private bool isDataCorrected { get; set; } = false;
+
+    private string cDateShamsi = "";
+    private PersonLastGstDto selectedPerson = new PersonLastGstDto();
+    private Pardar OriginalPardar = new Pardar();//  ذخیره مقادیر حالت اصلاح حساب
+
+    private List<Person> Persons = new List<Person>();
+    private int CurrentIndex = 0;
+    private PersonTotalGstDto CurrentPerson = new PersonTotalGstDto();
+    private string CurrentPersonPictureAddress = string.Empty;
+    private string? PCodeSearchable = string.Empty;
+    private byte Gst_Day; private byte Gst_Month;private int Gst_Year;
+    private byte Paid_Day; private byte Paid_Month; private int Paid_Year;
+    private string cVamInfoStr = ""; private string cPersonInfoStr = "";
+    private long MonthlyGst;
+    private long MonthlyPas;
+    private long SandoghMojodi;
+    private string SandoghMojodiStr;
+    private string styleSavedOrNot = "display: flex; font-size: 16px; font-weight: bold; width: 100%; height: 100%; justify-content: space-between;";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            SandoghMojodi = SandoghService.GetCurrentSandogh();
+            SandoghMojodiStr = SandoghMojodi.ToString("N0");
+            if (DarGstForm != null)
+            {
+                // isFormValid = form.IsValid;
+            }
+            if (ParamTypeVam == "1") titrPage = titrPage + ""; else titrPage = titrPage + " وامهای ضروری ";
+            var query = await _Db.vwPersonLastGst
+                                        .Where(v => v.Type == ParamTypeVam[0])
+                                        .Select(v => new PersonLastGstDto
+                                            {
+                                                Code = v.Code,
+                                                FullName = v.FullName + "ش.حساب:" + v.HesabNo + " معرف: " + v.Moaref,
+                                                HesabNo = v.HesabNo,
+                                                Moaref = v.Moaref,
+                                                ReqNo = v.ReqNo
+                                            })
+                                        .AsNoTracking()
+                                        .ToListAsync();
+
+            // تبدیل به لیست;
+            ///         بخاطر باگ Autocomplete دو لیست ساختیم یکی برای Autocomplete یکی هم کنترل عملیات
+            //  _personOrderdList = vwPersonList.OrderBy(p => p.HesabNo).ToList();// تبدیل به لیست;
+            _personSelectList = query.OrderBy(p => p.Moaref)
+                                     .ThenBy(p => p.HesabNo)
+                                     .ToList();
+
+            // var record = _Db.tblDates.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
+            //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
+            cDateShamsi = DateService.TodayHDate();
+            //     var _tbldate = DateService.TblDate;
+            //     cDateShamsi = _tbldate.FirstOrDefault(d => d.GDate == DateTime.Now.Date).HDate; // مقایسه فقط تاریخ بدون زمان
+            var cper = _personSelectList.First().FullName;
+            selectedPerson = new PersonLastGstDto();
+            selectedPerson.FullName = cper;
+            selectedPerson.Code = _personSelectList.First().Code;
+            selectedPerson.HesabNo = _personSelectList.First().HesabNo;
+            selectedPerson.ReqNo = _personSelectList.First().ReqNo;
+            CurrentIndex = 0; // اول لیست
+
+            _personOrderdList = MakeVamRecordSet();
+            CurrentIndex = _personOrderdList.FindIndex(p => p.ReqNo == selectedPerson.ReqNo && string.IsNullOrWhiteSpace(p.PaidDate));
+
+            if (CurrentIndex < _personOrderdList.Count - 1)
+                NextPersonLastGstDto = _personOrderdList[CurrentIndex + 1];
+            else NextPersonLastGstDto = null;
+            if (CurrentIndex > 0)
+                PrevPersonLastGstDto = _personOrderdList[CurrentIndex - 1];
+            else PrevPersonLastGstDto = null;
+
+            LoadCurrentPerson();
+
+        }
+        catch (SqlException ex)
+        {
+            _logger.LogError(ex, $"خطای SQL در هنگام دریافت داده‌ها در OnInitializedAsync: {ex.Message}");
+
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "خطای شبکه در هنگام اجرا: " + ex.Message);
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"خطای عمومی در OnInitializedAsync: {ex.Message}");
+
+        }
+    }
+    // لیستی از اشخاص به عنوان داده‌های نمونه
+
+    private Task<IEnumerable<PersonLastGstDto>> SearchPerson(string value, CancellationToken cancellationToken)
+    {
+        // فیلتر کردن داده‌ها بر اساس ورودی کاربر
+        var result = _personSelectList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
+                             && TextHelper.NormalContain(c.FullName, value));
+
+        // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // بازگشت نتایج به صورت AsEnumerable
+        return Task.FromResult(result.AsEnumerable());
+    }
+    private void OnPCodeChanged()
+    {
+        if (selectedPerson != null && selectedPerson.Code != null)
+        {
+            PCodeSearchable = selectedPerson.Code;
+            CurrentPersonLastGstDto.Code = PCodeSearchable;
+
+            _personOrderdList = MakeVamRecordSet();
+            CurrentIndex = _personOrderdList.FindIndex(p => p.ReqNo == selectedPerson.ReqNo && string.IsNullOrWhiteSpace(p.PaidDate));
+            if (CurrentIndex < _personOrderdList.Count - 1)
+                NextPersonLastGstDto = _personOrderdList[CurrentIndex + 1];
+            else NextPersonLastGstDto = null;
+            if (CurrentIndex > 0) 
+                PrevPersonLastGstDto = _personOrderdList[CurrentIndex - 1];
+            else PrevPersonLastGstDto = null;
+
+            LoadCurrentPerson();
+
+
+        }
+        //  isValid = ValidateForm();
+    }
+
+    private void LoadCurrentPerson()
+    {
+
+
+
+        if (CurrentIndex < _personOrderdList.Count)
+        {
+            CurrentPersonLastGstDto = _personOrderdList[CurrentIndex];
+            CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(CurrentPersonLastGstDto.Code);
+
+            MonthlyGst = CurrentPersonLastGstDto.GstMblg;
+            MonthlyPas = CurrentPersonLastGstDto.MonthQty;
+            if(CurrentPersonLastGstDto.CurrentGstSaved) styleSavedOrNot = "background-color:khaki; display: flex; font-size: 16px; font-weight: bold; width: 100%; height: 100%; justify-content: space-between;";
+            
+            else styleSavedOrNot = "display: flex; font-size: 16px; font-weight: bold; width: 100%; height: 100%; justify-content: space-between;";
+
+            if (!(PrevPersonLastGstDto == null || NextPersonLastGstDto == null))
+                isValidGst = CurrentPersonLastGstDto.CurrentGstSaved ? !NextPersonLastGstDto.CurrentGstSaved : PrevPersonLastGstDto.CurrentGstSaved;
+            else isValidGst = true;
+
+            selectedPerson.FullName = CurrentPersonLastGstDto.FullName; // + " ش.حساب : " + CurrentPersonLastGstDto.HesabNo;
+                                                                        // selectedPerson.FullName = CurrentPersonLastGstDto.FullName;
+            selectedPerson.HesabNo = CurrentPersonLastGstDto.HesabNo;
+            selectedPerson.Code = CurrentPersonLastGstDto.Code;
+            Gst_Year = DateService.GetHYear(CurrentPersonLastGstDto.GstDate);
+            Gst_Month = DateService.GetHMonth(CurrentPersonLastGstDto.GstDate);
+            Gst_Day = DateService.GetHDay(CurrentPersonLastGstDto.GstDate);
+            if (!CurrentPersonLastGstDto.CurrentGstSaved)  // قسط پرداخت نشده
+            {
+                Paid_Year = DateService.GetHYear(cDateShamsi);
+                Paid_Month = DateService.GetHMonth(cDateShamsi);
+                Paid_Day = DateService.GetHDay(cDateShamsi);
+            }
+
+            cVamInfoStr = "وام شماره " + CurrentPersonLastGstDto.ReqNo
+           + " تاریخ " + CurrentPersonLastGstDto.DateD
+           + " مبلغ " + CurrentPersonLastGstDto.MblgVam.ToString("N0");
+
+            var nRemainvam = PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo);
+            var nMojodi = PersonServices.GetMojodiHesab(CurrentPersonLastGstDto.Code);
+            cPersonInfoStr = " موجودی حساب " + nMojodi.ToString("N0") + "  " +
+                             "مانده وام " + nRemainvam.ToString("N0");
+
+            //   CurrentAccountNumber = string.Empty; // مقدار شماره‌حساب فعلی را پاک کنید
+        }
+        else
+        {
+            CurrentPersonLastGstDto = null; // لیست تمام شده
+        }
+    }
+    private void PreviousGst()
+    {
+        if (CurrentIndex > 0)
+        {
+            NextPersonLastGstDto = _personOrderdList[CurrentIndex];
+            CurrentIndex = CurrentIndex - 1;
+            PrevPersonLastGstDto = CurrentIndex > 0 ? _personOrderdList[CurrentIndex - 1] : null;
+            LoadCurrentPerson();
+        }
+        else _snackBar.Add("ابتدای اطلاعات", Severity.Warning);
+    }
+    private void NextGst()
+    {
+        if (CurrentIndex < _personOrderdList.Count - 1) 
+        {
+            PrevPersonLastGstDto = _personOrderdList[CurrentIndex];
+            CurrentIndex = CurrentIndex + 1; 
+            NextPersonLastGstDto = CurrentIndex < _personOrderdList.Count - 1 ? _personOrderdList[CurrentIndex + 1] : null;
+            LoadCurrentPerson();
+        }
+        else _snackBar.Add("انتهای اطلاعات", Severity.Warning);
+    }
+    private void SaveAndNext()
+    {
+        if (CurrentPersonLastGstDto != null)
+        {
+            // ذخیره قسط وام برای شخص فعلی
+            if (!CurrentPersonLastGstDto.CurrentGstSaved && MonthlyGst == 0)
+            {
+                _snackBar.Add("مبلغ قسط نباید خالی باشد", Severity.Warning);
+                MonthlyGst = CurrentPersonLastGstDto.GstMblg;
+                MonthlyPas = CurrentPersonLastGstDto.MonthQty;
+            }
+            else
+            {
+                var nReqNo = CurrentPersonLastGstDto.ReqNo;
+                var nGstNo = CurrentPersonLastGstDto.GstNo;
+                var GstRecord = _Db.Dargsts.FirstOrDefault(d => d.ReqNo == nReqNo && d.GstNo == nGstNo);
+                if (GstRecord != null)
+                {
+                    GstRecord.DateP = DateService.DateShamsiFormat(Paid_Year, Paid_Month, Paid_Day);
+                    GstRecord.Gstmblg = MonthlyGst;
+                    GstRecord.Pasandaz = MonthlyPas;
+                    if (MonthlyGst == 0)
+                    {
+                        GstRecord.DateP = " ";
+                        GstRecord.Pasandaz = 0;
+                        GstRecord.Gstmblg = 0;
+                        CurrentPersonLastGstDto.CurrentGstSaved = false;
+                    }
+                    else CurrentPersonLastGstDto.CurrentGstSaved = true;
+                    _Db.Update(GstRecord);
+                    _Db.SaveChanges();
+                    SandoghMojodi = SandoghService.GetCurrentSandogh();
+                    SandoghMojodiStr = SandoghMojodi.ToString("N0");
+                }
+
+                // به آیتم بعدی بروید
+                NextGst();
+            }
+        }
+        else _snackBar.Add("لطفاً یک سپرده گذار انتخاب کنید.", Severity.Warning);
+    }
+    private void ShowClearPersonLastGstInfo()
+    {
+
+        //PCodeSearchable = "";
+        Mapper.Map(new PersonLastGstDto(), CurrentPersonLastGstDto);
+        ///
+        ///تاریخ با روز جاری پرمیشود
+        ///
+ 
+
+    }
+
+    private void isDataChanged()
+    {
+        isNeedUpdate = false;
+      //  CurrentPersonLastGstDto.PaidGstDate = DateFunctions.DateFormatYYYYMMDD(CurrentPersonLastGstDto.V_Year, CurrentPersonLastGstDto.V_Month, CurrentPersonLastGstDto.V_Day);
+      //  if (OriginalPardar.Date != CurrentPersonLastGstDto.Date) isNeedUpdate = true;
+      //  if (OriginalPardar.Mblg != CurrentPersonLastGstDto.Mblg) isNeedUpdate = true;
+      //  if (OriginalPardar.Action != CurrentPersonLastGstDto.Action) isNeedUpdate = true;
+      //  if (OriginalPardar.Babat != CurrentPersonLastGstDto.Babat) isNeedUpdate = true;
+    }
+
+    private List<PersonTotalGstDto> MakeVamRecordSet()
+    {
+        return _Db.vwPersonTotalGst
+                                        .Where(v => v.Type == ParamTypeVam[0] && v.ReqNo == selectedPerson.ReqNo)
+                                        .Select(v => new PersonTotalGstDto
+                                            {
+                                                Code = v.Code,
+                                                FullName = v.FullName + " حساب: " + v.HesabNo + " معرف: " + v.Moaref,
+                                                HesabNo = v.HesabNo,
+                                                Moaref = v.Moaref,
+                                                MonthQty = v.MonthQty,
+                                                Mojodi = v.Mojodi,
+                                                ReqNo = v.ReqNo,
+                                                Type = v.Type,
+                                                DateD = v.DateD,
+                                                MblgVam = v.MblgVam,
+                                                Pasandaz = v.MonthQty,
+                                                GstNo = v.GstNo,
+                                                GstMblg = v.GstMblg,
+                                                GstDate = v.GstDate,
+                                                PaidDate = v.PaidDate,
+                                                CurrentGstSaved = !string.IsNullOrWhiteSpace(v.PaidDate)
+                                            })
+                                        .AsNoTracking()
+                                        .OrderBy(p => p.GstNo)
+                                        .ToList();
+    }
+}
+

@@ -1,0 +1,48 @@
+﻿@page "/generate-report"
+
+@inject IJSRuntime JSRuntime
+
+<button class="btn btn-primary" @onclick="GenerateReport">Generate Report</button>
+
+@code {
+    private async Task GenerateReport()
+    {
+        // نمونه داده برای گزارش
+        var transactions = new List<Transaction>
+        {
+            new Transaction { TransactionID = 1, Description = "Purchase", Amount = 100.50m },
+            new Transaction { TransactionID = 2, Description = "Sale", Amount = 200.75m },
+            new Transaction { TransactionID = 3, Description = "Refund", Amount = 50.00m }
+        };
+
+        // ایجاد گزارش به صورت PDF
+        using (var document = new PdfSharpCore.Pdf.PdfDocument())
+        {
+            var page = document.AddPage();
+            var gfx = PdfSharpCore.Drawing.XGraphics.FromPdfPage(page);
+            var font = new PdfSharpCore.Drawing.XFont("Verdana", 12);
+
+            // نوشتن محتوای گزارش در PDF
+            var yPosition = 20;
+            foreach (var transaction in transactions)
+            {
+                gfx.DrawString($"Transaction ID: {transaction.TransactionID}, Description: {transaction.Description}, Amount: {transaction.Amount}", font, PdfSharpCore.Drawing.XBrushes.Black, new PdfSharpCore.Drawing.XPoint(20, yPosition));
+                yPosition += 20;
+            }
+
+            // ذخیره فایل PDF در سرور
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "report.pdf");
+            document.Save(filePath);
+
+            // نمایش فایل PDF
+            await JSRuntime.InvokeVoidAsync("open", "/report.pdf", "_blank");
+        }
+    }
+
+    public class Transaction
+    {
+        public int TransactionID { get; set; }
+        public string Description { get; set; }
+        public decimal Amount { get; set; }
+    }
+}

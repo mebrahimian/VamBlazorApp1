@@ -1,0 +1,225 @@
+﻿@page "/formmudsample"
+@inject DatabaseContext _Db
+@inject ILogger<FormMudSample> _logger
+@inject VamBlazor.Client.Application.Services.PersonServices PersonServices
+@inject IMapper Mapper
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@layout MainLayout
+@inject DtoComparer comparer
+
+@using AutoMapper
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Logging
+@using Serilog
+@using Serilog.Core
+@using VamBlazor.Client.Application.Dto_Utilities
+@using VamBlazor.Client.Domain.Entities
+@using VamBlazor.Client.Domain.Enum
+@using VamBlazor.Client.Application.Dtos
+@using VamBlazor.Client.Application.Mappings
+@using VamBlazor.Client.Application.CommonFunc
+@using VamBlazor.Client.Shared.Dialogs
+@using VamBlazor.Client.Application.Services
+@using VamBlazor.Client.Shared.Component
+
+
+<MudContainer style="font-family:'VazirUI'">
+
+    <MudPaper Class="half-width" Style="width: 50%; margin: 0 auto;">
+        <!-- MudForm برای مدیریت فرم و اعتبارسنجی -->
+        <MudText Typo="Typo.body2" Align="Align.Center" Style="height:25px;background-color:cadetblue" Class="mt-2">فرم ورودمتقاضیان دریافت وام</MudText>
+        <MudForm Model="@person" @ref="form" Validated="OnValidSubmit">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudAutocomplete T="City"
+                    Label="انتخاب شهر"
+                    @bind-Value="selectedCity"
+                    SearchFunc="@SearchCities"
+                    ToStringFunc="@(city => city?.Name ?? "نام شهر")"
+                    Dense="true" Clearable Direction="MudBlazor.Direction.RightToLeft" />
+
+                </MudItem>
+                <MudItem xs="12">
+                    <MudButton OnClick="AddNewItem">Add</MudButton>
+                    <MudAutocomplete T="City"
+                    Label="انتخاب شهر"
+                    @bind-Value="selectedCity"
+                    SearchFunc="@SearchCities"
+                    ToStringFunc="@(city => city?.Name ?? "نام شهر")"
+                    Dense="true" Clearable Direction="MudBlazor.Direction.RightToLeft"
+                    Adornment="Adornment.End"
+                    AdornmentIcon="@Icons.Material.Filled.Add"
+                    AdornmentClick="HandleAddClick" />
+
+                </MudItem>
+                 <MudItem xs="12">
+                    <div style="display: flex; align-items: center;">
+                        <MudAutocomplete T="City"
+                                         @bind-Value="selectedCity"
+                                         Label="Select or Add"
+                                         Placeholder="Type or Add"
+                                         SearchFunc="@SearchCities"
+                                         ToStringFunc="@(city => city?.Name ?? "نام شهر")"
+                                         Clearable="true"
+                                         Class="autocomplete" />
+                        <MudButton Color="Color.Primary" Size="Size.Small" Style="margin-left: 5px;" >
+                            <MudIcon Icon="@Icons.Material.Filled.Add" />
+                        </MudButton>
+                    </div>
+
+                </MudItem>
+
+                <p>Selected Value: @SelectedValue</p>
+               
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="نام" Variant="Variant.Filled" @bind-Value="person.FirstName" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="نام خانوادگی" Variant="Variant.Filled" @bind-Value="person.LastName" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="ایمیل" Variant="Variant.Filled" @bind-Value="person.Email" Required="true" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="تلفن" Variant="Variant.Filled" @bind-Value="person.Phone" />
+                </MudItem>
+            </MudGrid>
+
+            <MudButton OnClick="SubmitForm" Disabled="!isFormValid" Variant="Variant.Filled" Color="Color.Primary">
+                ارسال
+            </MudButton>
+        </MudForm>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<string> Items = new List<string> { "Option 1", "Option 2", "Option 3" };
+    private string SelectedValue;
+    private City selectedCity;
+    private List<City> cities;
+    private CityService cityService = new CityService();
+    private MudForm form;
+    private Person person = new Person();
+    private bool isFormValid;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // اینجا فرم را اعتبارسنجی می‌کنیم
+            isFormValid = form.IsValid;
+            StateHasChanged(); // به‌روزرسانی UI پس از تغییر وضعیت
+        }
+        isFormValid = form.IsValid;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        cities = cityService.GetCities();
+        if (form != null)
+        {
+            // isFormValid = form.IsValid;
+        }
+    }
+
+
+    private async Task SubmitForm()
+    {
+        // اگر فرم معتبر بود، اطلاعات را ارسال یا پردازش کنید
+        if (form.IsValid)
+        {
+            // به عنوان مثال، نمایش داده‌ها در کنسول
+            Console.WriteLine($"نام: {person.FirstName}");
+            Console.WriteLine($"نام خانوادگی: {person.LastName}");
+            Console.WriteLine($"ایمیل: {person.Email}");
+            Console.WriteLine($"تلفن: {person.Phone}");
+
+            // اینجا می‌توانید داده‌ها را به API ارسال کنید یا هر عملیات دیگری انجام دهید
+
+            // برای مثال ارسال به یک سرویس یا API:
+            // await ApiService.SendDataAsync(person);
+
+            // پس از ارسال، می‌توانید پیامی نشان دهید
+            _snackBar.Add("اطلاعات با موفقیت ارسال شد", Severity.Success);
+        }
+        else
+        {
+            // در صورت عدم اعتبار فرم، پیام خطا نشان دهید
+            _snackBar.Add("لطفاً تمامی فیلدهای مورد نیاز را پر کنید.", Severity.Error);
+        }
+    }
+
+    private Task<IEnumerable<City>> SearchCities(string value, CancellationToken cancellationToken)
+    {
+
+        // فیلتر کردن داده‌ها بر اساس ورودی کاربر
+        var result = cities.Where(c => !string.IsNullOrEmpty(c.Name) && !string.IsNullOrEmpty(value) && c.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+
+        // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // بازگشت نتایج به صورت AsEnumerable
+        return Task.FromResult(result.AsEnumerable());
+    }
+    private class Person
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string Phone { get; set; }
+    }
+    public class CityService
+    {
+        public List<City> GetCities()
+        {
+            return new List<City>
+        {
+            new City { Id = 1, Name = "Tehran" },
+            new City { Id = 2, Name = "Mashhad" },
+            new City { Id = 3, Name = "Isfahan" },
+            new City { Id = 4, Name = "Shiraz" },
+            new City { Id = 5, Name = "Tabriz" }
+        };
+        }
+    }
+
+    public class City
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+
+
+    /// <summary>
+    ///
+    /// <Autocomplete With Add>
+    /// </summary>
+    private Task<IEnumerable<string>> SearchItems(string value)
+    {
+        // جستجو در لیست بر اساس مقدار وارد شده
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(Items.AsEnumerable());
+
+        var filteredItems = Items.Where(x => x.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(filteredItems.AsEnumerable());
+    }
+
+    private void AddNewItem()
+    {
+        if (!string.IsNullOrWhiteSpace(SelectedValue) && !Items.Contains(SelectedValue))
+        {
+            Items.Add(SelectedValue);
+        }
+    }
+
+    private void HandleAdd(FocusEventArgs args)
+    {
+        // افزودن آیتم جدید به هنگام از دست دادن فوکوس
+        AddNewItem();
+    }
+
+
+}

@@ -1,0 +1,137 @@
+﻿
+==================================
+Relation between Person, hesab, Qvam, OVam 
+==================================
+public IQueryable<PersonFullDataDto> GetPersonFullDataDtos()
+{
+    return from person in _Db.Persons
+           join qvam in _Db.Qvams on person.Code equals qvam.Pcode into qvamGroup
+           from qvam in qvamGroup.DefaultIfEmpty() // Left Join با Qvam
+           join pvam in _Db.Pvams on qvam.Id equals pvam.QvamId into pvamGroup
+           from pvam in pvamGroup.DefaultIfEmpty() // Left Join با Pvam
+           join dargst in _Db.Dargsts on pvam.Id equals dargst.PvamId into dargstGroup
+           from dargst in dargstGroup.DefaultIfEmpty() // Left Join با Dargst
+           select new PersonFullDataDto
+           {
+               FullName = person.FullName,
+               Pcode = person.Code,
+               ReqNo = qvam != null ? qvam.ReqNo : null,
+               QvamDate = qvam != null ? qvam.Date : (DateTime?)null,
+               Mblg = qvam != null ? qvam.Mblg : 0,
+               PvamTitle = pvam != null ? pvam.Title : null,
+               DargstDescription = dargst != null ? dargst.Description : null
+           };
+}
+
+DTO مرتبط
+
+public class PersonFullDataDto
+{
+    public string FullName { get; set; }
+    public string Pcode { get; set; }
+    public string ReqNo { get; set; }
+    public DateTime? QvamDate { get; set; }
+    public decimal Mblg { get; set; }
+    public string PvamTitle { get; set; }
+    public string DargstDescription { get; set; }
+}
+==================
+نمایش همه person ها
+====================
+var result = GetPersonFullDataDtos().ToList();
+
+foreach (var item in result)
+{
+    Console.WriteLine($"Name: {item.FullName}, ReqNo: {item.ReqNo ?? "No Qvam"}, " +
+                      $"PvamTitle: {item.PvamTitle ?? "No Pvam"}, " +
+                      $"Dargst: {item.DargstDescription ?? "No Dargst"}");
+}
+
+
+
+================================================
+Query جندمرحله ای
+===========================================
+public IQueryable<PersonFullDataDto> GetPersonFullDataDtosOptimized()
+{
+    // Step 1: دریافت داده‌های Person
+    var persons = _Db.Persons.ToList();
+
+    // Step 2: دریافت داده‌های Qvam
+    var qvams = _Db.Qvams.ToList();
+
+    // Step 3: دریافت داده‌های Pvam
+    var pvams = _Db.Pvams.ToList();
+
+    // Step 4: دریافت داده‌های Dargst
+    var dargsts = _Db.Dargsts.ToList();
+
+    // Step 5: ادغام داده‌ها در حافظه
+    var result = from person in persons
+                 join qvam in qvams on person.Code equals qvam.Pcode into qvamGroup
+                 from qvam in qvamGroup.DefaultIfEmpty()
+                 join pvam in pvams on qvam?.Id equals pvam.QvamId into pvamGroup
+                 from pvam in pvamGroup.DefaultIfEmpty()
+                 join dargst in dargsts on pvam?.Id equals dargst.PvamId into dargstGroup
+                 from dargst in dargstGroup.DefaultIfEmpty()
+                 select new PersonFullDataDto
+                 {
+                     FullName = person.FullName,
+                     Pcode = person.Code,
+                     ReqNo = qvam?.ReqNo,
+                     QvamDate = qvam?.Date,
+                     Mblg = qvam?.Mblg ?? 0,
+                     PvamTitle = pvam?.Title,
+                     DargstDescription = dargst?.Description
+                 };
+
+    return result.AsQueryable();
+}
+
+
+============================================
+کوئری بدون <dbset>
+====================================
+var result = await _dbContext
+    .VwPersonFullData
+    .FromSqlRaw("SELECT * FROM vwPersonFullData")
+    .ToListAsync();
+=================================
+var result = await _Db.PVAM
+    .Include(p => p.QVAM) // بارگذاری رابطه یک به یک با QVAM
+    .Include(p => p.DARGSTs) // بارگذاری رابطه یک به چند با DARGST
+    .Select(p => new
+    {
+        p.QVAM.PCODE,
+        p.req_no,
+        p.type,
+        p.mblgvam,
+        p.gst_no,
+        p.gst_pay,
+        p.sabtdate,
+        p.lastdate,
+        p.mblgmain,
+        HesabNo = _Db.Hesabs // اضافه کردن HesabNo از جدول حساب
+            .Where(h => h.Pcode == p.QVAM.PCODE) // اتصال دستی Hesabs به QVAM
+            .Select(h => h.HesabNo)
+            .FirstOrDefault(), // گرفتن اولین شماره حساب
+        PaidVam = p.DARGSTs.Sum(d => d.gstmblg), // محاسبه جمع gstmblg
+        GstNo = p.DARGSTs
+            .Where(d => d.date_p == " ")
+            .OrderBy(d => d.gst_no)
+            .Select(d => d.gst_no)
+            .FirstOrDefault() // پیدا کردن کوچکترین gst_no
+    })
+    .Where(p => p.mblgvam > p.PaidVam && p.type == "1") // اعمال شرط‌ها
+    .ToListAsync();
+
+
+
+
+
+
+
+
+
+
+

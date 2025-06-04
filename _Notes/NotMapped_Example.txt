@@ -1,0 +1,38 @@
+﻿============================Customer=======================================
+public class Customer
+{
+    public int CustomerId { get; set; }
+    public string Name { get; set; }
+
+    // مجموعه سفارشات مربوط به این مشتری
+    public virtual ICollection<Order> Orders { get; set; }
+
+    // فیلد NotMapped برای مجموع کل سفارشات این مشتری
+    [NotMapped]
+    public decimal TotalOrdersAmount
+    {
+        get
+        {
+            // محاسبه مجموع کل مبلغ سفارشات این مشتری
+            return Orders?.Sum(o => o.OrderAmount) ?? 0; // اگر هیچ سفارش نداشته باشد، 0 برمی‌گرداند
+        }
+    }
+}
+=============================Order=================================
+public class Order
+{
+    public int OrderId { get; set; }
+    public int CustomerId { get; set; }
+    public decimal OrderAmount { get; set; }
+
+    // ارتباط با مشتری
+    public virtual Customer Customer { get; set; }
+}
+===================Lazy Loading no need to coding ==============
+
+==================Eager Loding=======================
+var customer = context.Customers
+    .Include(c => c.Orders)  // بارگذاری سفارشات مربوط به مشتری
+    .FirstOrDefault(c => c.CustomerId == 1);
+
+Console.WriteLine(customer.TotalOrdersAmount); // چاپ مجموع مبلغ سفارشات

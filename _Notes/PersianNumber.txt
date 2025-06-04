@@ -1,0 +1,19 @@
+﻿@code {
+    private string ConvertToPersian(int number)
+    {
+        string[] persianDigits = { "۰", "۱", "۲", "۳", "۴", "۵", "۶", "۷", "۸", "۹" };
+        return number.ToString().Select(digit => persianDigits[int.Parse(digit.ToString())]).Aggregate((current, next) => current + next);
+    }
+
+    private string persianNumber;
+    private int number = 123456789;
+
+    private void ShowPersianNumber()
+    {
+        persianNumber = ConvertToPersian(number);
+    }
+}
+
+<h3>نمایش عدد فارسی</h3>
+<p>عدد به فارسی: @persianNumber</p>
+<button @onclick="ShowPersianNumber">تبدیل به فارسی</button>

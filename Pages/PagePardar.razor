@@ -1,0 +1,670 @@
+﻿@page "/pagepardar"
+
+@inject DatabaseContext _Db
+@inject ILogger<PagePardar> _logger
+@inject IConfiguration Configuration
+@inject VamBlazor.Client.Application.Services.PersonServices PersonServices
+@inject DateService DateService
+@inject IMapper Mapper
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@layout MainLayout
+@inject DtoComparer comparer
+
+@using AutoMapper
+@using System.ComponentModel.DataAnnotations
+@using Dapper
+@using Microsoft.Data.SqlClient
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Logging
+@using Serilog
+@using Serilog.Core
+@using System.Configuration
+@using VamBlazor.Client.Application.Dto_Utilities
+@using VamBlazor.Client.Domain.Entities
+@using VamBlazor.Client.Domain.Enum
+@using VamBlazor.Client.Application.Dtos
+@using VamBlazor.Client.Application.Mappings
+@using VamBlazor.Client.Application.CommonFunc
+@using VamBlazor.Client.Shared.Dialogs
+@using VamBlazor.Client.Application.Services
+
+
+<MudContainer style="font-family:'VazirUI'">
+
+    <MudPaper Class="half-width" Style="width: 50%; margin: 0 auto;">
+        <!-- MudForm برای مدیریت فرم و اعتبارسنجی -->
+        <MudText Typo="Typo.body2" Align="Align.Center" Style="height:25px;background-color:cadetblue" Class="mt-2">فرم واریز وبرداشت</MudText>
+        <MudForm @ref="PardarForm" Model="@CurrentPardarDto" @bind-IsValid="isDataCorrected" Spacing="16" Class="p-4">
+
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudAutocomplete T="PersonFullDataDto"
+                                     Label="لطفا سپرده گذار را انتخاب کنید ..."
+                                     @bind-Value="selectedPerson"
+                                     SearchFunc="@SearchPerson"
+                                     ToStringFunc="@(_personFullDataList => _personFullDataList?.FullNameWCode ?? "")"
+                                     Dense="true" Clearable
+                                     OnBlur="OnPCodeChanged"
+                                     MaxItems="50"
+                                     ShowProgressIndicator="true" />
+
+                </MudItem>
+                <!-- ردیف دوم: ReqNo & Date -->
+
+                <MudItem xs="12" sm="6">
+
+                    <div class="mt-n6" style="display: flex;font-size: 18px; font-weight: bold;">
+
+                        <MudItem xs="12">
+                            <MudSelect T="char" @bind-Value="CurrentPardarDto.Action" @bind-Value:after="isDataChanged" Label="شرح عمل" Variant="Variant.Outlined" Class="w-100">
+                                <MudSelectItem Value="'1'">واریـز</MudSelectItem>
+                                <MudSelectItem Value="'2'">برداشت</MudSelectItem>
+                                <MudSelectItem Value="'3'">افتتاح</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudText Style="justify-content:left;width:45%;padding-right:25px;" Class="mt-5"> تـاریـخ :</MudText>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <div class="mt-n6 mr-n3" style="display: flex;font-size: 16px; font-weight: bold;">
+
+                        <!-- فیلد روز -->
+
+                        <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="int" Variant="Variant.Outlined"
+                                             @bind-Value="CurrentPardarDto.V_Day" @bind-Value:after="isDataChanged"
+                                             Min="1"
+                                             Max="31"
+                                             Immediate="true" />
+                        </MudTooltip>
+
+                        <!-- فیلد ماه -->
+
+                        <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="int" Variant="Variant.Outlined"
+                                             @bind-Value="CurrentPardarDto.V_Month" @bind-Value:after="isDataChanged"
+                                             Min="1"
+                                             Max="12"
+                                             Immediate="true" />
+                        </MudTooltip>
+
+                        <!-- فیلد سال -->
+
+                        <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="int" Variant="Variant.Outlined"
+                                             @bind-Value="CurrentPardarDto.V_Year" @bind-Value:after="isDataChanged"
+                                             Min="1300"
+                                             Max="1499"
+                                             Style="width:100px"
+                                             Immediate="true" />
+                        </MudTooltip>
+
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" Style="margin-top:0">
+                    <div class="mt-n6" style="width:100%;">
+                        <MudTooltip Text="لطفاً مبلغ واریز/برداشت را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="long" Label="مبلغ واریز/برداشت" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
+                                             For="@(() => CurrentPardarDto.Mblg)"
+                                             @bind-Value="CurrentPardarDto.Mblg" @bind-Value:after="isDataChanged"
+                                             Style="font-size:19px"
+                                             Format="###,###"
+                                             HideSpinButtons="true" />
+                        </MudTooltip>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" class="mt-n6">
+                    @if (CurrentPardarDto.Mojodi != 0 || isEditing)
+                    {
+                        @if (CurrentPardarDto.Mojodi >= 10000000000)
+                        {
+                            <MudNumericField T="long"
+                                             @bind-Value="CurrentPardarDto.Mojodi"
+                                             Format="###,###"
+                                             Adornment="Adornment.End"
+                                             AdornmentText="ریال"
+                                             Label="موجودی"
+                                             Variant="Variant.Outlined"
+                                             HideSpinButtons="true"
+                                             Style="font-size:20px; height:60px;background-color:antiquewhite"
+                                             readonly="true" />
+                        }
+                        else if (CurrentPardarDto.Mojodi >= 100000000)
+                        {
+                            <MudNumericField T="long"
+                                             @bind-Value="CurrentPardarDto.Mojodi"
+                                             Format="###,###"
+                                             Adornment="Adornment.End"
+                                             AdornmentText="ریال"
+                                             Label="موجودی"
+                                             Variant="Variant.Outlined"
+                                             HideSpinButtons="true"
+                                             Style="font-size:22px; height:60px;background-color:antiquewhite"
+                                             readonly="true" />
+                        }
+                        else
+                        {
+                            <MudNumericField T="long"
+                                             @bind-Value="CurrentPardarDto.Mojodi"
+                                             Format="###,###"
+                                             Adornment="Adornment.End"
+                                             AdornmentText="ریال"
+                                             Label="موجودی"
+                                             Variant="Variant.Outlined"
+                                             HideSpinButtons="true"
+                                             Style="font-size:28px; height:60px;background-color:antiquewhite"
+                                             readonly="true" />
+                        }
+
+                    }
+                </MudItem>
+                <MudItem xs="12" class="mt-n6">
+                    <MudTooltip Text="لطفاً شرح عملیات را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                        <MudTextField Label="بابت" @bind-Value="CurrentPardarDto.Babat" @bind-Value:after="isDataChanged" />
+                    </MudTooltip>
+                </MudItem>
+            </MudGrid>
+
+            <div style="display: flex;" class="mt-n14">
+                <MudButton style="width:33%" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" Disabled="!isValidFnc" OnClick="SavePerson">ذخیره</MudButton>
+                <MudButton style="width:33%" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" IconColor="Color.Tertiary" OnClick="CancelEdit">لغو</MudButton>
+                <MudButton style="width:34%; height: 40px; white-space: normal; line-height: 1;" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.SpeakerNotes" IconColor="Color.Warning" OnClick="TogglePersonList">
+                    @(ShowPersonList ? "عدم نمایش گردش حساب" : "نمایش گردش حساب")
+                </MudButton>
+            </div>
+        </MudForm>
+
+
+        <MudSpacer />
+
+        @if (ShowPersonList)
+        {
+
+            <MudTable T="PardarDto" Items="_personPardarList" RowsPerPage="10" Filter="new Func<PardarDto,bool>(FilterFunction)" Hover=" true" Bordered="true" Striped="true" Dense="true" class="mt-n10">
+                <ToolBarContent>
+                    <MudTextField @bind-Value="searchString1" Placeholder="جستجو..." Immediate="true" OnKeyUp="OnSearchTextChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh Style="width: 10%"><MudTableSortLabel SortBy="new Func<PardarDto, object>(x=>x.V_ActionDesc)"></MudTableSortLabel>تراکنش</MudTh>
+                    <MudTh Style="width: 10%;"><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<PardarDto, object>(x=>x.Date)"></MudTableSortLabel>تاریخ</MudTh>
+                    <MudTh Style="width: 30%;"><MudTableSortLabel SortBy="new Func<PardarDto, object>(x=>x.Mblg)"></MudTableSortLabel>مـبــلـــــغ</MudTh>
+                    <MudTh Style="width:40%;"><MudTableSortLabel SortBy="new Func<PardarDto, object>(x=>x.Babat)"></MudTableSortLabel>بابت</MudTh>
+                    <MudTh Style="width:10%;">عملیات</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+
+                    <MudTd>@context.V_ActionDesc</MudTd>
+                    <MudTd>@context.Date</MudTd>
+                    <MudTd>@string.Format("{0:N0}", context.Mblg)</MudTd>
+                    <MudTd>@context.Babat</MudTd>
+                    <MudTd>
+                        <div style="display: flex;">
+                            <MudFab title="اصلاح" Size="Size.Small" Color="Color.Tertiary" Disabled="false" StartIcon="@Icons.Material.Filled.Edit" IconSize="Size.Medium" OnClick="() => EditPardar(context)" />
+                            <MudFab title="حـذف" Size="Size.Small" Color="Color.Secondary" Disabled="false" StartIcon="@Icons.Material.Filled.Delete" IconSize="Size.Medium" OnClick="() => OpenDeleteDialog(context)" />
+                        </div>
+                    </MudTd>
+
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, int.MaxValue }"
+                                   RowsPerPageString="@rowsPerPageString"
+                                   InfoFormat="@infoFormat"
+                                   AllItemsText="@allItemsText"
+                                   HorizontalAlignment="@horizontalAlignment" />
+                </PagerContent>
+            </MudTable>
+        }
+    </MudPaper>
+
+
+</MudContainer>
+
+@code {
+
+    private List<PardarDto> _personPardarList = new List<PardarDto>();
+    private List<PersonFullDataDto> _personFullDataList = new List<PersonFullDataDto>();
+    private PardarDto CurrentPardarDto = new PardarDto();
+    
+    private string? PCodeSearchable = string.Empty;
+
+    private bool isNeedUpdate { get; set; } = false;
+    private bool isDataCorrected { get; set; } = false;
+
+    private PersonFullDataDto selectedPerson;
+
+    private bool isEditing = false;
+    // private bool isValid = false;
+    // private bool isDateValid = false;
+    private MudForm PardarForm;
+    private string? searchString1 = string.Empty;
+    private Person person = new Person();
+    //   private Person1 person1 = new Person1();
+    private bool isFormValid;
+    private bool ShowPersonList = false;
+    private string cDateShamsi;
+    ///
+    /// </summary> /////////////////////////////////////////////////////////////
+    ///
+    // private Person1 selectedPerson;
+    //Pagination Variables
+    //  private IEnumerable<PardarDto> pagedData;
+    private HorizontalAlignment horizontalAlignment = HorizontalAlignment.Right; private string rowsPerPageString = "Rows per page:";
+    private string infoFormat = "{first_item}-{last_item} of {all_items}";
+    private string allItemsText = "All";
+    //   private int pageSize = 10;
+    private int currentPage = 0;
+    //    private int totalRecords = 0;
+    private List<tblDate> _tblDate = new List<tblDate>();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (PardarForm != null)
+            {
+                // isFormValid = form.IsValid;
+            }
+
+            //_tblDate = _Db.tblDates.ToList();
+            _tblDate = DateService.TblDate;
+            _personFullDataList = _Db.vwPersonFullData.Where(v => v.Code != "000000" && v.Code != "001000") // شرط‌های دلخواه
+                                           .Select(v => new PersonFullDataDto
+                                               {
+                                                   FullNameWCode = v.FullName + " حساب " + v.HesabNo,
+                                                   FullName = v.FullName,
+                                                   Code = v.Code,
+                                                   HesabNo = v.HesabNo,
+                                                   Mojodi = v.Mojodi
+                                               })
+                                           .Distinct()
+                                           .ToList();
+
+
+            var record = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
+            cDateShamsi = record?.HDate; // اگر record null باشد، cDateShamsi هم null خواهد بود
+
+            ShowClearPardarInfo();
+        }
+        catch (SqlException ex)
+        {
+            Console.WriteLine("SQL Error: " + ex.Message);
+            Console.WriteLine("Error Code: " + ex.Number);
+            _logger.LogError(ex, $"خطای sql: {ex.Message}");
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "خطای غیرمنتظره در کامپوننت MyComponent.");
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"خطای عمومی: {ex.Message}");
+
+        }
+
+    }
+
+    // لیستی از اشخاص به عنوان داده‌های نمونه
+
+    private Task<IEnumerable<PersonFullDataDto>> SearchPerson(string value, CancellationToken cancellationToken)
+    {
+        // فیلتر کردن داده‌ها بر اساس ورودی کاربر
+        var result = _personFullDataList.Where(c => !string.IsNullOrEmpty(c.FullNameWCode) && !string.IsNullOrEmpty(value)
+                             && TextHelper.NormalContain(c.FullNameWCode, value));
+
+        // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // بازگشت نتایج به صورت AsEnumerable
+        return Task.FromResult(result.AsEnumerable());
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // اینجا فرم را اعتبارسنجی می‌کنیم
+            isFormValid = PardarForm.IsValid;
+            StateHasChanged(); // به‌روزرسانی UI پس از تغییر وضعیت
+        }
+        isFormValid = PardarForm.IsValid;
+    }
+
+    private async Task SubmitForm()
+    {
+        // اگر فرم معتبر بود، اطلاعات را ارسال یا پردازش کنید
+        if (PardarForm.IsValid)
+        {
+            // به عنوان مثال، نمایش داده‌ها در کنسول
+
+
+            // اینجا می‌توانید داده‌ها را به API ارسال کنید یا هر عملیات دیگری انجام دهید
+
+            // برای مثال ارسال به یک سرویس یا API:
+            // await ApiService.SendDataAsync(person);
+
+            // پس از ارسال، می‌توانید پیامی نشان دهید
+            _snackBar.Add("اطلاعات با موفقیت ارسال شد", Severity.Success);
+        }
+        else
+        {
+            // در صورت عدم اعتبار فرم، پیام خطا نشان دهید
+            _snackBar.Add("لطفاً تمامی فیلدهای مورد نیاز را پر کنید.", Severity.Error);
+        }
+    }
+
+    private void TogglePersonList()
+    {
+        ShowPersonList = !ShowPersonList;
+        if (ShowPersonList == true) OnPCodeChanged();
+
+    }
+
+
+    private void OnPCodeChanged()
+    {
+        if (selectedPerson != null && selectedPerson.Code != null)
+        {
+            try
+            {
+                PCodeSearchable = selectedPerson.Code;
+                CurrentPardarDto.Pcode = PCodeSearchable;
+                CurrentPardarDto.Mojodi = GetMojodi(PCodeSearchable);
+
+
+                _personPardarList = (from Pardar in _Db.Pardars
+                                     join person in _Db.Persons on Pardar.Pcode equals person.Code
+                                     join hesab in _Db.Hesabs on person.Code equals hesab.Pcode
+                                     where person.Code == PCodeSearchable
+                                     orderby Pardar.Date descending, Pardar.Action
+                                     select new PardarDto
+                                         {
+                                             Pcode = person.Code,
+                                             Action = Pardar.Action,
+                                             V_ActionDesc = Pardar.V_ActionDesc,
+                                             Date = Pardar.Date,
+                                             Mblg = Pardar.Mblg,
+                                             V_Day = Pardar.V_Day,
+                                             V_Month = Pardar.V_Month,
+                                             V_Year = Pardar.V_Year,
+                                             Babat = Pardar.Babat,
+                                             IdDi = Pardar.IdDi,    // key record
+                                             Mojodi = hesab.Firstqty + hesab.Curqty
+                                         }).ToList();  // تبدیل به لیست;
+
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine("SQL Error: " + ex.Message);
+                Console.WriteLine("Error Code: " + ex.Number);
+                _logger.LogError(ex, $"خطای sql: {ex.Message}");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "خطای غیرمنتظره در کامپوننت MyComponent.");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"خطای عمومی: {ex.Message}");
+
+            }
+        }
+
+    }
+
+    // متدی برای دریافت پیغام خطا از داده‌های وارد شده
+    private string GetErrorMessageForField(string fieldName)
+    {
+        var context = new ValidationContext(CurrentPardarDto);
+        var validationResults = new List<ValidationResult>();
+
+        // اعتبارسنجی فیلد خاص
+
+        Validator.TryValidateProperty(
+            typeof(PersonQVamDto).GetProperty(fieldName).GetValue(CurrentPardarDto),
+            new ValidationContext(CurrentPardarDto) { MemberName = fieldName },
+            validationResults);
+
+
+        // اگر خطا وجود دارد، پیغام خطا را برمی‌گرداند
+        return validationResults.Any() ? validationResults.First().ErrorMessage : string.Empty;
+    }
+
+    // private bool FilterFunction(Person _person) => FilterFunc(_person, searchString1);
+    private bool FilterFunction(PardarDto _personPardarList)
+    {
+        // بررسی null بودن searchString1
+        if (string.IsNullOrEmpty(searchString1))
+        {
+            // اگر searchString1 null یا خالی بود، می‌توانید نتیجه دلخواه را برگردانید یا بررسی کنید.
+            return true; // یا هر عمل دیگری که مناسب است
+        }
+
+        return FilterFunc(_personPardarList, searchString1);
+    }
+
+    private bool FilterFunc(PardarDto _pardar, string searchString)
+    {
+        if (_pardar is null) return false;
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if ($"{_pardar.V_ActionDesc} {_pardar.Babat} {_pardar.Mblg} {_pardar.Date}".Contains(searchString))
+            return true;
+
+        return false;
+    }
+    private void OnSearchTextChanged()
+    {
+        if (!string.IsNullOrEmpty(searchString1))
+        {
+            searchString1 = TextHelper.NormalizeSimpleString(searchString1);
+        }
+    }
+    // اعتبارسنجی مدل
+    private bool ValidateModel()
+    {
+        var context = new ValidationContext(CurrentPardarDto);
+        var validationResults = new List<ValidationResult>();
+        return Validator.TryValidateObject(CurrentPardarDto, context, validationResults, true);
+    }
+    // متدی برای ارسال فرم
+    // اعتبارسنجی مدل
+    private bool isValidFnc => ValidateForm();
+
+    private bool ValidateForm()
+    {
+        // پرکردن فیلد تاریخ
+        CurrentPardarDto.Date = DateService.DateShamsiFormat(CurrentPardarDto.V_Year, CurrentPardarDto.V_Month, CurrentPardarDto.V_Day);
+        //isDataCorrected = false;
+        // مثال: اعتبارسنجی یک فرم
+        if (CurrentPardarDto.Mblg <= 0) return false;
+        if (string.IsNullOrEmpty(CurrentPardarDto.Babat)) return false;
+        if (!_tblDate.Any(d => d.HDate == CurrentPardarDto.Date)) return false;
+        isDataCorrected = ValidateModel();
+        if (!isDataCorrected) return false;
+        //    if (!_Db.tblDates.Any(p => p.HDate == CurrentPardarDto.Date)) return false;
+
+        return isNeedUpdate;
+    }
+    private void SavePerson()
+    {
+
+        try
+        {
+            if (isEditing)
+            {
+                var editpardar = _Db.Pardars.FirstOrDefault(p => p.IdDi == CurrentPardarDto.IdDi);
+                if (editpardar != null)
+                {
+                    editpardar.Pcode = CurrentPardarDto.Pcode;
+                    editpardar.Date = CurrentPardarDto.Date;
+                    editpardar.Mblg = CurrentPardarDto.Mblg;
+                    editpardar.Action = CurrentPardarDto.Action;
+                    editpardar.Babat = CurrentPardarDto.Babat;
+                    _Db.Pardars.Update(editpardar);
+                }
+            }
+            else
+            {
+                CurrentPardarDto.FullName = selectedPerson.FullName;
+                var newPardar = Mapper.Map<Pardar>(CurrentPardarDto); // Mapping DTO to Entity
+                _personPardarList.Add(CurrentPardarDto);
+                // newQvam.Sabtdate = newQvam.Date;
+                _Db.Pardars.Add(newPardar);
+                _snackBar.Add($"عملیات {CurrentPardarDto.FullName} ثبت شد", Severity.Success);
+            }
+            _Db.SaveChanges();
+            CurrentPardarDto.Mojodi = GetMojodi(CurrentPardarDto.Pcode);
+
+
+            isNeedUpdate = false;
+
+        }
+        catch (DbUpdateException ex)
+        {
+            // اینجا خطاهایی که مربوط به مشکلات ذخیره‌سازی در پایگاه داده هستند مدیریت می‌شود
+            // مثلاً خطاهای مربوط به نقض محدودیت‌های پایگاه داده مانند unique constraint
+
+            // به کاربر پیام خطای مناسب نمایش داده می‌شود
+
+            _logger.LogError(ex, "خطایی در ذخیره‌سازی داده‌ها به پایگاه داده رخ داد.");
+        }
+
+
+    }
+
+    private void EditPardar(PardarDto pardardto)
+    {
+        CurrentPardarDto = _personPardarList.FirstOrDefault(p => p.IdDi == pardardto.IdDi) ?? new PardarDto();
+
+        isEditing = true;
+        isNeedUpdate = false;
+        isDataCorrected = true;
+
+    }
+    private async Task OpenDeleteDialog(PardarDto context)
+    {
+        var deleteContext = context.FullName;
+        deleteContext = " برای حذف تراکنش " + deleteContext + " مطمئن هستید؟ ";
+        // اینجا باید یک دیالوگ برای تایید حذف باز کنیم
+        var parameters = new DialogParameters
+    {
+        { nameof(Shared.Dialogs.DeleteConfirmationDialog.ContextText), deleteContext }
+    };
+
+        var dialog = DialogService.Show<DeleteConfirmationDialog>("حذف تقاضا", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                // اگر کاربر گزینه Yes را انتخاب کرده باشد، عملیات حذف انجام می‌شود
+                _personPardarList.Remove(context);
+                CancelEdit();
+
+                _snackBar.Add($" عملیات واریز/برداشت حذف شد ", Severity.Warning);
+                _Db.SaveChanges();
+                CurrentPardarDto = _personPardarList.Where(p => p.Pcode == PCodeSearchable).OrderByDescending(p => p.Date).FirstOrDefault() ?? new PardarDto();
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, $"خطای sql: {ex.Message}");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "خطای غیرمنتظره در کامپوننت MyComponent.");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"خطای عمومی: {ex.Message}");
+
+            }
+        }
+    }
+
+    private async Task CancelEdit()
+    {
+        if (isNeedUpdate)
+        {
+            var dialogContext = "";
+            dialogContext = "اطلاعات تغییرکرده !!! برای لغو مطمئن هستید ؟";
+            // اینجا باید یک دیالوگ برای تایید حذف باز کنیم
+            var parameters = new DialogParameters
+            {
+                {nameof(Shared.Dialogs.DeleteConfirmationDialog.ContextText), dialogContext}
+            };
+
+            var dialog = DialogService.Show<DeleteConfirmationDialog>("اخطار تغییر", parameters);
+            var result = await dialog.Result;
+            if (result?.Canceled == true)
+            {
+                return;
+            }
+        }
+        CurrentPardarDto = new PardarDto();
+        PCodeSearchable = "";
+        _personPardarList = null;
+        isEditing = false;
+        isNeedUpdate = false;
+        ShowClearPardarInfo();
+    }
+
+
+
+    private void ShowClearPardarInfo()
+    {
+
+        //PCodeSearchable = "";
+        Mapper.Map(new PardarDto(), CurrentPardarDto);
+        ///
+        ///تاریخ با روز جاری پرمیشود
+        ///
+
+        CurrentPardarDto.V_Year = DateService.GetHYear(cDateShamsi);
+        CurrentPardarDto.V_Month = DateService.GetHMonth(cDateShamsi);
+        CurrentPardarDto.V_Day = DateService.GetHDay(cDateShamsi);
+        CurrentPardarDto.Date = cDateShamsi;
+        CurrentPardarDto.FullName = "";
+        CurrentPardarDto.Action = '1';
+        CurrentPardarDto.Mblg = 0;
+        //ReqNoSearchable = _personPardarList.Max(p => p.ReqNo) + 1;
+        //  CurrentPardarDto.ReqNo = ReqNoSearchable;
+        selectedPerson = null;
+
+
+    }
+
+    private void isDataChanged()
+    {
+        isNeedUpdate = true;
+
+    }
+
+    private long GetMojodi(string cPcode)
+    {
+        var ExistCommand = "SELECT FirstQty + CurQty AS Mojidi FROM Hesab WHERE Pcode = @Pcode";
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {
+            connection.Open();  // باز کردن اتصال به پایگاه داده به صورت همزمان
+
+            // اجرای کوئری به صورت همزمان
+            var result = connection.ExecuteScalar<long>(ExistCommand, new { Pcode = cPcode });
+
+            // اگر نتیجه صفر یا منفی باشد
+            if (result <= 0)
+            {
+                return 0; // مقدار دلخواه در صورت وجود مانده منفی یا صفر
+            }
+
+            // بازگشت نتیجه به عنوان long
+            return result; // تبدیل نتیجه به long (در صورت نیاز)
+        }
+
+
+
+    }
+}

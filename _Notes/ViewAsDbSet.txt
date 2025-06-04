@@ -1,0 +1,99 @@
+﻿public class PersonFullDataDto
+{
+    public string FullName { get; set; }
+    public string Pcode { get; set; }
+    public string ReqNo { get; set; }
+    public DateTime? QvamDate { get; set; }
+    public decimal Mblg { get; set; }
+    public string PvamTitle { get; set; }
+    public string DargstDescription { get; set; }
+}
+
+
+
+public class ApplicationDbContext : DbContext
+{
+    public DbSet<PersonFullDataDto> PersonFullDataDtos { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // تنظیم View به عنوان یک Entity
+        modelBuilder.Entity<PersonFullDataDto>(entity =>
+        {
+            entity.HasNoKey(); // Viewها معمولاً کلید ندارند
+            entity.ToView("vwPersonFullData"); // نام View که در پایگاه داده ایجاد کرده‌اید
+        });
+    }
+}
+
+
+public List<PersonFullDataDto> GetPersonFullData()
+{
+    return _dbContext.PersonFullDataDtos.ToList();
+}
+
+
+
+
+
+
+
+
+code	              char	     5	NO
+FullName              nvarchar	73	YES
+sex	                  char	    1	YES
+SexDesc	              varchar	4	NO
+issue_no	          char	   15	YES
+tel                   nvarchar	30	YES
+address	              nvarchar	100	YES
+city	              char	    1	YES
+cityDesc              varchar	7	NO
+mellicode             nchar	10	YES
+PrsonId	              bigint	NULL	NO
+Status	              char	1	NO
+StatusDesc            varchar	7	YES
+CardBank              varchar	16	YES
+BankType	          int	NULL	YES
+HesabBank             varchar	16	YES
+scode	              char	   2	YES
+pcode	              char	   5	YES
+hesab_no              bigint	NULL	YES
+firstqty	          bigint	NULL	YES
+date	              char     	10	YES
+curqty                bigint	NULL	YES
+monthqty              bigint	NULL	YES
+p	                  bigint	NULL	YES
+p1                    bigint	NULL	YES
+Moaref                bigint	NULL	YES
+QREQNO                int	    NULL	YES
+QCode	              char   	5	    YES
+QStatus               nvarchar	1	YES
+MBLG                  bigint	NULL	YES
+QDate	              nvarchar	10	YES
+QSabtDate             nvarchar	10	YES
+QType	              nvarchar	1	YES
+QTypeDesc	          varchar	5	NO
+PReqNo	              int	NULL	YES
+mblgvam               bigint	NULL	YES
+gst1                  bigint	NULL	YES
+gst2                  bigint	NULL	YES
+PGstNo                tinyint	NULL	YES
+date_d	              char	10	YES
+PDateg                char	10	YES
+PGstPay               int	NULL	YES
+PStatus               char	1	YES
+PSabtDate	          char	10	YES
+pkarmozd	          int	NULL	YES
+mkarmozd              int	NULL	YES
+lastdate              char	10	YES
+PType	              char	1	YES
+mblgmain              int	NULL	YES
+DReqNo                int	NULL	YES
+DGstNo	              tinyint	NULL	YES
+DDateg                char	10	YES
+DDatep                char	10	YES
+DStatus               char	1	YES
+pasandaz	          bigint	NULL	YES
+gstmblg	              bigint	NULL	YES

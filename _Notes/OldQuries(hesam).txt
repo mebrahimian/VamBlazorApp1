@@ -1,0 +1,26 @@
+﻿
+SELECT  Code, Person.Status,rtrim(Family)+' ' + Name As Fam, Father, Hesab_no As Hesab, 
+PVam.Req_no, cast(PVAM.gst_no As Char(3))+ '- '+ Cast(PVAM.gst_no - PVAM.gst_pay As Char(3)) As GstNo, Pvam.MblgVam 
+FROM  QVAM INNER JOIN PVAM ON QVAM.REQ_NO = PVAM.req_no INNER JOIN 
+     Dargst On PVAM.req_no = DARGST.req_no 
+           LEFT OUTER JOIN HESAB INNER JOIN
+           PERSON ON HESAB.pcode = PERSON.code ON QVAM.PCODE = HESAB.pcode 
+WHERE (QVAM.TYPE = N'1') And (PVAM.Gst_Pay < PVAM.Gst_No Or Lastdate > '1403/09/01') 
+GROUP BY PERSON.code, PERSON.Status, RTRIM(PERSON.family) + ' ' + PERSON.name, PERSON.father, HESAB.hesab_no, PVAM.req_no,
+CAST(PVAM.gst_no AS Char(3)) + '- ' + CAST(PVAM.gst_no - PVAM.gst_pay AS Char(3)), PVAM.mblgvam 
+Having ((Sum(DARGST.gstmblg) < PVAM.mblgvam) OR (MAX(PVAM.lastdate) > '1403/09/01')) And 
+      (PVAM.req_no IN (SELECT MAX(QVAM_1.REQ_NO) AS ReqNo
+                      FROM PVAM AS PVAM_1 INNER JOIN QVAM AS QVAM_1 ON PVAM_1.req_no = QVAM_1.REQ_NO
+                      Where (PVAM_1.Type = N'1')
+                     GROUP BY QVAM_1.PCODE))
+   Order By Hesab_No 
+
+
+   ==========================================
+Select *, (Select Gst1 From PVam where Req_No = 1101) As Gst1,
+          (Select Gst2 From PVam where Req_No = 1101) As Gst2, 
+          (Select Gst_No From PVam where Req_No = 1101) As Gst_Tot, 
+          (Select MonthQty From Hesab Where Hesab_No = 1101) As Pas  
+          From DarGst Where Req_No = " & cReq_No & " Order By Gst_No 
+     
+  

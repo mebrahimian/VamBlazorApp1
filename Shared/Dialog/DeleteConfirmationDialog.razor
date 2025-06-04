@@ -1,0 +1,28 @@
+﻿@namespace VamBlazor.Client.Shared.Dialogs
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Style="color: red;">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-3 mb-n1" Style="color: red;" />
+            اخطار !!!
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText>@ContextText</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">بلی</MudButton>
+        <MudButton OnClick="Cancel" AutoFocus="true">خیر</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter] public string? ContextText { get; set; }
+  
+    
+    void Submit()
+    {
+        MudDialog?.Close(DialogResult.Ok(true));
+    }
+    void Cancel() => MudDialog?.Cancel();
+}

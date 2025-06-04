@@ -1,0 +1,38 @@
+﻿@page "/user-form"
+@layout MainLayout
+@using VamBlazor.Client.Application.Dtos
+@using MudBlazor
+
+<MudForm @ref="form" Model="userDTO" @bind-IsValid="isValid" ValidationCompleted="OnValidationCompleted">
+    <MudTextField @bind-Value="userDTO.Name" Label="Name" Required="true" HelperText="Name must be between 3 and 100 characters" />
+    <MudNumericField @bind-Value="userDTO.Age" Label="Age" Min="18" Max="120" Required="true" HelperText="Age must be between 18 and 120" />
+    <MudTextField @bind-Value="userDTO.Email" Label="Email" Required="true" Type="email" HelperText="Invalid email address" />
+
+    <MudButton Disabled="@(!isValid)" OnClick="SubmitForm">Submit</MudButton>
+</MudForm>
+
+<p>@statusMessage</p>
+
+@code {
+    private UserDTO userDTO = new UserDTO();
+    private MudForm form = new MudForm();
+    private bool isValid;
+    private string statusMessage;
+
+    private void OnValidationCompleted()
+    {
+        statusMessage = isValid ? "Form is valid!" : "Form has errors!";
+    }
+
+    private void SubmitForm()
+    {
+        if (form.IsValid)
+        {
+            statusMessage = "Form submitted successfully!";
+        }
+        else
+        {
+            statusMessage = "Please fix the form errors.";
+        }
+    }
+}

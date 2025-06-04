@@ -1,0 +1,121 @@
+﻿@page "/graphfuturevams"
+@inject DatabaseContext _Db
+@inject SandoghService SandoghService
+@inject VamBlazor.Client.Application.Services.PersonServices PersonServices
+@layout MainLayoutReports
+@inject NavigationManager Navigation
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using MudBlazor
+@using VamBlazor.Client.Application.Dtos
+@using VamBlazor.Client.Application.Services
+@using VamBlazor.Client.Application.CommonFunc
+@using VamBlazor.Client.Domain.Entities
+
+
+<!-- دکمه برای چاپ گزارش -->
+
+<MudButton @onclick="PrintReport" Variant="Variant.Filled"
+           Class="ma-0 pa-0"
+           StartIcon="@Icons.Material.Filled.Print"
+           IconColor="Color.Primary"
+           Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
+    چاپ گزارش
+</MudButton>
+
+<!-- این خط برای جلوگیری از تداخل و شروع جدید در هر رکورد -->
+<div style="clear: both;"></div>
+<div style="text-align:center" class="mt-n5">
+    @SandoghName
+</div>
+<div style= "width: 100%; align-content:center;">
+    
+        <!-- ردیف اول: دو چارت در بالا -->
+    <MudItem xs="12">
+        
+        <MudChart ChartType="ChartType.Bar" class="ma-1" style="border:solid;background-color:azure" @bind-SelectedIndex="Index" ChartSeries="@SeriesForLoanAmountsAndPaidByLoanDate" XAxisLabels="@XAxisLabels" Width="100%" Height="500px">
+            <CustomGraphics>
+                <style>
+                    .heavy {
+                        font: bold 10px Helvetica;
+                    }
+
+                    .Rrrrr {
+                        font: italic 12px ;
+                        fill: rgb(62,44,221);
+                    }
+                </style>
+                <text x="-30" y="15" class="Rrrrr">میلیون ریال</text>
+                
+            </CustomGraphics>
+        </MudChart>
+           
+    </MudItem>
+        
+        
+
+        
+</div>
+
+<br />
+<div style="page-break-after: always;"></div>
+
+@code {
+    private List<vwPersonTotalGst> ReportRecords { get; set; }
+    private string SandoghName = "";
+    private bool isButtonVisible = true;
+    private int Index = -1; // default value cannot be 0 -> first selectedindex is 0.
+
+    public List<ChartSeries> SeriesForLoanAmountsAndPaidByLoanDate = new List<ChartSeries>();
+    public List<ChartSeries> SeriesForNumberOfLoansByDate = new List<ChartSeries>();
+    public List<ChartSeries> SeriesForNumberOfLoansByLoanAmount = new List<ChartSeries>();
+    public List<ChartSeries> SeriesForLoanAmountsAndPaidByLoanAmount = new List<ChartSeries>();
+
+    public string[] XAxisLabels;
+    public string[] LoanAmountXAxisLabels; // اضافه کردن محور X مخصوص چارت‌های ۳ و ۴
+
+    protected override void OnInitialized()
+    {
+        ReportRecords = _Db.vwPersonTotalGst.Where(p=>p.PaidDate == " ").OrderBy(p => p.GstDate).ToList();
+        SandoghName = SandoghService.GetSandoghName();
+        // داده‌ها را از رکوردها استخراج می‌کنیم
+
+        // سری دوم: وام وپرداخت براساس تاریخ
+        var groupedByMonthYearVam = ReportRecords
+            .GroupBy(x => x.GstDate.Substring(0, 4))  // استخراج yyyyMM از تاریخ
+            .Select(g => new
+            {
+                MonthYear = g.Key,
+                TotalGst = g.Sum(x => x.GstMblg),  // جمع مبلغ وام
+                TotalPas = g.Sum(x => x.Pasandaz)  // جمع پرداخت وام
+            }).OrderBy(p => p.MonthYear).ToList();
+
+        // تبدیل داده‌ها به فرمت مناسب برای چارت
+        XAxisLabels = groupedByMonthYearVam.Select(g => TextHelper.ConvertToPersian(g.MonthYear.ToString(), false)).ToArray();
+
+        // ساخت سری‌های داده برای چارت‌ها
+        SeriesForLoanAmountsAndPaidByLoanDate = new List<ChartSeries>
+        {
+            new ChartSeries()
+            {
+                Name = "قسط وام",
+                Data = groupedByMonthYearVam.Select(g => (double)g.TotalGst/1000000).ToArray()
+            },
+            new ChartSeries()
+            {
+                Name = "پس انداز",
+                Data = groupedByMonthYearVam.Select(g => (double)g.TotalPas/1000000).ToArray()
+            }
+        };
+        
+    }
+
+    private async Task PrintReport()
+    {
+        isButtonVisible = !isButtonVisible;
+        StateHasChanged();
+        await Task.Delay(1000);
+        await JSRuntime.InvokeVoidAsync("window.printAndRedirect", "/", 500);
+    }
+}

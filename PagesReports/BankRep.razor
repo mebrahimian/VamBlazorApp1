@@ -1,0 +1,264 @@
+﻿@page "/bankrep"
+@inject DatabaseContext _Db
+@inject SandoghService SandoghService
+@inject VamBlazor.Client.Application.Services.PersonServices PersonServices
+@layout MainLayoutReports
+@inject NavigationManager Navigation
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject DateService DateService
+
+@using MudBlazor
+@using VamBlazor.Client.Application.Dtos
+@using VamBlazor.Client.Application.Services
+@using VamBlazor.Client.Application.CommonFunc
+@using VamBlazor.Client.Domain.Entities
+
+
+
+<!-- دکمه برای چاپ گزارش -->
+
+<MudButton @onclick="PrintReport" Variant="Variant.Filled"
+Class="ma-0 pa-0"
+StartIcon="@Icons.Material.Filled.Print"
+IconColor="Color.Primary"
+Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
+    چاپ گزارش
+</MudButton>
+
+
+@if (@ReportRecords.Any())
+{
+    //var firstRow = @ReportRecords.First();
+
+    <!-- این قسمت برای جلوگیری از صفحه خالی قبل از شروع رکورد اول -->
+
+    <div style="width: 100%; margin-left:0;text-align:center">
+        @SandoghName
+    </div>
+
+    <div style="display: flex; width: 100%; margin-left:0;margin-right:75%">
+
+        <!-- اولین MudText (یک سوم فضای صفحه) -->
+        <MudText Typo="Typo.subtitle2" Align="Align.Right" Style="background-color:aquamarine; font-size:14px; text-align: right; display: block; margin-right: 20px; padding: 0;">
+            تاریخ  @DateService.TodayHDateString()
+
+        </MudText>
+
+
+    </div>
+
+    <!-- این خط برای جلوگیری از تداخل و شروع جدید در هر رکورد -->
+    <div style="clear: both;"></div>
+    <div style="display: flex; width: 100%; margin-left:0;">
+        <MudTable T="PersonReportStatusDto" Items="@ReportRecords" Hover="true" Bordered="true" Striped="true" Dense="true" Style="width:95%; align-content:center; font-size:10px; table-layout: fixed;">
+            <HeaderContent>
+                <MudTh Style="width:75px;text-align:center">ردیف</MudTh> <!-- ستون شماره ردیف -->
+                <MudTh Style="width:75px">ش.حساب</MudTh>
+                <MudTh Style="width:75px">تاریخ </MudTh>   
+                <MudTh Style="width:250px"> مشخصات سپرده گذار</MudTh>
+                <MudTh Style="width:110px">بدهکار</MudTh>
+                <MudTh Style="width:110px">بستانکار</MudTh>
+                <MudTh Style="width:110px">مانده </MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@TextHelper.ConvertToPersian((ReportRecords.IndexOf(context) + 1).ToString(), false)</MudTd> <!-- شماره ردیف --> <!-- اعداد فارسی بدون کاما  -->
+                <MudTd>@TextHelper.ConvertToPersian(context.HesabNo.ToString(), false)</MudTd>
+                <MudTd>@TextHelper.ConvertNumbersInStringToPersian(context.Date)</MudTd>
+                <MudTd>@($"{context.Sharh} {context.FullName}")</MudTd>
+                <MudTd>
+                    @if ((context.Vam + context.Karmozd != 0 || context.Pasandaz + context.GstPaid < 0) && (ReportRecords.IndexOf(context) != 0) && (ReportRecords.IndexOf(context) != ReportRecords.Count - 1))
+                    {
+                        @TextHelper.ConvertToPersian((context.Vam + context.Karmozd - (context.Pasandaz + context.GstPaid)).ToString("N0"))
+
+                    }
+                    else
+                    {
+
+                    }
+                </MudTd>
+                <MudTd>
+                    @if ((context.Pasandaz + context.GstPaid > 0) && (ReportRecords.IndexOf(context) != 0) && (ReportRecords.IndexOf(context) != ReportRecords.Count - 1))
+                    {
+
+                        @TextHelper.ConvertToPersian((context.Pasandaz + context.GstPaid).ToString("N0"))
+
+                    }
+                    else
+                    {
+
+                    }
+                </MudTd>
+                <!-- محاسبه مانده -->
+                <MudTd>
+                    @{
+                        var currentRemain = context.Pasandaz + context.GstPaid - context.Vam - context.Karmozd;
+                        var finalRemain = 0L;
+                        var formattedRemain = "";
+
+                        if (context.ColPasandaz != 0) {
+                            @TextHelper.ConvertToPersian(context.ColPasandaz >= 0 ? $"{context.ColPasandaz:N0}" : $"-{Math.Abs(context.ColPasandaz):N0}");
+                            previousRemainForRow = context.ColPasandaz;
+                        }
+                        else 
+                        {
+                            finalRemain = previousRemainForRow + currentRemain; // مانده سطر جاری + مانده سطر قبلی
+                            context.ColPasandaz = finalRemain; // ذخیره مقدار مانده سطر جاری به عنوان مانده سطر قبلی برای سطر بعدی
+
+                            formattedRemain = finalRemain >= 0 ? $"{finalRemain:N0}" : $"-{Math.Abs(finalRemain):N0}";
+                            @TextHelper.ConvertToPersian(formattedRemain)
+                            previousRemainForRow += currentRemain;
+                        }
+                    }
+                    
+                </MudTd>
+
+            </RowTemplate>
+        </MudTable>
+    </div>
+    <br />
+
+
+}
+
+
+
+@code {
+    private int PageNumber { get; set; } = 1; // شماره صفحه (پیش‌فرض صفحه اول)
+    private int PageSize { get; set; } = 20;  // تعداد رکوردها در هر صفحه (پیش‌فرض 20 رکورد)
+    private List<PersonReportStatusDto> ReportRecords { get; set; }
+    private List<IGrouping<long, PersonReportStatusDto>> groupedRecords { get; set; }
+    private string CurrentPersonPictureAddress = string.Empty;
+    private string SandoghName = "";
+
+    public string cDate1 { get; set; }
+    public string cDate2 { get; set; }
+    // تعریف متغیر برای ذخیره مانده سطر قبلی 
+    private decimal previousRemain = 0;  // متغیر برای ذخیره مانده سطر قبلی
+    private long previousRemainForRow = 0L;
+    private bool isTransactionTableStarted = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        previousRemain = 0;
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        
+        // دریافت پارامترهای URL
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+
+        cDate1 = GetQueryStringValue(uri, "date1");
+        cDate2 = DateService.DateEndMonthShamsi(cDate1);
+
+        // بررسی و تبدیل پارامتر hesab1 به long
+        // محاسبه رکوردها برای "Balance Before Date1"
+        var balanceBeforeDate1 = new List<PersonReportStatusDto>
+                                     {
+                                         new PersonReportStatusDto
+                                             {
+                                               Sharh = "",
+                                               Pcode = " " ,
+                                               Date = " ",
+                                               FullName = "جمع کل قبل از " + cDate1,
+                                               RecordType = "1BalanceBeforeDate1",
+                                               Pasandaz = _Db.vwPersonAllTransactions
+                                                        .Where(t =>  string.Compare(t.Date, cDate1) < 0)
+                                                        .Sum(t => t.GstPaid + t.Pasandaz - t.Vam - t.Karmozd),
+                                              ColPasandaz = _Db.vwPersonAllTransactions
+                                                        .Where(t =>  string.Compare(t.Date, cDate1) < 0)
+                                                        .Sum(t => t.GstPaid + t.Pasandaz - t.Vam - t.Karmozd) // بجای مانده استفاده میشود
+                                             }
+                                     };
+        // محاسبه رکوردها برای "Transaction Between Date1 and Date2"
+        var groupedTransactions = (from transaction in _Db.vwPersonAllTransactions
+                                   join person in _Db.Persons on transaction.Pcode equals person.Code
+                                   where string.Compare(transaction.Date, cDate1) >= 0 && string.Compare(transaction.Date, cDate2) <= 0
+                                   group new { transaction, person } by new
+                                   {
+                                       transaction.Pcode,
+                                       transaction.HesabNo,
+                                       transaction.Date,
+                                       transaction.Sharh                                       
+                                   } into transactionGroup
+                                   select new PersonReportStatusDto
+                                       {
+                                           Pcode = transactionGroup.Key.Pcode,
+                                           FullName = transactionGroup.Select(t => t.person.Family + " " + t.person.Name + " (" + t.person.Father + ")").FirstOrDefault(),
+                                           HesabNo = transactionGroup.Key.HesabNo,
+                                           Date = transactionGroup.Key.Date,
+                                           RecordType = "2TransactionBetweenDate1andDate2",
+                                           Vam = transactionGroup.Sum(t => t.transaction.Vam),
+                                           GstPaid = transactionGroup.Sum(t => t.transaction.GstPaid),
+                                           Pasandaz = transactionGroup.Sum(t => t.transaction.Pasandaz),
+                                           Karmozd = transactionGroup.Sum(t => t.transaction.Karmozd),
+                                           Sharh = transactionGroup.Key.Sharh,
+                                           ColPasandaz = 0 // بجای مانده استفاده میشود
+
+                                       })
+                           .OrderBy(t => t.Date)
+                           .ThenBy(t => t.HesabNo)
+                           .ToList();
+
+        // محاسبه رکوردها برای "Balance At Date2"
+        var balanceAtDate2 = new List<PersonReportStatusDto>
+                                    {new PersonReportStatusDto
+                                          {
+                                             Sharh = "",
+                                             Pcode = " " ,
+                                             Date = " ",
+                                             FullName = "مانده در پایان " + cDate2,
+                                             RecordType = "3BalanceAfterDate2",
+                                             Pasandaz = _Db.vwPersonAllTransactions
+                                                      .Where(t => string.Compare(t.Date, cDate2) <= 0)
+                                                      .Sum(t => t.GstPaid + t.Pasandaz - t.Vam - t.Karmozd),
+                                             ColPasandaz =  _Db.vwPersonAllTransactions
+                                                      .Where(t => string.Compare(t.Date, cDate2) <= 0)
+                                                      .Sum(t => t.GstPaid + t.Pasandaz - t.Vam - t.Karmozd) // بجای مانده استفاده میشود
+                                          }
+                                    };
+
+        // ترکیب همه رکوردها
+        ReportRecords = balanceBeforeDate1
+            .Concat(groupedTransactions)
+            .Concat(balanceAtDate2)
+            .OrderBy(r => r.RecordType)
+            .ThenBy(r => r.Date)
+            .ThenBy(r=> r.HesabNo)
+            .ThenBy(r=> r.ReqNo)
+            .ToList();
+
+       SandoghName = SandoghService.GetSandoghName();
+    }
+
+
+    // متد کمکی برای دریافت مقدار پارامتر از URL
+    private string GetQueryStringValue(Uri uri, string key)
+    {
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        return query.ContainsKey(key) ? query[key].ToString() : string.Empty;
+    }
+    private bool isButtonVisible = true;
+
+    private MudTheme myTheme = new MudTheme()
+        {
+            Typography = new Typography()
+            {
+                Default = new Default()
+                {
+                    FontFamily = ["Vazir UI", "sans-serif"]
+
+                }
+            }
+        };
+    // رکورد ست شامل اطلاعات هر شخص
+
+    // دستور چاپ با استفاده از JSInterop
+    private async Task PrintReport()
+    {
+        isButtonVisible = !isButtonVisible;
+        StateHasChanged();
+        await Task.Delay(1000);
+        await JSRuntime.InvokeVoidAsync("window.printAndRedirect", "/pagebankcard", 500);
+    }
+}

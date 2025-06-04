@@ -1,0 +1,122 @@
+﻿@page "/backup-restore"
+@layout MainLayout
+@inject IJSRuntime JSRuntime
+@inject IConfiguration Configuration
+@inject IWebHostEnvironment Environment
+
+@using Microsoft.Data.SqlClient
+@using Microsoft.AspNetCore.Hosting;
+@using Microsoft.Extensions.Hosting;
+
+<h3>Backup and Restore Database</h3>
+
+<button @onclick="StartBackup" class="btn btn-primary"> گرفتن نسخه پشتیبان(Backup) </button>
+<br/>
+<br/>
+<button @onclick="RestoreDatabase" class="btn btn-primary"> بازیابی نسخه پشتیبان(Restore) </button>
+<br/>
+<br />
+<p>@StatusMessage</p>
+
+@code {
+    private string BackupFileName { get; set; }
+    private string backupFolderPath { get; set; }
+    private string StatusMessage { get; set; }
+
+    // private ElementReference directoryInput; // برای دسترسی به ورودی دایرکتوری
+
+    private async Task StartBackup()
+    {
+        try
+        {
+            // مسیر فولدر backup
+            backupFolderPath = Path.Combine(Environment.ContentRootPath, "backup");
+            // ایجاد فولدر backup اگر وجود ندارد
+            if (!Directory.Exists(backupFolderPath))
+            {
+                Directory.CreateDirectory(backupFolderPath);
+            }
+            // مسیر فایل پشتیبان
+            BackupFileName = Path.Combine(backupFolderPath, "Vam_New_Backup.bak");
+            if (File.Exists(BackupFileName))
+            {
+                File.Delete(BackupFileName);  // حذف فایل پشتیبان قبلی
+            }
+            // ساخت دستور SQL برای پشتیبان‌گیری
+            var commandText = $"BACKUP DATABASE [Vam_New] TO DISK='{BackupFileName}'";
+
+            // اتصال به دیتابیس
+            using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+            {
+                await connection.OpenAsync();
+
+                using (var command = new SqlCommand(commandText, connection))
+                {
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+
+            // وضعیت موفقیت‌آمیز
+            StatusMessage = "نسخه پشتیبان در آدرس " + BackupFileName + " با موفقیت انجام شد. ";
+        }
+        catch (Exception ex)
+        {
+            // در صورت بروز خطا
+            StatusMessage = $"Error1111 during backup: {ex.Message}";
+        }
+    }
+
+    private async Task RestoreDatabase()
+    {
+        backupFolderPath = Path.Combine(Environment.ContentRootPath, "backup");
+        BackupFileName = Path.Combine(backupFolderPath, "Vam_New_Backup.bak");
+        if (!File.Exists(BackupFileName))
+        {
+            StatusMessage = "فایل Restore موجود نیست ";
+            return;
+        }
+        try
+        {
+            // 1. تغییر وضعیت دیتابیس به OFFLINE
+            await SetDatabaseOfflineAsync();
+
+            // 2. انجام عملیات RESTORE
+            string restoreCommand = $"RESTORE DATABASE [Vam_New] FROM DISK='{BackupFileName}' With REPLACE";
+            await ExecuteSqlCommandAsync(restoreCommand);
+
+            // 3. تغییر وضعیت دیتابیس به ONLINE
+            await SetDatabaseOnlineAsync();
+
+            StatusMessage = " نسخه پشتیبان " + BackupFileName + " با موفقیت بازیابی شد.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Restore failed: {ex.Message}";
+        }
+    }
+
+   
+
+    private async Task ExecuteSqlCommandAsync(string commandText)
+    {
+       // var connectionString = "your_connection_string"; // اتصال به پایگاه داده
+
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("MasterConnection")))
+        {
+            var command = new SqlCommand(commandText, connection);
+            await connection.OpenAsync();
+            await command.ExecuteNonQueryAsync();
+        }
+    }
+    private async Task SetDatabaseOfflineAsync()
+    {
+        string offlineCommand = "ALTER DATABASE [Vam_New] SET OFFLINE WITH ROLLBACK IMMEDIATE";
+        await ExecuteSqlCommandAsync(offlineCommand);
+    }
+
+    private async Task SetDatabaseOnlineAsync()
+    {
+        string onlineCommand = "ALTER DATABASE [Vam_New] SET ONLINE";
+        await ExecuteSqlCommandAsync(onlineCommand);
+    }
+}

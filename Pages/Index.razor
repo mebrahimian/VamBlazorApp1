@@ -1,0 +1,64 @@
+﻿@page "/"
+@layout MainLayout
+@using Microsoft.EntityFrameworkCore
+@inject DatabaseContext _Db
+<PageTitle>Index</PageTitle>
+
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم وام قرض الحسنه</title>
+    <style>
+        body {
+            
+            text-align: center;
+            background-color: #f1f1f1;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 50px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 100px auto;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #555;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: purple;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <h1>سیستم وام قرض الحسنه</h1>
+        <p><strong>نسخه:</strong> 1.0.1</p>
+        <p><strong>آخرین بروزرسانی:</strong> 1404/03/14 </p>
+        <p><strong> تهیه کننده : </strong> مجید ابراهیمیان </p>
+        <div class="footer">
+            <h4>&copy; تاریخ نگارش : فروردین هزار و چهارصد و چهار </h4>
+        </div>
+    </div>
+</body>
+</html>
+
+

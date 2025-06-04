@@ -1,0 +1,58 @@
+﻿@page "/pagelogin"
+@using Blazored.LocalStorage
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@using VamBlazor.Client.Domain.Entities
+
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILocalStorageService _localStorage
+@inject IUserService UserService // سرویس UserService که پیاده‌سازی کردیم
+
+<MudPaper Elevation="4" Class="pa-4" Style="max-width: 400px; margin: auto;">
+    <MudText Typo="Typo.h6" Align="Align.Center">ورود به سیستم</MudText>
+
+    <MudForm @ref="loginForm" Model="@user" OnValidSubmit="HandleLogin">
+        <MudTextField Label="نام کاربری" @bind-Value="user.Id" Required="true" />
+        <MudTextField Label="رمز عبور" @bind-Value="user.Password" Type="password" Required="true" />
+
+        <MudButton Type="Submit" Color="Color.Primary" FullWidth="true">ورود</MudButton>
+
+        @if (loginError)
+        {
+            <MudText Color="Color.Error" Align="Align.Center">نام کاربری یا رمز عبور اشتباه است!</MudText>
+        }
+    </MudForm>
+</MudPaper>
+
+@code {
+    private User user = new User();
+    private bool loginError = false;
+    private MudForm loginForm;
+    private async Task HandleLogin()
+    {
+        // اعتبارسنجی نام کاربری و رمز عبور با استفاده از سرویس UserService
+        var storedUser = await UserService.ValidateUserAsync(user.Id, user.Password);
+
+        if (storedUser != null)
+        {
+            // اگر نام کاربری و رمز عبور صحیح باشد، ورود موفقیت‌آمیز است.
+            loginError = false;
+
+            // فرض کنید یک توکن JWT دریافت می‌کنید
+            var token = "fake-jwt-token"; // این توکن باید از سرور دریافت شود
+            await _localStorage.SetItemAsync("authToken", token);
+
+            var customProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
+            customProvider.MarkUserAsAuthenticated(token);
+
+            // هدایت به صفحه داشبورد پس از ورود موفق
+            Navigation.NavigateTo("/dashboard");
+        }
+        else
+        {
+            // اگر نام کاربری یا رمز عبور اشتباه باشد، خطا را نمایش می‌دهیم.
+            loginError = true;
+        }
+    }
+}

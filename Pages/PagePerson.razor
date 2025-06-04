@@ -1,0 +1,971 @@
+﻿@page "/pageperson"
+@inject IJSRuntime JS
+@inject DatabaseContext _Db
+@inject IConfiguration Configuration
+@inject ILogger<PagePerson> _logger
+@inject VamBlazor.Client.Application.Services.PersonServices PersonServices
+@inject IMapper Mapper
+
+@inject IDialogService DialogService
+@layout MainLayout
+
+@using AutoMapper
+@using Dapper
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.Data.SqlClient
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Logging
+@using Serilog
+@using Serilog.Core
+@using System.Configuration
+@using VamBlazor.Client.Domain.Entities
+@using VamBlazor.Client.Domain.Enum
+@using MudBlazor
+@using VamBlazor.Client.Application.Dtos
+@using VamBlazor.Client.Application.Mappings
+@using VamBlazor.Client.Application.CommonFunc
+@using VamBlazor.Client.Shared.Dialogs
+@using VamBlazor.Client.Application.Services
+
+@using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database
+
+<MudContainer style="font-family:'VazirUI';">
+
+    <MudPaper>
+        <MudText Typo="Typo.body2" Align="Align.Center" Style="height:25px;background-color:cadetblue" Class="mt-2">فرم ورود اطلاعات سپرده گذاران</MudText>
+        <MudForm @ref="PersonForm" @bind-IsValid="isDataCorrected" Model="CurrentPersonDto" Spacing="16" Class="p-4">
+
+            <MudGrid>
+                <!-- ردیف اول: Code و City , Sex -->
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 100px;">
+                        <MudTextField Label="کد سپرده گذار" Immediate="true" Required @ref="myTextField"
+                                      For="@(() => CurrentPersonDto.Code)"
+                                      @bind-Value="PCodeSearchable"
+                                      MaxLength="5"
+                                      InputType="InputType.Text"
+                                      onkeyup="OnPCodeChanged"
+                                      ErrorText="@GetErrorMessageForField(nameof(CurrentPersonDto.Code))" />
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 200px;">
+                        <MudSelect T="char" @bind-Value="CurrentPersonDto.City" Label="محل سکونت" Variant="Variant.Outlined" SelectedValuesChanged="isDataChanged">
+                            @foreach (CityEnum city in Enum.GetValues(typeof(CityEnum)))
+                            {
+                                <MudSelectItem Value="@(Convert.ToChar(city))">@GetCityName(city)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 100px;">
+                        <MudSelect T="char" @bind-Value="CurrentPersonDto.Sex" Label="جنسیت" Variant="Variant.Outlined" SelectedValuesChanged="isDataChanged">
+                            @foreach (SexEnum sex in Enum.GetValues(typeof(SexEnum)))
+                            {
+                                <MudSelectItem Value="@(Convert.ToChar(sex))">@GetSex(sex)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div>
+                        <MudImage Src="@CurrentPersonPictureAddress" Alt="محل عکس" Elevation="25" Class="rounded-lg" Style="width:150px;height:150px" />
+                    </div>
+                </MudItem>
+                <!-- ردیف دوم: Name و Familyو Father و IssueNo -->
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 200px;">
+                        <MudTextField Label="نام خانوادگی" Required
+                                      For="@(() => CurrentPersonDto.Family)"
+                                      @bind-Value="CurrentPersonDto.Family" @bind-Value:after="isDataChanged"
+                                      ErrorText="@GetErrorMessageForField(nameof(CurrentPersonDto.Family))" />
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 200px;">
+                        <MudTextField Label="نــــام" Required
+                                      For="@(() => CurrentPersonDto.Name)"
+                                      @bind-Value="CurrentPersonDto.Name" @bind-Value:after="isDataChanged"
+                                      ErrorText="@GetErrorMessageForField(nameof(CurrentPersonDto.Name))" />
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 150px;">
+                        <MudTextField Label="نام پدر" @bind-Value="CurrentPersonDto.Father" @bind-Value:after="isDataChanged" />
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 150px;">
+                        <MudTextField Label="شماره شناسنامه" @bind-Value="CurrentPersonDto.IssueNo" @bind-Value:after="isDataChanged" />
+                    </div>
+                </MudItem>
+                <!-- ردیف سوم: MelliCode و TelNoو bankType و HesabBank -->
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 150px;">
+                        <MudTextField Label="کد ملی" @bind-Value="CurrentPersonDto.Mellicode" @bind-Value:after="isDataChanged" InputType=" InputType.Text" />
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 150px;">
+                        <MudTextField Label="شماره تماس" @bind-Value="CurrentPersonDto.Tel" @bind-Value:after="isDataChanged" InputType="InputType.Telephone" />
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 200px;">
+                        <MudSelect T="int?" @bind-Value="CurrentPersonDto.BankType" @bind-Value:after="isDataChanged" Label="نام بانک">
+                            @foreach (Bank bankitem in Banks)
+                            {
+                                <MudSelectItem T="int?" Value="@bankitem.Id">@bankitem.BankName</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 150px;">
+                        <MudTextField Label="شماره حساب" @bind-Value="CurrentPersonDto.HesabBank" @bind-Value:after="isDataChanged" InputType="InputType.Text" />
+                    </div>
+                </MudItem>
+                <!-- ردیف چهارم: MelliCode و TelNoو bankType و HesabBank -->
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 150px;">
+                        <MudTextField Label="شماره کارت" @bind-Value="CurrentPersonDto.CardBank" @bind-Value:after="isDataChanged" InputType="InputType.Text" />
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="آدرس" @bind-Value="CurrentPersonDto.Address" @bind-Value:after="isDataChanged" Lines="2" />
+                </MudItem>
+
+            </MudGrid>
+
+
+            <!-- دکمه‌ها -->
+            <div style="display: flex; gap: 10px;">
+                <MudButton style="width:30%" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" Disabled="!isValidFnc" OnClick="SavePerson">ذخیره</MudButton>
+                <MudButton style="width:30%" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" IconColor="Color.Tertiary" OnClick="CancelEdit">لغو</MudButton>
+                <MudButton style="width:30%" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.SpeakerNotes" IconColor="Color.Warning" OnClick="TogglePersonList">
+                    @(ShowPersonList ? "مخفی کردن لیست سپرده گذاران" : "نمایش لیست سپرده گذاران")
+                </MudButton>
+            </div>
+        </MudForm>
+
+
+    </MudPaper>
+
+    <MudSpacer />
+    @if (ShowPersonList)
+    {
+        <!--
+        <MudTable Items="@pagedData" Filter="FilterFunc" SortLabel="Sort by" Hover="true" Bordered="true" Dense="true" Pagination="true" RowsPerPage="5" @bind-Page="currentPage">
+        <MudTable Items="@peoples" Hover="true" SortLabel="Sort By" Filter="searchText" PageSize="10" @bind-SelectedItem="selectedPerson">
+        <MudTable Items="@filtere" Hover="true" SortLabel="Sort By" PageSize="10" @bind-SelectedItem="selectedPerson">
+        -->
+
+        <MudTable T="Person" Items="@Persons" Filter="new Func<Person,bool>(FilterFunction)" Pageable="true" Hover="true" Bordered="true" Striped="true" Dense="true">
+            <ToolBarContent>
+                <MudTextField @bind-Value="searchString1" Placeholder="جستجوی سپرده گذار" Immediate="true" OnKeyUp="OnSearchTextChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Person, object>(x=>x.Code)"></MudTableSortLabel>کـــد</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Person, object>(x=>x.FullName)"></MudTableSortLabel> نام و نام خانوادگی</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Person, object>(x=>x.V_CityDesc)"></MudTableSortLabel> محل سکونت</MudTh>
+                <MudTh>عملیات</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Code</MudTd>
+                <MudTd>@context.FullName</MudTd>
+                <MudTd>@context.V_CityDesc</MudTd>
+
+                <MudTd>
+                    <MudFab title="اصلاح" Size="Size.Medium" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Edit" IconSize="Size.Medium" Class="ma-2" OnClick="() => EditPerson(context)" />
+                    <MudFab title="حـذف" Size="Size.Medium" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Delete" IconSize="Size.Medium" Class="ma-2" OnClick="() => OpenDeleteDialog(context)" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, int.MaxValue }"
+                               RowsPerPageString="@rowsPerPageString"
+                               InfoFormat="@infoFormat"
+                               AllItemsText="@allItemsText"
+                               HorizontalAlignment="@horizontalAlignment" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    //  private string Data { get; set; }
+    //  private string ErrorMessage { get; set; }
+    private MudTextField<string?> myTextField;
+    private bool ShowPersonList { get; set; } = false;
+    private List<Person> Persons = new List<Person>();
+    private PersonDto CurrentPersonDto = new PersonDto();
+    private Person OriginalPerson = new Person();//  ذخیره مقادیر حالت اصلاح پرسنل
+
+    private List<Bank> Banks = new List<Bank>();
+    private long CurrentPersonId;
+    private string CurrentPersonPictureAddress = string.Empty;
+    private bool IsEditing = false;
+    private bool isDataCorrected = false;
+    private bool isNeedUpdate = false;
+    //  private bool isDataCorrected { get; set; } = false;
+    private MudForm? PersonForm;
+
+    private string? searchString1 = string.Empty;
+    private string? PCodeSearchable = string.Empty;
+
+    //   private HashSet<Person> selectedItems = new HashSet<Person>();
+
+    //Pagination Variables
+    private HorizontalAlignment horizontalAlignment = HorizontalAlignment.Right;
+
+    private string rowsPerPageString = "Rows per page:";
+    private string infoFormat = "{first_item}-{last_item} of {all_items}";
+    private string allItemsText = "All";
+
+    // loading Variable
+    //   private bool isLoading = false;
+    private int pageSize = 10;
+    private int currentPage = 0;
+
+    //Order Variable
+    private Func<Person, object> currentSortBy = p => p.Code; // فیلد پیش‌فرض برای مرتب‌سازی
+    private SortDirection currentSortDirection = SortDirection.Ascending;
+    private string? viewName = "";
+    private string? createIndexQuery = "";
+    private string? rebuildIndexQuery = "";
+    protected override async Task OnInitializedAsync()
+
+    {
+        try
+        {
+            AdjustDB();
+
+            //  DatabaseContext Db = new DatabaseContext();
+            pageSize = _Db.Persons.Count();
+            Persons = _Db.Persons.Skip(currentPage * pageSize)
+                                .Take(pageSize).OrderBy(x => x.Code)
+                                .ToList();
+
+            Banks = _Db.Banks.ToList();
+
+            Mapper.Map(new Person(), CurrentPersonDto);
+
+        }
+        catch (SqlException ex)
+        {
+            Console.WriteLine("SQL Error: " + ex.Message);
+            Console.WriteLine("Error Code: " + ex.Number);
+            _logger.LogError(ex, $"خطای sql: {ex.Message}");
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "خطای غیرمنتظره در کامپوننت MyComponent.");
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"خطای عمومی: {ex.Message}");
+        }
+
+
+    }
+    private void OnFieldChanged()
+    {
+        // هندل کردن تغییر فیلد
+        isNeedUpdate = true;
+        if (string.IsNullOrEmpty(PCodeSearchable))
+        {
+            _snackBar.Add($" کد 5 رقمی سپرده گذار را وارد کنید ", Severity.Warning);
+        }
+
+    }
+    // private bool FilterFunction(Person _person) => FilterFunc(_person, searchString1);
+    private bool FilterFunction(Person _person)
+    {
+        // بررسی null بودن searchString1
+        if (string.IsNullOrEmpty(searchString1))
+        {
+            // اگر searchString1 null یا خالی بود، می‌توانید نتیجه دلخواه را برگردانید یا بررسی کنید.
+            return true; // یا هر عمل دیگری که مناسب است
+        }
+
+        return FilterFunc(_person, searchString1);
+    }
+
+    private bool FilterFunc(Person _person, string searchString)
+    {
+        if (_person is null) return false;
+        if (_person != null)
+        {
+            if (_person.FullName != null && TextHelper.NormalContain(_person.FullName, searchString))
+                return true;
+            if ($"{_person.Code} {_person.Mellicode} {_person.IssueNo}".Contains(searchString))
+                return true;
+        }
+        return false;
+    }
+    private void SavePerson()
+    {
+        try
+        {
+            if (IsEditing)
+            {
+                var person = _Db.Persons.FirstOrDefault(p => p.IdDi == CurrentPersonId);
+                if (person != null)
+                {
+                    _Db.Entry(person).Property(p => p.IdDi).IsModified = false;
+                    _Db.Entry(person).Property(p => p.Code).IsModified = false;
+                    Mapper.Map(CurrentPersonDto, person); // Mapping DTO to Entity
+                    _snackBar.Add($" مشخصات {CurrentPersonDto.Name} {CurrentPersonDto.Family} اصلاح شد", Severity.Success);
+                    // person.Name = CurrentPersonDto.Name;
+                    // person.Family = CurrentPersonDto.Family;
+                    // person.Code = CurrentPersonDto.Code;
+                }
+            }
+            else
+            {
+                CurrentPersonDto.Code = PCodeSearchable;
+                var newPerson = Mapper.Map<Person>(CurrentPersonDto); // Mapping DTO to Entity
+                CurrentPersonId = 0;
+                _Db.Persons.Add(newPerson);
+                Persons.Add(newPerson);
+                _snackBar.Add($"سپرده گذار {CurrentPersonDto.Name} {CurrentPersonDto.Family} ثبت شد", Severity.Success);
+            }
+            //Persons.Count();
+            _Db.SaveChanges();
+            _logger.LogInformation($"سپرده گذار {CurrentPersonDto.Name} {CurrentPersonDto.Family} ثبت شد");
+            isNeedUpdate = false;
+            //  CancelEdit();
+        }
+        catch (DbUpdateException ex)
+        {
+            // اینجا خطاهایی که مربوط به مشکلات ذخیره‌سازی در پایگاه داده هستند مدیریت می‌شود
+            // مثلاً خطاهای مربوط به نقض محدودیت‌های پایگاه داده مانند unique constraint
+
+            // به کاربر پیام خطای مناسب نمایش داده می‌شود
+
+            _logger.LogError(ex, "خطایی در ذخیره‌سازی داده‌ها به پایگاه داده رخ داد.");
+        }
+    }
+
+
+    private void EditPerson(Person person)
+    {
+        CurrentPersonDto = Mapper.Map<PersonDto>(person);
+        OriginalPerson = _Db.Persons.FirstOrDefault(p => p.Code == person.Code) ?? new Person();// یک کپی برای کنترل تغییرات
+                                                                                                //  OriginalPerson = _Db.Qvams.FirstOrDefault(p => p.ReqNo == personqvamdto.ReqNo) ?? new Qvam();// یک کپی برای کنترل تغییرات
+
+        CurrentPersonId = person.IdDi;
+        PCodeSearchable = CurrentPersonDto.Code;
+        CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(person.Code);
+        myTextField.FocusAsync();
+        IsEditing = true;
+        isNeedUpdate = false;
+        isDataCorrected = true;
+        //  PersonForm.ResetAsync();
+    }
+
+    private async Task OpenDeleteDialog(Person context)
+    {
+        var deleteContext = context.Name + " " + context.Family;
+        deleteContext = " برای حذف " + deleteContext + " مطمئن هستید؟ ";
+        // اینجا باید یک دیالوگ برای تایید حذف باز کنیم
+        var parameters = new DialogParameters
+            {
+                {nameof(Shared.Dialogs.DeleteConfirmationDialog.ContextText), deleteContext}
+            };
+
+        var dialog = DialogService.Show<DeleteConfirmationDialog>("حذف سپرده گذار", parameters);
+        var result = await dialog.Result;
+        if (!result?.Canceled == false)
+        {
+            // اگر کاربر گزینه Yes را انتخاب کرده باشد، عملیات حذف انجام می‌شود
+            CurrentPersonId = context.IdDi;
+            var personToRemove = Persons.FirstOrDefault(p => p.IdDi == CurrentPersonId);
+            bool lHaveHesab = _Db.Hesabs.Any(hesab => hesab.Pcode == context.Code);
+            bool lHaveQvam = _Db.Qvams.Any(qvam => qvam.Pcode == context.Code);
+            bool lHavePardar = _Db.Pardars.Any(pardar => pardar.Pcode == context.Code);
+            if (personToRemove != null)
+            {
+                if (lHaveHesab || lHaveQvam || lHavePardar)  // در سایر جداول رکورد دارد
+                    _snackBar.Add($"مجاز به حذف {personToRemove.Name} {personToRemove.Family} نیستید ", Severity.Error);
+                else
+                {
+                    Persons.Remove(personToRemove);
+                    _Db.Remove(personToRemove);
+                    _Db.SaveChanges();
+                    _snackBar.Add($" {personToRemove.Name} {personToRemove.Family} حذف شد ", Severity.Warning);
+                }
+            }
+            else
+            {
+                // شخصی با این ID در لیست پیدا نشد
+                // می‌توانید اینجا لاگ یا پیام خاصی اضافه کنید
+            }
+
+        }
+    }
+
+    private async Task CancelEdit()
+    {
+        if (isNeedUpdate)
+        {
+            var dialogContext = "";
+            dialogContext = "اطلاعات تغییرکرده !!! برای لغو مطمئن هستید ؟";
+            // اینجا باید یک دیالوگ برای تایید حذف باز کنیم
+            var parameters = new DialogParameters
+            {
+                {nameof(Shared.Dialogs.DeleteConfirmationDialog.ContextText), dialogContext}
+            };
+
+            var dialog = DialogService.Show<DeleteConfirmationDialog>("اخطار تغییر", parameters);
+            var result = await dialog.Result;
+            if (result?.Canceled == true)
+            {
+                return;
+            }
+        }
+        CurrentPersonDto = new PersonDto();
+        CurrentPersonId = 0;
+        CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress("000");
+        IsEditing = false;
+        isNeedUpdate = false;
+        isDataCorrected = false;
+        ShowClearPersonInfo();
+        //   PersonForm?.ResetAsync();
+    }
+
+    // متدی برای دریافت پیغام خطا از داده‌های وارد شده
+    private string GetErrorMessageForField(string fieldName)
+    {
+        var context = new ValidationContext(CurrentPersonDto);
+        var validationResults = new List<ValidationResult>();
+
+        // اعتبارسنجی فیلد خاص
+        Validator.TryValidateProperty(
+            typeof(PersonDto).GetProperty(fieldName).GetValue(CurrentPersonDto),
+            new ValidationContext(CurrentPersonDto) { MemberName = fieldName },
+            validationResults
+        );
+
+        // اگر خطا وجود دارد، پیغام خطا را برمی‌گرداند
+        return validationResults.Any() ? validationResults.First().ErrorMessage : string.Empty;
+    }
+
+
+    private string GetCityName(CityEnum city)  // Enum
+    {
+        return city switch
+        {
+            CityEnum.Shahroud => "شاهرود",
+            CityEnum.Gorgan => "گرگان",
+            CityEnum.Tehran => "تهران",
+            CityEnum.Other => "سایر",
+            _ => "نامشخص"
+        };
+    }
+
+    private string GetSex(SexEnum sex)
+    {
+        return sex switch
+        {
+            SexEnum.Male => "مرد",
+            SexEnum.Female => "زن",
+            _ => "نامشخص"
+        };
+    }
+    private void TogglePersonList()
+    {
+        ShowPersonList = !ShowPersonList;
+    }
+    private void SortTableByName()
+    {
+        currentSortBy = p => p.Name ?? "";
+        ToggleSortDirection();
+    }
+    private void ToggleSortDirection()
+    {
+        if (currentSortDirection == SortDirection.Ascending)
+        {
+            currentSortDirection = SortDirection.Descending;
+        }
+        else
+        {
+            currentSortDirection = SortDirection.Ascending;
+        }
+
+    }
+
+    private async Task AdjustDB()
+    {    /// View vwPersonFullData
+         ///
+        var ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwPersonFullData'";
+        var createViewQuery = @" Create View vwPersonFullData As
+                                 SELECT  dbo.PERSON.Code,
+                                 LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END AS FullName,
+                                 dbo.PERSON.Sex,CASE WHEN sex = '1' THEN 'مرد ' ELSE 'زن' END AS SexDesc,
+                                 dbo.PERSON.City,CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END AS CityDesc,
+                                 dbo.PERSON.Status, CASE PERSON.status WHEN '1' THEN 'فعال ' WHEN '2' THEN 'غیرفعال' END AS StatusDesc,
+                                 dbo.HESAB.Pcode,dbo.HESAB.hesab_no As HesabNo, dbo.HESAB.FirstQty, dbo.HESAB.date As HDate,dbo.HESAB.CurQty, dbo.HESAB.MonthQty,
+                                 dbo.HESAB.firstqty + dbo.HESAB.curqty AS Mojodi,dbo.HESAB.id___di AS Moaref,dbo.QVAM.REQ_NO AS QReqNo,
+                                 dbo.QVAM.STATUS AS QStatus,dbo.QVAM.Mblg, dbo.QVAM.DATE AS QDate, dbo.QVAM.SABTDATE AS QSabtDate,
+                                 dbo.QVAM.TYPE AS QType,CASE WHEN QVAM.TYPE = '1' THEN 'عـادی' ELSE 'ضروری' END AS QTypeDesc,
+                                 dbo.PVAM.req_no AS PReqNo, dbo.PVAM.MblgVam, dbo.PVAM.Gst1, dbo.PVAM.Gst2, dbo.PVAM.gst_no As PGstNo,
+                                 dbo.PVAM.date_d as DateD, dbo.PVAM.date_g AS PDateG, dbo.PVAM.gst_pay As PGstPay, dbo.PVAM.status AS PStatus,
+                                 dbo.PVAM.sabtdate AS PSabtDate, dbo.PVAM.PKarmozd, dbo.PVAM.MKarmozd, dbo.PVAM.type AS PType, dbo.PVAM.MblgMain,
+                                 dbo.DARGST.req_no As DReqNo, dbo.DARGST.gst_no AS DGstNo,dbo.DARGST.date_g AS DDateG,dbo.DARGST.date_p As DDateP,
+                                 dbo.DARGST.status AS DStatus, dbo.DARGST.Pasandaz, dbo.DARGST.GstMblg
+                                 FROM  dbo.PVAM
+                                      INNER JOIN dbo.QVAM ON dbo.PVAM.req_no = dbo.QVAM.REQ_NO
+                                      INNER JOIN dbo.DARGST ON dbo.PVAM.req_no = dbo.DARGST.req_no
+                                      RIGHT OUTER JOIN dbo.PERSON ON dbo.QVAM.PCODE = dbo.PERSON.code
+                                      LEFT OUTER JOIN dbo.HESAB ON dbo.PERSON.code = dbo.HESAB.pcode
+                                 WHERE(NOT(dbo.HESAB.hesab_no IS NULL))";
+
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createViewQuery);
+        }
+        /// View [vwPersonLastGst]
+        ///
+        ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwPersonLastGst'";
+        createViewQuery = @" Create View vwPersonLastGst As
+                                 SELECT dbo.PERSON.Code, LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END AS FullName, dbo.PERSON.Sex As Sex,
+                                        dbo.PERSON.City, CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END AS CityDesc,dbo.HESAB.hesab_no As HesabNo,dbo.HESAB.date As StartDate, CASE WHEN Hesab.id___di = 0 THEN Hesab.Hesab_No ELSE Hesab.id___di END AS Moaref, dbo.HESAB.MonthQty, dbo.HESAB.FirstQty + dbo.HESAB.CurQty AS Mojodi, dbo.QVAM.REQ_NO As ReqNo, dbo.PVAM.Type, dbo.PVAM.date_d As DateD, dbo.PVAM.MblgVam, dbo.PVAM.PKarmozd,
+                                        dbo.PVAM.MKarmozd, dbo.PVAM.gst_no As GstNo, dbo.PVAM.gst_pay As GstPay, dbo.PVAM.LastDate, SUM(dbo.DARGST.gstmblg) AS PaidVam,
+                                          (SELECT        MIN(gst_no) AS Expr1
+                                           FROM            dbo.DARGST AS DG1
+                                           WHERE        (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)) AS CurrentGstNo,
+                                          (SELECT        MIN(date_g) AS Expr1
+                                           FROM            dbo.DARGST AS DG2
+                                           WHERE        (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)) AS CurrentGstDate,
+                                          (SELECT        MIN(date_p) AS Expr1
+                                           FROM            dbo.DARGST AS DG2
+                                           WHERE        (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)) AS CurrentPaidDate, CASE WHEN
+                                          (SELECT        MIN(gst_no) AS Expr1
+                                           FROM            DARGST AS DG1
+                                           WHERE        (req_no = PVAM.req_no) AND (gstmblg = 0)) = Pvam.Gst_no THEN Gst2 ELSE Gst1 END AS CurrentGstMblg,
+                                        isnull(dbo.PERSON.MelliCode, '') As MelliCode
+                                 FROM dbo.PERSON INNER JOIN
+                                      dbo.HESAB ON dbo.PERSON.code = dbo.HESAB.pcode INNER JOIN
+                                      dbo.QVAM ON dbo.HESAB.pcode = dbo.QVAM.PCODE INNER JOIN
+                                      dbo.PVAM ON dbo.PVAM.req_no = dbo.QVAM.REQ_NO INNER JOIN
+                                      dbo.DARGST ON dbo.PVAM.req_no = dbo.DARGST.req_no
+                                 GROUP BY dbo.PERSON.code, dbo.PERSON.family, dbo.PERSON.name, dbo.PERSON.father, dbo.HESAB.hesab_no, dbo.HESAB.firstqty, dbo.HESAB.curqty, dbo.HESAB.monthqty, dbo.PVAM.scode, dbo.PVAM.mblgvam, dbo.PVAM.gst_no,
+                                      dbo.PVAM.date_g, dbo.PVAM.gst_pay, dbo.PVAM.pkarmozd, dbo.PVAM.mkarmozd, dbo.PVAM.lastdate, dbo.PVAM.type, dbo.PVAM.mblgmain, dbo.PVAM.gst1, dbo.PVAM.gst2, dbo.PERSON.sex, dbo.PERSON.city,dbo.PVAM.req_no, 
+                                      dbo.QVAM.REQ_NO, dbo.PVAM.date_d, dbo.HESAB.id___di,CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END, dbo.HESAB.date, isnull(dbo.PERSON.MelliCode, '')
+                                 HAVING        (dbo.PVAM.mblgvam > SUM(dbo.DARGST.gstmblg))";
+
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createViewQuery);
+        }
+
+        ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwReportBase'";
+        createViewQuery = @"Create View vwReportBase As
+                               SELECT PERSON.code, RTRIM(PERSON.family) + ' ' + RTRIM(PERSON.name) + '(' + RTRIM(PERSON.father) + ')' AS FullName, PERSON.sex, PERSON.issue_no, PERSON.tel, PERSON.address, PERSON.city,
+                                      ISNULL(PERSON.mellicode, ' ') AS MelliCode, PERSON.id___di, PERSON.Status, ISNULL(PERSON.CardBank, ' ') AS CardBank, ISNULL(PERSON.BankType, ' ') AS BankType, ISNULL(PERSON.HesabBank, ' ') AS HesabBank,
+                                      HESAB.hesab_no, HESAB.date AS StartDate, HESAB.firstqty + HESAB.curqty AS Mojodi, ISNULL(QVAM.REQ_NO, 0) AS ReqNoQ, ISNULL(QVAM.TYPE, ' ') AS TypeQ, ISNULL(QVAM.DATE, ' ') AS DateQ, isnull(Qvam.Mblg, 0) As MblgQ, ISNULL(PVAM.req_no, 0) AS ReqNoP, ISNULL(PVAM.date_d, ' ')
+                                      AS DateP, ISNULL(PVAM.gst_no, 0) AS GstNo, ISNULL(PVAM.gst_pay, 0) AS GstPay, ISNULL(PVAM.mblgvam, 0) AS MblgVam, ISNULL(SUM(DARGST.gstmblg), 0) AS PaidVam,
+                                      isnull((SELECT        MIN(gst_no) AS Expr1
+                                              FROM            dbo.DARGST AS DG1
+                                              WHERE(req_no = dbo.PVAM.req_no) AND(gstmblg = 0)),0) AS CurrentGstNo,
+                                      isnull((SELECT        MIN(date_g) AS Expr1
+                                              FROM            dbo.DARGST AS DG2
+                                              WHERE(req_no = dbo.PVAM.req_no) AND(gstmblg = 0)),' ') AS CurrentGstDate, isnull(CASE WHEN
+                                      (SELECT        MIN(gst_no) AS Expr1
+                                        FROM            DARGST AS DG1
+                                        WHERE(req_no = PVAM.req_no) AND(gstmblg = 0)) = Pvam.Gst_no THEN Gst2 ELSE Gst1 END, 0)  AS MonthlyGst
+
+                              FROM DARGST INNER JOIN
+                                   PVAM ON DARGST.req_no = PVAM.req_no RIGHT OUTER JOIN
+                                   QVAM ON PVAM.req_no = QVAM.REQ_NO RIGHT OUTER JOIN
+                                   HESAB ON QVAM.PCODE = HESAB.pcode RIGHT OUTER JOIN
+                                   PERSON ON HESAB.pcode = PERSON.code
+                              GROUP BY PERSON.code, RTRIM(PERSON.family) + ' ' + RTRIM(PERSON.name) + '(' + RTRIM(PERSON.father) + ')', PERSON.sex, PERSON.issue_no, PERSON.tel, PERSON.address, PERSON.city, PERSON.mellicode, PERSON.id___di,
+                                       PERSON.Status, PERSON.CardBank, PERSON.BankType, PERSON.HesabBank, HESAB.hesab_no, HESAB.date, QVAM.REQ_NO, QVAM.TYPE, QVAM.DATE,Qvam.Mblg, PVAM.req_no, PVAM.date_d, PVAM.gst_no, PVAM.gst_pay,
+                                       PVAM.mblgvam, HESAB.firstqty, HESAB.curqty, dbo.PVAM.gst1, dbo.PVAM.gst2";
+
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createViewQuery);
+        }
+
+        ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwPersonAllTransactions'";
+        createViewQuery = @"Create View vwPersonAllTransactions As
+                            SELECT  PARDAR.pcode, HESAB.hesab_no, PARDAR.date, cast(0 as bigint) AS Vam, cast(0 as bigint) AS GstPaid,
+                                    cast(CASE WHEN action = '2' AND req_no <> ' ' THEN 0 WHEN action = '2' THEN - mblg ELSE mblg END as bigint) AS Pasandaz,
+                                    cast(CASE WHEN action = '2' AND req_no <> ' ' THEN mblg ELSE 0 END as bigint) AS Karmozd, 
+                                    CASE WHEN action = '2' AND req_no <> ' ' THEN 'وام/کارمزد' WHEN action = '2' THEN babat WHEN action = '3' THEN 'افتتاح حساب' WHEN PARDAR.Pcode <> '00000' THEN 'واریز' ELSE babat END AS sharh, 
+                                    PARDAR.req_no, ' ' AS Date_d
+                            FROM PARDAR INNER JOIN
+                                 HESAB ON PARDAR.pcode = HESAB.pcode
+                            UNION ALL
+                            SELECT QVAM.PCODE, HESAB.hesab_no, PVAM.date_d, PVAM.mblgvam, 0 AS GstPaid, 0 AS Pasandaz, 0 AS karmozd, 'وام/کارمزد' AS sharh, PVAM.req_no, PVam.Date_d
+                            FROM PVAM INNER JOIN
+                                 QVAM ON PVAM.req_no = QVAM.REQ_NO INNER JOIN
+                                 HESAB ON QVAM.PCODE = HESAB.pcode
+                            UNION ALL
+                            SELECT QVAM_1.PCODE, HESAB.hesab_no, DARGST.date_p, 0 AS vam, DARGST.gstmblg AS GstPaid, 0 AS pasandaz, 0 AS karmozd, 'واریز' AS sharh,
+                                   DARGST.req_no, ' ' As Date_d
+                            FROM DARGST INNER JOIN
+                                 QVAM AS QVAM_1 ON DARGST.req_no = QVAM_1.REQ_NO INNER JOIN
+                                 HESAB ON QVAM_1.PCODE = HESAB.pcode
+                            WHERE (DARGST.gstmblg <> 0)";
+  
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createViewQuery);
+        }
+
+        ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwPersonMojodoMandehVam'";
+        createViewQuery = @"Create View vwPersonMojodoMandehVam As
+                            SELECT  TOP (100) PERCENT dbo.vwPersonAllTransactions.pcode, PARDAR_1.date AS startDate, SUM(dbo.vwPersonAllTransactions.Vam - dbo.vwPersonAllTransactions.GstPaid) AS MandehVam,
+                                    SUM(dbo.vwPersonAllTransactions.Pasandaz - dbo.vwPersonAllTransactions.Karmozd) AS Pasandaz, ISNULL
+                                    ((SELECT  MAX(dbo.PVAM.req_no) AS ReqNo
+                                      FROM  dbo.QVAM INNER JOIN
+                                            dbo.PVAM ON dbo.QVAM.REQ_NO = dbo.PVAM.req_no
+                                      WHERE (dbo.QVAM.PCODE = dbo.vwPersonAllTransactions.pcode)), 0) AS LastVamNo, ISNULL
+                                    ((SELECT MAX(PVAM_1.date_d) AS LastVamDate
+                                      FROM dbo.QVAM AS QVAM_1 INNER JOIN
+                                           dbo.PVAM AS PVAM_1 ON QVAM_1.REQ_NO = PVAM_1.req_no
+                                      WHERE (QVAM_1.PCODE = dbo.vwPersonAllTransactions.pcode)), ' ') AS LastVamDate, ISNULL
+                                    ((SELECT TOP (1) PVAM_2.mblgvam AS LastVamMblg
+                                      FROM dbo.QVAM AS QVAM_2 INNER JOIN
+                                           dbo.PVAM AS PVAM_2 ON QVAM_2.REQ_NO = PVAM_2.req_no
+                                      WHERE (QVAM_2.PCODE = dbo.vwPersonAllTransactions.pcode) AND (PVAM_2.req_no =
+                                    (SELECT MAX(REQ_NO) AS Expr1
+                                     FROM dbo.QVAM AS QVAM_1
+                                     WHERE (PCODE = dbo.vwPersonAllTransactions.pcode) AND (STATUS = '1')))), 0) AS LastVamMblg
+                            FROM  dbo.vwPersonAllTransactions INNER JOIN
+                                  dbo.PARDAR AS PARDAR_1 ON dbo.vwPersonAllTransactions.pcode = PARDAR_1.pcode
+                            WHERE (PARDAR_1.action = '3')
+                            GROUP BY dbo.vwPersonAllTransactions.pcode, PARDAR_1.date
+                            HAVING (SUM(dbo.vwPersonAllTransactions.Vam - dbo.vwPersonAllTransactions.GstPaid) <> 0) AND 
+                                   (SUM(dbo.vwPersonAllTransactions.Pasandaz - dbo.vwPersonAllTransactions.Karmozd) <> 0)";
+
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createViewQuery);
+        }
+
+        ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwReportPersonStatus'";
+        createViewQuery = @"CREATE VIEW [dbo].[vwReportPersonStatus] AS
+                            SELECT dbo.vwPersonAllTransactions.pcode, dbo.vwPersonAllTransactions.hesab_no, CASE WHEN father IS NULL OR
+                                   father = ' ' THEN ' ' ELSE CASE WHEN sex = 1 THEN 'جناب آقای ' ELSE 'سرکارخانم ' END END + LTRIM(RTRIM(dbo.PERSON.name)) + ' ' + LTRIM(RTRIM(dbo.PERSON.family)) + 
+                                   CASE WHEN father IS NULL OR father = ' ' THEN ' ' ELSE ' فرزند' + PERSON.father END AS FullName, 
+                                   dbo.vwPersonAllTransactions.date, dbo.vwPersonAllTransactions.sharh, Max(dbo.vwPersonAllTransactions.req_no) As req_no,MAX(dbo.vwPersonAllTransactions.Date_d) AS VamDate,
+                                   SUM(dbo.vwPersonAllTransactions.Vam) AS Vam, SUM(dbo.vwPersonAllTransactions.GstPaid) AS GstPaid, SUM(dbo.vwPersonAllTransactions.Pasandaz) AS Pasandaz, 
+                                   SUM(dbo.vwPersonAllTransactions.Karmozd) AS karmozd,
+                                   SUM(dbo.vwPersonAllTransactions.Vam) - SUM(dbo.vwPersonAllTransactions.GstPaid) AS ColVamGst, SUM(dbo.vwPersonAllTransactions.Pasandaz) - SUM(dbo.vwPersonAllTransactions.Karmozd) AS ColPasandaz
+                            FROM dbo.vwPersonAllTransactions INNER JOIN
+                                 dbo.PERSON ON dbo.vwPersonAllTransactions.pcode = dbo.PERSON.code
+                            GROUP BY dbo.vwPersonAllTransactions.pcode, dbo.vwPersonAllTransactions.hesab_no, CASE WHEN father IS NULL OR
+                                     father = ' ' THEN ' ' ELSE CASE WHEN sex = 1 THEN 'جناب آقای ' ELSE 'سرکارخانم ' END END + LTRIM(RTRIM(dbo.PERSON.name)) + ' ' + LTRIM(RTRIM(dbo.PERSON.family)) + CASE WHEN father IS NULL OR
+                                     father = ' ' THEN ' ' ELSE ' فرزند' + PERSON.father END, dbo.vwPersonAllTransactions.date, dbo.vwPersonAllTransactions.sharh";
+
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createViewQuery);
+        }
+
+        ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwPersonTotalGst'";
+        createViewQuery = @"CREATE VIEW [dbo].[vwPersonTotalGst] AS
+                            SELECT dbo.PERSON.code, LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END AS FullName,
+                                   dbo.HESAB.hesab_no AS HesabNo, CASE WHEN hesab.id___di = 0 THEN Hesab_No ELSE hesab.id___di END AS Moaref, dbo.HESAB.monthqty, dbo.HESAB.firstqty + dbo.HESAB.curqty AS Mojodi,
+                                   dbo.QVAM.REQ_NO AS ReqNo, dbo.PVAM.type, dbo.PVAM.date_d AS DateD, dbo.PVAM.mblgvam, dbo.DARGST.gst_no, dbo.DARGST.date_g, dbo.DARGST.date_p,
+                                   CASE WHEN date_p <> ' ' THEN DARGST.pasandaz ELSE HESAB.monthqty END AS Pasandaz,
+                                   CASE WHEN date_p <> ' ' THEN DARGST.gstmblg WHEN dargst.gst_no < Pvam.Gst_No THEN Pvam.gst1 ELSE gst2 END AS GstMblg
+                            FROM dbo.QVAM INNER JOIN
+                                 dbo.PVAM ON dbo.QVAM.REQ_NO = dbo.PVAM.req_no INNER JOIN
+                                 dbo.HESAB ON dbo.QVAM.PCODE = dbo.HESAB.pcode INNER JOIN
+                                 dbo.DARGST ON dbo.PVAM.req_no = dbo.DARGST.req_no INNER JOIN
+                                 dbo.PERSON ON dbo.QVAM.PCODE = dbo.PERSON.code
+                            WHERE (dbo.PVAM.mblgvam >
+                                  (SELECT SUM(gstmblg) AS GstTotal
+                                   FROM dbo.DARGST AS DARGST_1
+                                   WHERE (req_no = dbo.PVAM.req_no))) OR
+                                                   (dbo.PVAM.lastdate >= (SELECT HDate
+                                                                          FROM dbo.tblDate10
+                                                                          WHERE (GDate = CAST(DATEADD(MONTH, - 1, GETDATE()) AS DATE))))";
+
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createViewQuery);
+        }
+
+        ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwPersonLastVamStatus'";
+        createViewQuery = @"CREATE VIEW [dbo].[vwPersonLastVamStatus] AS
+                            SELECT dbo.QVAM.PCODE, dbo.PVAM.req_no, dbo.PVAM.date_d, dbo.PVAM.mblgvam, dbo.PVAM.gst_no, dbo.PVAM.gst1, dbo.PVAM.gst2, dbo.PVAM.gst_pay, dbo.PVAM.type, 
+                                   dbo.PVAM.pkarmozd, dbo.PVAM.mkarmozd, SUM(DARGST_1.gstmblg) AS PaidVam,
+                                   (SELECT MIN(gst_no) AS Expr1
+                                    FROM   dbo.DARGST AS DG1
+                                    WHERE  (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)) AS CurrentGstNo,
+                                   (SELECT MIN(date_g) AS Expr1
+                                    FROM   dbo.DARGST AS DG2
+                                    WHERE  (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)) AS CurrentGstDate,
+                                   (SELECT MIN(date_p) AS Expr1
+                                    FROM   dbo.DARGST AS DG2
+                                    WHERE  (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)) AS CurrentPaidDate, CASE WHEN
+                                   (SELECT MIN(gst_no) AS Expr1
+                                    FROM   DARGST AS DG1
+                                    WHERE  (req_no = PVAM.req_no) AND (gstmblg = 0)) = Pvam.Gst_no THEN Gst2 ELSE Gst1 END AS CurrentGstMblg,
+                                   (SELECT COUNT(*) AS DelayGst
+                                    FROM   dbo.DARGST INNER JOIN
+                                           dbo.tblDate10 ON dbo.DARGST.date_g = dbo.tblDate10.HDate
+                                    WHERE  (dbo.tblDate10.GDate <= CAST(GETDATE() AS DATE)) AND (dbo.DARGST.req_no = dbo.PVAM.req_no) AND (dbo.DARGST.gstmblg = 0)) AS DelayGst
+                            FROM dbo.QVAM INNER JOIN
+                                 dbo.PVAM ON dbo.QVAM.REQ_NO = dbo.PVAM.req_no INNER JOIN
+                                 dbo.DARGST AS DARGST_1 ON dbo.PVAM.req_no = DARGST_1.req_no
+                            GROUP BY dbo.QVAM.PCODE, dbo.PVAM.req_no, dbo.PVAM.date_d, dbo.PVAM.mblgvam, dbo.PVAM.gst_no, dbo.PVAM.gst1, dbo.PVAM.gst2, dbo.PVAM.gst_pay, dbo.PVAM.type, dbo.PVAM.pkarmozd, dbo.PVAM.mkarmozd
+                            HAVING        (dbo.PVAM.mblgvam > SUM(DARGST_1.gstmblg))";
+
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createViewQuery);
+        }
+
+        ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwPersonStatusCurrent'";
+        createViewQuery = @"CREATE VIEW [dbo].[vwPersonStatusCurrent] AS
+                            SELECT dbo.PERSON.code, LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END AS FullName, dbo.PERSON.sex,
+                                   CASE WHEN sex = '1' THEN 'مرد ' ELSE 'زن' END AS SexDesc, dbo.PERSON.city, CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END AS CityDesc, dbo.HESAB.hesab_no,
+                                   CASE WHEN hesab.id___di = 0 THEN Hesab_No ELSE hesab.id___di END AS Moaref, dbo.HESAB.firstqty + dbo.HESAB.curqty AS Mojodi, dbo.HESAB.monthqty, ISNULL(dbo.vwPersonLastVamStatus.req_no, 0) AS ReqNo,
+                                   ISNULL(dbo.vwPersonLastVamStatus.date_d, ' ') AS DateVam, ISNULL(dbo.vwPersonLastVamStatus.mblgvam, 0) AS MblgVam, ISNULL(dbo.vwPersonLastVamStatus.gst_no, 0) AS GstNo,
+                                   ISNULL(dbo.vwPersonLastVamStatus.gst1, 0) AS Gst1, ISNULL(dbo.vwPersonLastVamStatus.gst2, 0) AS Gst2, ISNULL(dbo.vwPersonLastVamStatus.gst_pay, 0) AS GstPay, 
+                                   ISNULL(dbo.vwPersonLastVamStatus.type, 0) AS Type, ISNULL(dbo.vwPersonLastVamStatus.pkarmozd, 0) AS PKarmozd, ISNULL(dbo.vwPersonLastVamStatus.mkarmozd, 0) AS MKarmozd,
+                                   ISNULL(dbo.vwPersonLastVamStatus.PaidVam, 0) AS PaidVam, ISNULL(dbo.vwPersonLastVamStatus.CurrentGstNo, 0) AS CurrentGstNo, ISNULL(dbo.vwPersonLastVamStatus.CurrentGstMblg, 0) AS CurrentGstMblg, 
+                                   ISNULL(dbo.vwPersonLastVamStatus.CurrentGstDate, ' ') AS CurrentGstDate, ISNULL(dbo.vwPersonLastVamStatus.DelayGst, 0) AS DelayGst,
+                                   ISNULL(dbo.vwPersonLastVamStatus.mblgvam, 0) - ISNULL(dbo.vwPersonLastVamStatus.PaidVam, 0) AS RemainVam
+                            FROM  dbo.PERSON INNER JOIN
+                                  dbo.HESAB ON dbo.PERSON.code = dbo.HESAB.pcode LEFT OUTER JOIN
+                                  dbo.vwPersonLastVamStatus ON dbo.HESAB.pcode = dbo.vwPersonLastVamStatus.PCODE 
+                            WHERE (dbo.HESAB.firstqty + dbo.HESAB.curqty > 0)";
+
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {
+            await connection.OpenAsync();
+            var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createViewQuery);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ///
+        ///     بازسازی ایندکس ها
+        ///
+        using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
+        {   // HESAB
+            ExistCommand = "Select count(*) as RecNo From sys.indexes where name = 'IX_Hesab_Pcode'";
+            createIndexQuery = "CREATE UNIQUE INDEX IX_Hesab_Pcode ON Hesab (PCode);";
+            rebuildIndexQuery = "ALTER INDEX IX_Hesab_Pcode ON Hesab REBUILD;";
+            await connection.OpenAsync();
+            var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createIndexQuery);
+            else await connection.ExecuteAsync(rebuildIndexQuery);
+            // PERSON
+            ExistCommand = "Select count(*) as RecNo From sys.indexes where name = 'IX_Person_Family'";
+            createIndexQuery = "CREATE INDEX IX_Person_Family ON Person (Family);";
+            rebuildIndexQuery = "ALTER INDEX IX_Person_Family ON Person REBUILD;";
+            //   await connection.OpenAsync();
+            result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createIndexQuery);
+            else await connection.ExecuteAsync(rebuildIndexQuery);
+            // QVAM  QVAM  QVAM  QVAM  QVAM  QVAM  QVAM
+            ExistCommand = "Select count(*) as RecNo From sys.indexes where name = 'IX_Qvam_Pcode'";
+            createIndexQuery = "CREATE INDEX IX_Qvam_Pcode ON Qvam (Pcode);";
+            rebuildIndexQuery = "ALTER INDEX IX_Qvam_Pcode ON Qvam REBUILD;";
+            //    await connection.OpenAsync();
+            result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createIndexQuery);
+            else await connection.ExecuteAsync(rebuildIndexQuery);
+            // Pardar  Pardar   Pardar  Pardar  Pardar  Pardar  Pardar
+            ExistCommand = "Select count(*) as RecNo From sys.indexes where name = 'IX_Pardar'";
+            createIndexQuery = "CREATE CLUSTER INDEX IX_PARDAR ON Pardar (Date,Pcode, Action);";
+            rebuildIndexQuery = "ALTER INDEX IX_Pardar ON Pardar REBUILD;";
+            //    await connection.OpenAsync();
+            result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createIndexQuery);
+            else await connection.ExecuteAsync(rebuildIndexQuery);
+
+            ExistCommand = "Select count(*) as RecNo From sys.indexes where name = 'IX_Pardar_Code'";
+            createIndexQuery = "CREATE INDEX IX_PARDAR_Code ON Pardar (Pcode);";
+            rebuildIndexQuery = "ALTER INDEX IX_Pardar_Code ON Pardar REBUILD;";
+            //    await connection.OpenAsync();
+            result = await connection.ExecuteScalarAsync<int>(ExistCommand);
+            if (result <= 0) await connection.ExecuteAsync(createIndexQuery);
+            else await connection.ExecuteAsync(rebuildIndexQuery);
+
+        }
+    }
+    /*
+    private void OnBlurFnc()
+    {
+    CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable);
+    if (_Db.Persons.Any(p => p.Code == PCodeSearchable))   // کد سپرده گذار ثبت شده در صفحه وب اگر موجود بود پرشود
+    {
+    var personToEdit = Persons.FirstOrDefault(p => p.Code == PCodeSearchable);
+    CurrentPersonDto = Mapper.Map<PersonDto>(personToEdit);
+    CurrentPersonId = personToEdit.IdDi;
+
+    }
+    }
+    */
+    //
+    //   کنترل فیلد کدسپرده گذار که بعد ار تایپ 5 حرف ازفیلد خارج شود
+    //
+    /*
+    private async Task OnInputChange()
+    {
+    //await Task.Delay(0);
+
+    // وقتی ورودی به 5 کاراکتر رسید
+    if (CurrentPersonDto.Code?.Length >= 4)
+        {
+        // فیلد به طور خودکار از حالت فوکوس خارج می‌شود
+        await JS.InvokeVoidAsync("blurElement", "InputData");
+    }
+    }
+    */
+    private void OnPCodeChanged()
+    {
+        if (PCodeSearchable?.Length == 5)
+        {
+            if (PCodeSearchable.All(char.IsDigit))    /// کنترل عددی بودن کد
+            {
+
+                CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable);
+                if (_Db.Persons.Any(p => p.Code == PCodeSearchable))   // کد سپرده گذار ثبت شده در صفحه وب اگر موجود بود پرشود
+                {
+                    var personToEdit = _Db.Persons.FirstOrDefault(p => p.Code == PCodeSearchable);
+                    CurrentPersonDto = Mapper.Map<PersonDto>(personToEdit);
+                    OriginalPerson = _Db.Persons.FirstOrDefault(p => p.Code == personToEdit.Code) ?? new Person();// یک کپی برای کنترل تغییرات
+
+                    CurrentPersonId = personToEdit.IdDi;
+                    IsEditing = true;
+                    isNeedUpdate = false;
+                    isDataCorrected = true;
+
+                }
+                else
+                {
+                    //  Mapper.Map(new Person(), CurrentPersonDto);
+                    CurrentPersonDto.Code = PCodeSearchable;
+                    CurrentPersonId = 0;
+                    isNeedUpdate = true;
+                    IsEditing = false;
+                }
+            }
+            else
+            {
+                _snackBar.Add($"  فیلد باید فقط عددی باشد", Severity.Warning);
+                CurrentPersonId = 0;
+                IsEditing = false;
+            }
+        }
+    }
+    private void OnSearchTextChanged()
+    {
+        if (!string.IsNullOrEmpty(searchString1))
+        {
+            searchString1 = TextHelper.NormalizeSimpleString(searchString1);
+        }
+    }
+    // متدی برای ارسال فرم
+    // اعتبارسنجی مدل
+    private bool ValidateModel()
+    {
+        var context = new ValidationContext(CurrentPersonDto);
+        var validationResults = new List<ValidationResult>();
+        return Validator.TryValidateObject(CurrentPersonDto, context, validationResults, true);
+    }
+    private bool isValidFnc => ValidateForm();
+
+    private bool ValidateForm()
+    {
+        // مثال: اعتبارسنجی یک فرم
+        if (CurrentPersonDto.Code == null) return false;
+        if (string.IsNullOrEmpty(CurrentPersonDto.Family)) return false;
+        if (string.IsNullOrEmpty(CurrentPersonDto.Name)) return false;
+        isDataCorrected = ValidateModel();
+        if (!isDataCorrected) return false;
+        return isNeedUpdate;
+    }
+    //  private bool isDataChangedFnc => isDataChanged();
+    private void ShowClearPersonInfo()
+    {
+
+        Mapper.Map(new PersonDto(), CurrentPersonDto);
+        PCodeSearchable = "";
+        CurrentPersonDto.Code = "";
+        CurrentPersonDto.Family = "";
+        CurrentPersonDto.Father = "";
+        CurrentPersonDto.Name = "";
+        CurrentPersonDto.Mellicode = "";
+        CurrentPersonDto.IssueNo = "";
+        CurrentPersonDto.BankType = 0;
+        CurrentPersonDto.CardBank = "";
+        CurrentPersonDto.HesabBank = "";
+        CurrentPersonDto.Address = "";
+        CurrentPersonDto.City = '1';
+        CurrentPersonDto.Sex = '1';
+        CurrentPersonDto.Tel = "";
+
+    }
+
+
+    private void isDataChanged()
+    {
+        isNeedUpdate = false;
+        //  CurrentPersonDto.Date = DateService.DateShamsiFormat(CurrentPersonQVamDto.V_Year, CurrentPersonQVamDto.V_Month, CurrentPersonQVamDto.V_Day);
+        if (OriginalPerson.Code != CurrentPersonDto.Code) isNeedUpdate = true;
+        if (OriginalPerson.Name != CurrentPersonDto.Name) isNeedUpdate = true;
+        if (OriginalPerson.Family != CurrentPersonDto.Family) isNeedUpdate = true;
+        if (OriginalPerson.Father != CurrentPersonDto.Father) isNeedUpdate = true;
+        if (OriginalPerson.IssueNo != CurrentPersonDto.IssueNo) isNeedUpdate = true;
+        if (OriginalPerson.BankType != CurrentPersonDto.BankType) isNeedUpdate = true;
+        if (OriginalPerson.CardBank != CurrentPersonDto.CardBank) isNeedUpdate = true;
+        if (OriginalPerson.City != CurrentPersonDto.City) isNeedUpdate = true;
+        if (OriginalPerson.Address != CurrentPersonDto.Address) isNeedUpdate = true;
+        if (OriginalPerson.HesabBank != CurrentPersonDto.HesabBank) isNeedUpdate = true;
+        if (OriginalPerson.Mellicode != CurrentPersonDto.Mellicode) isNeedUpdate = true;
+        if (OriginalPerson.Sex != CurrentPersonDto.Sex) isNeedUpdate = true;
+        if (OriginalPerson.Tel != CurrentPersonDto.Tel) isNeedUpdate = true;
+
+
+
+
+        //isNeedUpdate = true;
+
+    }
+
+
+
+}
+
+

@@ -1,0 +1,18 @@
+﻿from person in _Db.Persons
+           join account in _Db.Hesabs on person.Code equals account.Pcode
+           orderby person.Code
+           select new PersonAccountDto
+              {
+                FullName = (string.IsNullOrEmpty(person.Name) ? "" : person.Name.Trim()) + " " +
+                           (string.IsNullOrEmpty(person.Family) ? "" : person.Family.Trim()) + "(" +
+                           (string.IsNullOrEmpty(person.Father) ? "" : person.Father.Trim()) + ")",
+                Family = person.Family,
+                Name = person.Name,
+                Father = person.Father,
+                Scode = account.Scode,
+                Pcode = (string.IsNullOrEmpty(account.Pcode) ? "" : account.Pcode),
+                HesabNo = account.HesabNo,
+                V_Mojodi = account.V_Mojodi
+               })
+
+

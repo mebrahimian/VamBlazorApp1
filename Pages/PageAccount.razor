@@ -1,0 +1,809 @@
+﻿@page "/pageaccount"
+@inject DatabaseContext _Db
+@inject DateService DateService
+@inject ILogger<PageAccount> _logger
+@inject VamBlazor.Client.Application.Services.PersonServices PersonServices
+@inject IMapper Mapper
+@inject IDialogService DialogService
+@layout MainLayout
+@inject DtoComparer comparer
+
+@using AutoMapper
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.Extensions.Logging
+@using Serilog
+@using Serilog.Core
+@using VamBlazor.Client.Application.Dto_Utilities
+@using VamBlazor.Client.Domain.Entities
+@using VamBlazor.Client.Domain.Enum
+@using VamBlazor.Client.Application.Dtos
+@using VamBlazor.Client.Application.Mappings
+@using VamBlazor.Client.Application.CommonFunc
+@using VamBlazor.Client.Shared.Dialogs
+@using VamBlazor.Client.Application.Services
+
+
+
+<MudContainer style="font-family:'VazirUI';">
+
+    <MudPaper>
+        <MudText Typo="Typo.body2" Align="Align.Center" Style="height:25px;background-color:cadetblue" Class="mt-2">فرم وروداطلاعات حساب سپرده گذاران</MudText>
+
+        <MudForm @ref="PersonsAccountForm" Model="CurrentPersonAccountDto" @bind-IsValid="isDataCorrected" Spacing="16" Class="p-4">
+
+            <MudGrid>
+                <!-- ردیف اول: Code و City , Sex -->
+                <MudItem sm="6">
+                    <MudAutocomplete T="PersonDto"
+                    Label="لطفا سپرده گذار را انتخاب کنید ..."
+                    @bind-Value="selectedPerson"
+                    SearchFunc="@SearchPerson"
+                    ToStringFunc="@(_personList => _personList?.FullName ?? "")"
+                    Dense="true" Clearable
+                    OnBlur="OnPCodeChanged"
+                    TextChanged="OnPCodeChanged"
+                    MaxItems="50"
+                    ShowProgressIndicator="true" />
+
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3" Class="pr-10 pt-0">
+                    @if (CurrentPersonAccountDto.Curqty != 0 || isEditing)
+                    {
+                        @if (CurrentPersonAccountDto.V_Mojodi >= 10000000000)
+                        {
+                            <MudNumericField T="long"
+                                             @bind-Value="CurrentPersonAccountDto.V_Mojodi"
+                                             Format="###,###"
+                                             Adornment="Adornment.End"
+                                             AdornmentText="ریال"
+                                             Label="موجودی"
+                                             Variant="Variant.Outlined"
+                                             HideSpinButtons="true"
+                                             Style="font-size:17px;background-color:antiquewhite"
+                            readonly="true" />
+                        }
+                        else if (CurrentPersonAccountDto.V_Mojodi >= 100000000)
+                        {
+                            <MudNumericField T="long"
+                                             @bind-Value="CurrentPersonAccountDto.V_Mojodi"
+                                             Format="###,###"
+                                             Adornment="Adornment.End"
+                                             AdornmentText="ریال"
+                                             Label="موجودی"
+                                             Variant="Variant.Outlined"
+                                             HideSpinButtons="true"
+                                             Style="font-size:20px;background-color:antiquewhite"
+                                             readonly="true" />
+                        }
+                        else
+                        {
+                            <MudNumericField T="long"
+                                             @bind-Value="CurrentPersonAccountDto.V_Mojodi"
+                                             Format="###,###"
+                                             Adornment="Adornment.End"
+                                             AdornmentText="ریال"
+                                             Label="موجودی"
+                                             Variant="Variant.Outlined"
+                                             HideSpinButtons="true"
+                                             Style="font-size:25px;background-color:antiquewhite"
+                                             readonly="true" />
+                        }
+
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+
+                </MudItem>
+                <!-- ردیف دوم: Hesab_No & Date -->
+                <MudItem xs="12" sm="6" md="3">
+                    <div class="mt-n6" style="display: flex;font-size: 18px; font-weight: bold;">
+                        <MudTextField T="long" @ref="myTextField" Style="justify-content:right;width:65%"
+                        Label="شماره حساب"
+                        Required
+                        Immediate="true"
+                        For="@(() => CurrentPersonAccountDto.HesabNo)"
+                        @bind-Value="@HesabNoSearchable" @bind-Value:after="isDataChanged"
+                        InputType="InputType.Text"
+                        Format="###"
+                        OnBlur="OnAccountChanged"
+                         />
+
+                        <MudText Style="justify-content:left;width:45%" Class="mt-5 ml-n3">تاریخ افتتاح :</MudText>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div class="mt-n6 mr-n3" style="display: flex;font-size: 16px; font-weight: bold;">
+
+                        <!-- فیلد روز -->
+
+                        <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="int" Variant="Variant.Outlined"
+                            @bind-Value="CurrentPersonAccountDto.V_Day" @bind-Value:after="isDataChanged"
+                            Min="1"
+                            Max="31"
+                            Immediate="true" />
+                        </MudTooltip>
+
+                        <!-- فیلد ماه -->
+
+                        <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="int" Variant="Variant.Outlined"
+                            @bind-Value="CurrentPersonAccountDto.V_Month" @bind-Value:after="isDataChanged"
+                            Min="1"
+                            Max="12"
+                            Immediate="true" />
+                        </MudTooltip>
+
+                        <!-- فیلد سال -->
+
+                        <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="int" Variant="Variant.Outlined"
+                            @bind-Value="CurrentPersonAccountDto.V_Year" @bind-Value:after="isDataChanged"
+                            Min="1300"
+                            Max="1499"
+                            Style="width:100px"
+                            Immediate="true" />
+                        </MudTooltip>
+
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3" Class="pr-10">
+
+
+
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div>
+                        <MudImage Src="@CurrentPersonPictureAddress" Alt="محل عکس" Elevation="25" Class="rounded-lg mt-n16" Style="width:150px;height:150px" />
+                    </div>
+                </MudItem>
+                <!-- ردیف سوم: MelliCode و TelNoو bankType و HesabBank -->
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width:100%;">
+                        <MudTooltip Text="لطفاً مبلغ افتتاحیه را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="long" Label="مبلغ افتتاحیه" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
+                            For="@(() => CurrentPersonAccountDto.Firstqty)"
+                            @bind-Value="CurrentPersonAccountDto.Firstqty" @bind-Value:after="isDataChanged"
+                            Format="###,###"
+                            HideSpinButtons="true"
+                            />
+                        </MudTooltip>
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width:100%;" class="mr-n3">
+                        <MudTooltip Text="لطفاً مبلغ ماهیانه را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="long?" Label="مبلغ ماهیانه" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
+                            @bind-Value="CurrentPersonAccountDto.Monthqty" @bind-Value:after="isDataChanged"
+                            Format="###,###"
+                            HideSpinButtons="true"
+                             />
+                        </MudTooltip>
+                    </div>
+                </MudItem>
+
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 75%;align-content:start" class="mr-20">
+                        <MudTextField T="long?" Label="حساب معرف" Immediate="true"
+                        For="@(() => CurrentPersonAccountDto.Moaref)"
+                        Format="###"
+                        @bind-Value="CurrentPersonAccountDto.Moaref" @bind-Value:after="isDataChanged"
+                        onblur="OnMoarefValid" />
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudText Typo="Typo.h5" class="mr-n20 mt-5" Style="background-color:azure;font-size:18px;">@_MoarefDesc</MudText>
+                </MudItem>
+                <!-- ردیف چهارم: MelliCode و TelNoو bankType و HesabBank -->
+                <MudItem xs="12" sm="6" md="3">
+                    <div style="width: 150px;">
+                    </div>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+
+                </MudItem>
+
+            </MudGrid>
+
+
+            <!-- دکمه‌ها -->
+            <div style="display: flex; gap: 10px;">
+                <MudButton style="width:30%" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" Disabled="!isValidFnc" OnClick="SavePerson">ذخیره</MudButton>
+                <MudButton style="width:30%" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" IconColor="Color.Tertiary" OnClick="CancelEdit">لغو</MudButton>
+                <MudButton style="width:30%" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.SpeakerNotes" IconColor="Color.Warning" OnClick="TogglePersonList">
+                    @(ShowPersonList ? "مخفی کردن لیست سپرده گذاران" : "نمایش لیست سپرده گذاران")
+                </MudButton>
+            </div>
+        </MudForm>
+
+
+    </MudPaper>
+
+    <MudSpacer />
+    @if (ShowPersonList)
+    {
+        <!--
+        <MudTable Items="@pagedData" Filter="FilterFunc" SortLabel="Sort by" Hover="true" Bordered="true" Dense="true" Pagination="true" RowsPerPage="5" @bind-Page="currentPage">
+        <MudTable Items="@peoples" Hover="true" SortLabel="Sort By" Filter="searchText" PageSize="10" @bind-SelectedItem="selectedPerson">
+        <MudTable Items="@filtere" Hover="true" SortLabel="Sort By" PageSize="10" @bind-SelectedItem="selectedPerson">
+        -->
+
+        <MudTable T="PersonAccountDto" Items="@_personAccountList" Filter="new Func<PersonAccountDto,bool>(FilterFunction)" Pageable="true" Hover="true" Bordered="true" Striped="true" Dense="true">
+            <ToolBarContent>
+                <MudTextField @bind-Value="searchString1" Placeholder="جستجوی سپرده گذار" Immediate="true" OnKeyUp="OnSearchTextChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="new Func<PersonAccountDto, object>(x=>x.Pcode)"></MudTableSortLabel>کـــد</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<PersonAccountDto, object>(x=>x.FullName)"></MudTableSortLabel>نـــام ونام خانوادگی</MudTh>
+                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<PersonAccountDto, object>(x=>x.HesabNo)"></MudTableSortLabel>شماره حساب</MudTh>
+
+                <MudTh>عملیات</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Pcode</MudTd>
+                <MudTd>@context.FullName</MudTd>
+                <MudTd>@context.HesabNo</MudTd>
+                <MudTd>
+                    <MudFab title="اصلاح" Size="Size.Medium" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Edit" IconSize="Size.Medium" Class="ma-2" OnClick="() => EditAccount(context)" />
+                    <MudFab title="حـذف" Size="Size.Medium" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Delete" IconSize="Size.Medium" Class="ma-2" OnClick="() => OpenDeleteDialog(context)" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, int.MaxValue }"
+                RowsPerPageString="@rowsPerPageString"
+                InfoFormat="@infoFormat"
+                AllItemsText="@allItemsText"
+                HorizontalAlignment="@horizontalAlignment" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private MudTextField<long> myTextField;
+    private PersonDto selectedPerson = new PersonDto();
+    private List<PersonDto> _personList = new List<PersonDto>();
+    private bool ShowPersonList { get; set; } = false;
+
+    private List<Hesab> Hesabs = new List<Hesab>();
+
+
+    private List<PersonAccountDto> _personAccountList = new List<PersonAccountDto>();
+    private PersonAccountDto CurrentPersonAccountDto = new PersonAccountDto();
+    private Hesab OriginalAccount = new Hesab();//  ذخیره مقادیر حالت اصلاح حساب
+    private string? CurrentPersonPictureAddress;
+    private bool isEditing = false;
+    private bool isDataCorrected = false;
+    private bool isNeedUpdate = false;
+    private MudForm PersonsAccountForm = new MudForm();
+    private string? searchString1 = string.Empty;
+    private string? PCodeSearchable = string.Empty;
+    private long HesabNoSearchable = 0;
+    private string? _MoarefDesc = string.Empty;
+    //  private HashSet<Person> selectedItems = new HashSet<Person>();
+    //Pagination Variables
+    private HorizontalAlignment horizontalAlignment = HorizontalAlignment.Right;
+    private string rowsPerPageString = "Rows per page:";
+    private string infoFormat = "{first_item}-{last_item} of {all_items}";
+    private string allItemsText = "All";
+
+    // loading Variable
+    private bool isLoading = false;
+    private int pageSize = 10;
+    private int currentPage = 0;
+
+    //Order Variable
+    private Func<Hesab, object> currentSortBy = p => p.HesabNo; // فیلد پیش‌فرض برای مرتب‌سازی
+    private SortDirection currentSortDirection = SortDirection.Ascending;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (_Db?.Persons == null || _Db?.Hesabs == null)
+            {
+                return; // خروج از متد اگر هیچ داده‌ای وجود نداشته باشد
+            }
+
+            pageSize = _Db.Hesabs.Count();
+            var query = (from person in _Db.Persons
+                         join account in _Db.Hesabs on person.Code equals account.Pcode
+                         orderby person.Code
+                         select new PersonAccountDto
+                             {
+                                 FullName = person.FullName,
+                                 Family = person.Family,
+                                 Name = person.Name,
+                                 Father = person.Father,
+                                 Scode = account.Scode,
+                                 Pcode = (string.IsNullOrEmpty(account.Pcode) ? "" : account.Pcode),
+                                 HesabNo = account.HesabNo,
+                                 Date = account.Date,
+                                 Firstqty = account.Firstqty,
+                                 Monthqty = account.Monthqty,
+                                 Curqty = account.Curqty,
+                                 P = account.P,
+                                 P1 = account.P1,
+                                 Moaref = account.IdDi,
+                                 V_Day = account.V_Day,
+                                 V_Month = account.V_Month,
+                                 V_Year = account.V_Year,
+                                 V_Mojodi = account.V_Mojodi
+
+                             })
+            .Skip(currentPage * pageSize)  // صفحه بندی
+            .Take(pageSize)  // تعداد رکوردهای هر صفحه
+            .ToList();  // تبدیل به لیست
+
+            if (query != null && query.Any())
+            {
+                _personAccountList = query;
+            }
+            _personList = await _Db.Persons.AsNoTracking().Where(v => v.Code != "000000" && v.Code != "001000") // شرط‌های دلخواه
+                                           .Select(v => new PersonDto
+                                               {
+                                                   FullName = v.FullName + " کد : " + v.Code,
+                                                   Code = v.Code
+                                               })
+                                           .ToListAsync();
+
+            ShowClearAccountInfo();
+
+        }
+
+        catch (HttpRequestException ex)
+        {
+
+            // اگر InnerException موجود است
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+
+        }
+
+    }
+
+    private bool FilterFunction(PersonAccountDto _personAccount) => FilterFunc(_personAccount, searchString1 ?? "");
+
+    private bool FilterFunc(PersonAccountDto _personAccount, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (_personAccount != null)
+        {
+            if (_personAccount.FullName != null && TextHelper.NormalContain(_personAccount.FullName, searchString))
+                return true;
+            if ($"{_personAccount.Pcode} {_personAccount.HesabNo} {_personAccount.Moaref}".Contains(searchString))
+                return true;
+        }
+        return false;
+    }
+
+    private Task<IEnumerable<PersonDto>> SearchPerson(string value, CancellationToken cancellationToken)
+    {
+        // فیلتر کردن داده‌ها بر اساس ورودی کاربر
+        var result = _personList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
+                             && TextHelper.NormalContain(c.FullName, value));
+
+        // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // بازگشت نتایج به صورت AsEnumerable
+        return Task.FromResult(result.AsEnumerable());
+    }
+
+    // اعتبارسنجی مدل
+    private bool ValidateModel()
+    {
+        var context = new ValidationContext(CurrentPersonAccountDto);
+        var validationResults = new List<ValidationResult>();
+        return Validator.TryValidateObject(CurrentPersonAccountDto, context, validationResults, true);
+    }
+    // متدی برای ارسال فرم
+    // اعتبارسنجی مدل
+
+
+    private bool isValidFnc => ValidateForm();
+    private bool ValidateForm()
+    {
+        // مثال: اعتبارسنجی یک فرم
+        if (CurrentPersonAccountDto.Pcode == null) return false;
+        if (CurrentPersonAccountDto.HesabNo == 0) return false;
+        if (CurrentPersonAccountDto.Firstqty == 0) return false;
+        isDataCorrected = ValidateModel();
+        if (!isDataCorrected) return false;
+        return isNeedUpdate;
+    }
+    private void OnPCodeChanged()
+    {
+        if (selectedPerson != null && selectedPerson.Code != null)
+        {
+            PCodeSearchable = selectedPerson.Code;
+            CurrentPersonAccountDto.Pcode = PCodeSearchable;
+            var selPer = _Db.Hesabs.FirstOrDefault(p => p.Pcode == PCodeSearchable);
+            if (selPer != null)
+            {
+                CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable);
+                CurrentPersonAccountDto = _personAccountList.FirstOrDefault(p => p.Pcode == PCodeSearchable);
+                OriginalAccount = selPer;
+                HesabNoSearchable = CurrentPersonAccountDto.HesabNo;
+                var MoarefCode = CurrentPersonAccountDto.Moaref;
+                isEditing = true;
+                isNeedUpdate = false;
+                if (CurrentPersonAccountDto.Moaref != 0)
+                {
+                    _MoarefDesc = _personAccountList?.FirstOrDefault(p => p.HesabNo == MoarefCode)?.FullName;
+                }
+            }
+
+
+        }
+        //  isValid = ValidateForm();
+    }
+    private void EditAccount(PersonAccountDto personaccountdto)
+    {
+        CurrentPersonAccountDto = Mapper.Map<PersonAccountDto>(personaccountdto);
+        OriginalAccount = _Db.Hesabs.FirstOrDefault(p => p.Pcode == personaccountdto.Pcode);// یک کپی برای کنترل تغییرات
+        HesabNoSearchable = personaccountdto.HesabNo;
+        // HesabNoSearchable = CurrentPersonAccountDto.HesabNo;
+        PCodeSearchable = CurrentPersonAccountDto.Pcode;
+        if (selectedPerson == null) { selectedPerson = new PersonDto(); }
+        selectedPerson.FullName = personaccountdto.FullName + " کد : " + personaccountdto.Pcode;
+    //  selectedPerson.FullName = personaccountdto.FullName;
+        selectedPerson.Code = personaccountdto.Pcode;
+    //  selectedPerson.HesabNo = personaccountdto.HesabNo;
+        var MoarefCode = CurrentPersonAccountDto.Moaref;
+        isEditing = true;
+        isNeedUpdate = false;
+        if (personaccountdto.Moaref != 0)
+        {
+            _MoarefDesc = _personAccountList?.FirstOrDefault(p => p.HesabNo == MoarefCode)?.FullName;
+        }
+       
+        myTextField.FocusAsync();
+    }
+
+    private void SavePerson()
+    {
+
+        try
+        {
+            if (isEditing)
+            {
+                comparer = new DtoComparer();
+                if (!comparer.isChangedPardarInfo(CurrentPersonAccountDto, OriginalAccount))
+                {
+                    var editHesab = _Db.Hesabs.FirstOrDefault(p => p.Pcode == PCodeSearchable);
+                    editHesab.HesabNo = CurrentPersonAccountDto.HesabNo;
+                    editHesab.IdDi = CurrentPersonAccountDto.Moaref;
+                    editHesab.Monthqty = CurrentPersonAccountDto.Monthqty;
+
+                }
+                else
+                {
+                    _snackBar.Add($" مجاز به تغییر این مقادیر نیستید", Severity.Error);
+                    CurrentPersonAccountDto.Firstqty = OriginalAccount.Firstqty;
+                    CurrentPersonAccountDto.Date = OriginalAccount.Date;
+                    CurrentPersonAccountDto.V_Year = DateService.GetHYear(OriginalAccount.Date);
+                    CurrentPersonAccountDto.V_Month = DateService.GetHMonth(OriginalAccount.Date);
+                    CurrentPersonAccountDto.V_Day = DateService.GetHDay(OriginalAccount.Date);
+
+                }
+
+            }
+            else
+            {
+                // CurrentPersonAccountDto.Pcode = PCodeSearchable;
+                CurrentPersonAccountDto.Scode  = "01";
+                CurrentPersonAccountDto.FullName = selectedPerson.FullName;
+                var newAccountPerson = Mapper.Map<PersonAccountDto>(CurrentPersonAccountDto); // Mapping DTO to Entity
+                var newHesab = Mapper.Map<Hesab>(CurrentPersonAccountDto);
+                var newPardar = new Pardar();
+                newPardar = CopyFromHesab2Pardar(newHesab);
+                newPardar = Mapper.Map<Pardar>(newPardar);
+                _Db.Hesabs.Add(newHesab);
+                _Db.Pardars.Add(newPardar);
+                _personAccountList.Add(CurrentPersonAccountDto);
+                _snackBar.Add($"حساب {CurrentPersonAccountDto.HesabNo} ثبت شد", Severity.Success);
+
+            }
+            _Db.SaveChangesAsync();
+
+            isNeedUpdate = false;
+            // _logger.LogInformation($"حساب {CurrentPersonAccountDto.FullName}  ثبت شد");
+            //CancelEdit();
+
+
+        }
+        catch (DbUpdateException ex)
+        {
+            // اینجا خطاهایی که مربوط به مشکلات ذخیره‌سازی در پایگاه داده هستند مدیریت می‌شود
+            // مثلاً خطاهای مربوط به نقض محدودیت‌های پایگاه داده مانند unique constraint
+
+            // به کاربر پیام خطای مناسب نمایش داده می‌شود
+
+            _logger.LogError(ex, "خطایی در ذخیره‌سازی داده‌ها به پایگاه داده رخ داد.");
+        }
+
+
+    }
+
+
+
+    private async Task OpenDeleteDialog(PersonAccountDto context)
+    {
+        var deleteContext = context.Name + " " + context.Family;
+        deleteContext = " برای حذف حساب " + deleteContext + " مطمئن هستید؟ ";
+        // اینجا باید یک دیالوگ برای تایید حذف باز کنیم
+        var parameters = new DialogParameters
+    {
+        { nameof(Shared.Dialogs.DeleteConfirmationDialog.ContextText), deleteContext }
+    };
+
+        var dialog = DialogService.Show<DeleteConfirmationDialog>("حذف حساب", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                // اگر کاربر گزینه Yes را انتخاب کرده باشد، عملیات حذف انجام می‌شود
+                HesabNoSearchable = context.HesabNo;
+                var hesabToRemove = _personAccountList.FirstOrDefault(p => p.HesabNo == HesabNoSearchable);
+                bool lHaveQvam = _Db.Qvams.Any(qvam => qvam.Pcode == context.Pcode && qvam.Date != context.Date);
+                bool lHavePardar = _Db.Pardars.Any(pardar => pardar.Pcode == context.Pcode && pardar.Action != '3');
+
+                if (hesabToRemove != null)
+                {
+                    if (lHaveQvam || lHavePardar)  // در سایر جداول رکورد دارد
+                        _snackBar.Add($"مجاز به حذف {hesabToRemove.Name} {hesabToRemove.Family} نیستید ", Severity.Error);
+                    else
+                    {
+                        ///  حذف درخواست اتوماتیک وام
+                        var QvamItem = await _Db.Qvams.FirstOrDefaultAsync(p => p.Pcode == context.Pcode && p.Date == context.Date);
+                        if (QvamItem != null)
+                        {
+                            _Db.Remove(QvamItem);
+
+                        }
+                        ///  پیداکردن رکورد افتتاحیه در فایل پرداخت
+                        var parItem = await _Db.Pardars.FirstOrDefaultAsync(p => p.Pcode == context.Pcode && p.Action == '3');
+                        if (parItem != null)
+                        {
+                            _Db.Remove(parItem);
+
+                        }
+                        _personAccountList.Remove(context);
+                        var hesabToDel = await _Db.Hesabs.FirstOrDefaultAsync(p => p.Pcode == context.Pcode);
+                        _Db.Remove(hesabToDel);
+                        _Db.SaveChanges();
+                        CancelEdit();
+
+                        // _personAccountList.Remove(hesabToRemove);
+                        //_Db.Remove(parItem);
+
+                        // await _Db.SaveChangesAsync();  // اطمینان از اجرای غیرهمزمان
+                        _snackBar.Add($" {hesabToRemove.Name} {hesabToRemove.Family} حذف شد ", Severity.Warning);
+                        // CancelEdit();
+                    }
+                }
+                else
+                {
+                    // شخصی با این ID در لیست پیدا نشد
+                    _snackBar.Add("رکوردی با این شناسه پیدا نشد.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                // در صورت وقوع خطا، خطا را در لاگ ذخیره یا به کاربر نمایش دهید
+                _snackBar.Add($"خطا در هنگام حذف حساب: {ex.Message}", Severity.Error);
+                // در صورت نیاز می‌توانید خطا را در لاگ ثبت کنید
+                Console.Error.WriteLine(ex.ToString());  // یا ذخیره در فایل لاگ
+            }
+        }
+    }
+    private void CancelEdit()
+    {
+        CurrentPersonAccountDto = new PersonAccountDto();
+
+        //   CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress("000");
+        isEditing = false;
+        isNeedUpdate = false;
+        ShowClearAccountInfo();
+
+    }
+
+
+
+    // متدی برای دریافت پیغام خطا از داده‌های وارد شده
+    private string GetErrorMessageForField(string fieldName)
+    {
+        var context = new ValidationContext(CurrentPersonAccountDto);
+        var validationResults = new List<ValidationResult>();
+
+        // اعتبارسنجی فیلد خاص
+
+        Validator.TryValidateProperty(
+            typeof(PersonAccountDto).GetProperty(fieldName).GetValue(CurrentPersonAccountDto),
+            new ValidationContext(CurrentPersonAccountDto) { MemberName = fieldName },
+            validationResults);
+
+
+        // اگر خطا وجود دارد، پیغام خطا را برمی‌گرداند
+        return validationResults.Any() ? validationResults.First().ErrorMessage : string.Empty;
+    }
+
+
+
+    private void TogglePersonList()
+    {
+        ShowPersonList = !ShowPersonList;
+    }
+    // private void SortTableByName()
+    // {
+    //     currentSortBy = p => p.HesabNo ?? "";
+    //     ToggleSortDirection();
+    // }
+    private void ToggleSortDirection()
+    {
+        if (currentSortDirection == SortDirection.Ascending)
+        {
+            currentSortDirection = SortDirection.Descending;
+        }
+        else
+        {
+            currentSortDirection = SortDirection.Ascending;
+        }
+
+    }
+
+
+
+    private void OnAccountChanged()
+    {
+        ///
+        ///   کنترل اینکه طرف حساب دارد یا نه
+        ///
+
+        var personAccount = _personAccountList.FirstOrDefault(p => p.HesabNo == HesabNoSearchable);
+        if (personAccount != null)
+        {
+            var Pcode = personAccount.Pcode;
+            if (Pcode != PCodeSearchable)
+            {
+                HesabNoSearchable = personAccount.HesabNo;
+                PCodeSearchable = personAccount.Pcode;
+                if (selectedPerson == null) { selectedPerson = new PersonDto(); }
+                selectedPerson.Code = PCodeSearchable;
+                selectedPerson.FullName = personAccount.FullName + " کد : " + personAccount.Pcode;
+             //   selectedPerson.FullName = personAccount.FullName;
+                FillPersonAccountInfo(personAccount);
+              //  _snackBar.Add($" حساب متعلق به {personAccount.FullName} می باشد", Severity.Warning);
+              //  HesabNoSearchable = CurrentPersonAccountDto.HesabNo;
+            }
+        }
+        else
+        {
+            CurrentPersonAccountDto.HesabNo = HesabNoSearchable;
+            if (OriginalAccount.HesabNo != HesabNoSearchable) isNeedUpdate = true;
+        }
+
+    }
+
+    private void OnSearchTextChanged()
+    {
+        if (!string.IsNullOrEmpty(searchString1))
+        {
+            searchString1 = TextHelper.NormalizeSimpleString(searchString1);
+        }
+    }
+    private void OnMoarefValid()
+    {
+        if (OriginalAccount.IdDi != CurrentPersonAccountDto.Moaref)
+        {
+            isNeedUpdate = true;
+            if (CurrentPersonAccountDto.Moaref != 0 && CurrentPersonAccountDto.Moaref != null)
+            {
+                if (_personAccountList.Any(p => p.HesabNo == CurrentPersonAccountDto.Moaref))   // کد معرف در فایل حساب یافت شد
+                {
+                    if (CurrentPersonAccountDto.Moaref == HesabNoSearchable)
+                    {
+                        _snackBar.Add($" معرف مجاز نیست", Severity.Error);
+                        CurrentPersonAccountDto.Moaref = 0;
+                        _MoarefDesc = "";
+                    }
+                    else
+                    {
+                        _MoarefDesc = _personAccountList.FirstOrDefault(p => p.HesabNo == CurrentPersonAccountDto.Moaref).FullName ?? "";
+                    }
+                }
+                else
+                {
+                    _snackBar.Add($" معرف یافت نشد", Severity.Error);
+                    CurrentPersonAccountDto.Moaref = 0;
+                    _MoarefDesc = "";
+
+                }
+
+            }
+            else { _MoarefDesc = ""; }
+        }
+    }
+   
+
+    /// <summary>
+    ///   transfer data
+    /// </summary>
+    public Pardar CopyFromHesab2Pardar(Hesab _HesabDto)
+    {
+        var _pardar = new Pardar();
+        _pardar.Scode = _HesabDto.Scode;
+        _pardar.Pcode = _HesabDto.Pcode;
+        _pardar.Date = _HesabDto.Date;
+        _pardar.Mblg = _HesabDto.Firstqty;
+        _pardar.Action = '3';
+        _pardar.Babat = ($" {_HesabDto.Date}<- افتتاح حساب درتاریخ");
+        _pardar.Khayer = "";
+        _pardar.ReqNo = "";
+        _pardar.IdDi = 0;
+        return _pardar;
+    }
+    private void ShowClearAccountInfo()
+    {
+        HesabNoSearchable = 0;
+        PCodeSearchable = "";
+        selectedPerson = null;
+        Mapper.Map(new PersonAccountDto(), CurrentPersonAccountDto);
+        ///
+        ///تاریخ با روز جاری پرمیشود
+        ///
+        var record = _Db.tblDates.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
+        var cDateShamsi = record?.HDate; // اگر record null باشد، cDateShamsi هم null خواهد بود
+        CurrentPersonAccountDto.V_Year = DateService.GetHYear(cDateShamsi);
+        CurrentPersonAccountDto.V_Month = DateService.GetHMonth(cDateShamsi);
+        CurrentPersonAccountDto.V_Day = DateService.GetHDay(cDateShamsi);
+        CurrentPersonAccountDto.Date = cDateShamsi;
+        CurrentPersonAccountDto.V_Mojodi = 0;
+        CurrentPersonAccountDto.Firstqty = 0;
+        CurrentPersonAccountDto.Monthqty = 0;
+        CurrentPersonAccountDto.Moaref = 0;
+        CurrentPersonAccountDto.FullName = "";
+        _MoarefDesc = "";
+
+
+    }
+
+    private void FillPersonAccountInfo(PersonAccountDto personToAdd)
+    {
+
+        CurrentPersonAccountDto.FullName = personToAdd.FullName;
+        CurrentPersonAccountDto.HesabNo = personToAdd.HesabNo;
+        CurrentPersonAccountDto.Firstqty = personToAdd.Firstqty;
+        CurrentPersonAccountDto.Monthqty = personToAdd.Monthqty;
+        CurrentPersonAccountDto.Moaref = personToAdd.Moaref;
+        CurrentPersonAccountDto.P = personToAdd.P;
+        CurrentPersonAccountDto.P1 = personToAdd.P1;
+        CurrentPersonAccountDto.Date = personToAdd.Date;
+        CurrentPersonAccountDto.V_Year = personToAdd.V_Year;
+        CurrentPersonAccountDto.V_Month = personToAdd.V_Month;
+        CurrentPersonAccountDto.V_Day = personToAdd.V_Day;
+        CurrentPersonAccountDto.V_Mojodi = personToAdd.V_Mojodi;
+
+    }
+    
+    private void isDataChanged()
+    {
+        isNeedUpdate = false;
+        CurrentPersonAccountDto.Date = DateService.DateShamsiFormat(CurrentPersonAccountDto.V_Year, CurrentPersonAccountDto.V_Month, CurrentPersonAccountDto.V_Day);
+        if (OriginalAccount.Date != CurrentPersonAccountDto.Date) isNeedUpdate = true;
+        if (OriginalAccount.Monthqty != CurrentPersonAccountDto.Monthqty) isNeedUpdate = true;
+        if (OriginalAccount.IdDi != CurrentPersonAccountDto.Moaref) isNeedUpdate = true;
+    }
+}

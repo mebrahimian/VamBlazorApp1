@@ -1,0 +1,24 @@
+﻿vwPersonAlltransactions  : اصلاح شود
+vwReportPersonstatus : اصلاح شود
+
+table Pardar : Mblg : bigint 
+<<<<<<< HEAD
+ST: sp_PersonUpto   ---> MonthQty اضافه شود
+=======
+ST: sp_PersonStatusUpTo   ---> MonthQty اضافه شود
+>>>>>>> Last Version Vam 14040313
+
+=============================
+USE [Vam_New]
+GO
+CREATE NONCLUSTERED INDEX [IX_gstMblgDateg]
+ON [dbo].[DARGST] ([gstmblg])
+INCLUDE ([date_g])
+GO
+=============================
+USE [Vam_New]
+GO
+CREATE NONCLUSTERED INDEX [IX_gstMblgDatep]
+ON [dbo].[DARGST] ([gstmblg])
+INCLUDE ([date_p])
+GO

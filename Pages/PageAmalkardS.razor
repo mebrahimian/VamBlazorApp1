@@ -1,0 +1,130 @@
+﻿@page "/pageamalkardsandogh"
+@layout MainLayout
+@inject DatabaseContext _Db
+@inject NavigationManager Navigation
+@inject NavigationManager NavigationManager
+@inject VamBlazor.Client.Application.Services.PersonServices PersonServices
+@inject EmailService _emailService
+@inject SandoghService SandoghService
+@inject DateService DateService
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using MudBlazor
+@using VamBlazor.Client.Application.CommonFunc
+@using VamBlazor.Client.Application.Dtos
+@using VamBlazor.Client.Application.Services
+@inject IJSRuntime JSRuntime
+
+<MudContainer style="font-family:'VazirUI'">
+
+    <MudGrid Justify="Justify.Center" AlignItems="Center" Style="height: 100vh;">
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.body2" Align="Align.Center" Style="width:100%;height:25px;background-color:cadetblue" Class="mt-2">گزارش عملکرد صندوق</MudText>
+            <MudPaper Elevation="3" Style="padding: 20px;">
+                <MudGrid>
+                    <MudItem xs="3" sm="3">
+                        <MudPaper Elevation="0" class="mt-0 ml-0">
+                            <MudText Style="text-align:center;">تا تاریخ</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="7" sm="5">
+                        <div class="mt-n3" style="display: flex; font-size: 16px; font-weight: bold; justify-content: space-between;">
+
+                            <!-- فیلد روز -->
+                            <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                                 @bind-Value="V_DayTo"
+                                                 
+                                                 Style="font-size:14px"
+                                                 Min="1"
+                                                 Max="31"
+                                                 Immediate="true" />
+                            </MudTooltip>
+
+                            <!-- فیلد ماه -->
+                            <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                                 @bind-Value="V_MonthTo"
+                                                 
+                                                 Style="font-size:14px"
+                                                 Min="1"
+                                                 Max="12"
+                                                 Immediate="true" />
+                            </MudTooltip>
+
+                            <!-- فیلد سال -->
+                            <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                                 @bind-Value="V_YearTo"
+                                                 
+                                                 Style="width:80px"
+                                                 Min="1300"
+                                                 Max="1499"
+                                                 Immediate="true" />
+                            </MudTooltip>
+
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12" sm="12">
+                        <MudButton class="mt-2" 
+                        @onclick="PrintReport" Variant="Variant.Filled"
+                        StartIcon="@Icons.Material.Filled.Print"
+                        IconColor="Color.Primary"
+                        style="width:100%">
+                            چاپ گزارش
+                        </MudButton>
+                    </MudItem>
+                    
+                    @if (AlertMessage != null)
+                    {
+                        <div class="alert alert-warning">
+                            @AlertMessage      // sample in PageBankCard Razor Page
+                        </div>
+                    }
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+
+@code {
+    private string AlertMessage { get; set; }
+    private string cDateShamsi = "";
+    private int V_YearTo; private int V_MonthTo; private int V_DayTo;
+    private bool isNeedUpdate;
+    private List<PersonAccountDto> _personFullDataList = new List<PersonAccountDto>();
+    private PersonAccountDto selectedPersonFrom; private PersonAccountDto selectedPersonTo;
+    private long? Hesab1Searchable = 0;
+    private long? Hesab2Searchable = 0;
+    private List<PersonReportStatusDto> ReportRecords { get; set; }
+    private List<IGrouping<long, PersonReportStatusDto>> groupedRecords { get; set; }
+         
+    protected override async Task OnInitializedAsync()
+
+    {
+        cDateShamsi = DateService.TodayHDate();   // تاریخ امروز
+
+        V_YearTo = DateService.GetHYear(cDateShamsi);
+        V_MonthTo = DateService.GetHMonth(cDateShamsi);
+        V_DayTo = DateService.GetHDay(cDateShamsi);
+    }
+    
+    // دستور چاپ با استفاده از JSInterop
+    private void  PrintReport()
+    {
+        if (isValidParameters())
+        {
+            NavigationManager.NavigateTo($"/SandoghRep?date1={cDateShamsi}");
+        }
+    }
+    
+    private bool isValidParameters()
+    {
+        cDateShamsi = DateService.DateShamsiFormat(V_YearTo, V_MonthTo, V_DayTo);
+        return true;
+    }
+        
+    
+}

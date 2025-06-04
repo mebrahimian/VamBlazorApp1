@@ -1,0 +1,56 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Web
+@namespace VamBlazor.Client.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="~/" />
+    <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+    <link href="css/site.css" rel="stylesheet" />
+    <link href="VamBlazor.Client.styles.css" rel="stylesheet" />
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <link rel="icon" type="image/png" href="favicon.png"/>
+    <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <component type="typeof(App)" render-mode="ServerPrerendered" />
+
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            An error has occurred. This application may no longer respond until reloaded.
+        </environment>
+        <environment include="Development">
+            An unhandled exception has occurred. See browser dev tools for details.
+        </environment>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
+    <script src="_framework/blazor.server.js"></script>
+    <!--// تابع برای فهمیدن Lost Focus    -->
+    <script>
+        
+        window.blurElement = function (elementId) {
+            var element = document.getElementById(elementId);
+            if (element) {
+                element.blur(); // از حالت فوکوس خارج می‌کند
+            } else {
+                console.error("Element with ID '" + elementId + "' not found.");
+            }
+        };
+            window.printAndRedirect = function(redirectUrl = "/", delay = 500) {
+            window.print();
+            setTimeout(function() {
+                // هدایت به منوی اصلی بعد از چاپ
+                window.location.href = redirectUrl; // مسیر منوی اصلی
+            }, delay); // 500 میلی‌ثانیه تا اطمینان از اتمام فرآیند چاپ
+        }
+    </script>
+</body>
+</html>

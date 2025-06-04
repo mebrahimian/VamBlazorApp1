@@ -1,0 +1,38 @@
+﻿@typeparam T
+
+<MudAutocomplete T="T"
+                 @bind-Value="Value"
+                 Label="@Label"
+                 Placeholder="@Placeholder"
+                 Clearable="@Clearable"
+                 SearchFunc="SearchFunc"
+                 ToStringFunc="ToStringFunc"
+                 CoerceText="@CoerceText"
+                 Disabled="@Disabled">
+    <Adornment End>
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="0">
+            <!-- آیکون فلش -->
+            <MudIcon Icon="@Icons.Material.Filled.ArrowDropDown" />
+            <!-- آیکون + -->
+            <MudIcon Icon="@Icons.Material.Filled.Add" Class="add-icon" OnClick="@HandleAddClick" />
+        </MudStack>
+    </Adornment>
+</MudAutocomplete>
+
+@code {
+    [Parameter] public T Value { get; set; }
+    [Parameter] public EventCallback<T> ValueChanged { get; set; }
+    [Parameter] public string Label { get; set; }
+    [Parameter] public string Placeholder { get; set; }
+    [Parameter] public bool Clearable { get; set; } = true;
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public bool CoerceText { get; set; }
+    [Parameter] public Func<string, CancellationToken, Task<IEnumerable<T>>> SearchFunc { get; set; }
+    [Parameter] public Func<T, string> ToStringFunc { get; set; }
+    [Parameter] public EventCallback AddClick { get; set; }
+
+    private void HandleAddClick()
+    {
+        AddClick.InvokeAsync();
+    }
+}

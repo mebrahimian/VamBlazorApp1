@@ -1,0 +1,1118 @@
+﻿Dim WithEvents adoPrimaryRS As Recordset
+Public cTypeVam As String
+Dim RstQVam As Recordset
+Dim mbCancelClick As Boolean
+Dim mvBookMark As Variant
+Dim mbEditFlag As Boolean
+Dim mbAddNewFlag As Boolean, HieghtForm, SelectedCol
+Dim mbDataChanged As Boolean
+Dim cBackColorTxtBox
+Dim GridKeys As String
+
+Private Sub cmdAdd_GotFocus()
+FraHelpM.Visible = False
+cmdAdd.BackColor = &HFF8080
+cmdAdd.Font.Bold = True
+cmdAdd.Font.Italic = True
+
+End Sub
+Private Sub cmdAdd_LostFocus()
+FraHelpM.Visible = False
+cmdAdd.BackColor = &HFFC0C0
+cmdAdd.Font.Bold = False
+cmdAdd.Font.Italic = False
+End Sub
+Private Sub cmdEdit_GotFocus()
+FraHelpM.Visible = False
+cmdEdit.BackColor = &HFF8080
+cmdEdit.Font.Bold = True
+cmdEdit.Font.Italic = True
+End Sub
+Private Sub cmdEdit_LostFocus()
+FraHelpM.Visible = False
+cmdEdit.BackColor = &HFFC0C0
+cmdEdit.Font.Bold = False
+cmdEdit.Font.Italic = False
+End Sub
+Private Sub cmdDelete_GotFocus()
+FraHelpM.Visible = False
+cmdDelete.BackColor = &HFF8080
+cmdDelete.Font.Bold = True
+cmdDelete.Font.Italic = True
+End Sub
+Private Sub cmdDelete_LostFocus()
+FraHelpM.Visible = False
+cmdDelete.BackColor = &HFFC0C0
+cmdDelete.Font.Bold = False
+cmdDelete.Font.Italic = False
+End Sub
+Private Sub cmdSearch_GotFocus()
+FraHelpM.Visible = False
+cmdSearch.BackColor = &HFF8080
+cmdSearch.Font.Bold = True
+cmdSearch.Font.Italic = True
+End Sub
+Private Sub cmdSearch_LostFocus()
+FraHelpM.Visible = False
+cmdSearch.BackColor = &HFFC0C0
+cmdSearch.Font.Bold = False
+cmdSearch.Font.Italic = False
+End Sub
+Private Sub cmdClose_GotFocus()
+FraHelpM.Visible = False
+cmdClose.BackColor = &HFF8080
+cmdClose.Font.Bold = True
+cmdClose.Font.Italic = True
+End Sub
+Private Sub cmdClose_LostFocus()
+FraHelpM.Visible = False
+cmdClose.BackColor = &HFFC0C0
+cmdClose.Font.Bold = False
+cmdClose.Font.Italic = False
+End Sub
+Private Sub cmdUpdate_GotFocus()
+FraHelpM.Visible = False
+cmdUpdate.BackColor = &HFF8080
+cmdUpdate.Font.Bold = True
+cmdUpdate.Font.Italic = True
+End Sub
+Private Sub cmdUpdate_LostFocus()
+FraHelpM.Visible = False
+cmdUpdate.BackColor = &HFFC0C0
+cmdUpdate.Font.Bold = False
+cmdUpdate.Font.Italic = False
+End Sub
+Private Sub cmdCancel_GotFocus()
+FraHelpM.Visible = False
+cmdCancel.BackColor = &HFF8080
+cmdCancel.Font.Bold = True
+cmdCancel.Font.Italic = True
+End Sub
+Private Sub cmdCancel_LostFocus()
+FraHelpM.Visible = False
+cmdCancel.BackColor = &HFFC0C0
+cmdCancel.Font.Bold = False
+cmdCancel.Font.Italic = False
+End Sub
+
+'-2147483630
+Private Sub Form_Load()
+  With Me
+    '.Width = 11590 '6495
+    .Left = (MainForm.Width - .Width) / 2
+    .Top = 0
+    .Height = 5385
+  End With
+  
+  MainForm.StatusBar1.Panels(6).Visible = True
+  FillDateCombo ComDate
+  FillDateCombo ComDate1
+  GridKeys = "PVam"
+  mbCancelClick = False
+  mbAddNewFlag = False
+  MakeNeedsRst
+  
+  SetFieldsGet False
+  GridSearch.Visible = False
+  cmdExitGrid.Visible = False
+  cBackColorTxtBox = &HC0FFFF
+  
+  cmdAdd.Enabled = lAddOk
+  cmdEdit.Enabled = lUpdateOk
+  cmdDelete.Enabled = lDeleteOk
+  If Not adoPrimaryRS.EOF Then
+     adoPrimaryRS.MoveLast
+     mvBookMark = adoPrimaryRS.Bookmark
+     FillData True
+  End If
+
+End Sub
+
+Private Sub Form_KeyDown(KeyCode As Integer, Shift As Integer)
+  Dim cStrS As String, nAns As Integer
+  FraHelpM.Visible = False
+  If mbEditFlag Or mbAddNewFlag Then Exit Sub
+
+  Select Case KeyCode
+    Case vbKeyF4
+      If Not Frame3.Visible Then GridKeys = "PVam": cmdSearch_Click
+'      cmdSearch_Click
+    Case vbKeyF1
+      FraHelpM.Visible = True
+      FraHelpM.ZOrder Top
+    Case vbKeyF2
+      cmdUpdate_Click
+      cmdNext_Click
+    Case vbKeyEnd
+      cmdLast_Click
+    Case vbKeyHome
+      cmdFirst_Click
+    Case vbKeyPageUp
+      If Shift = vbCtrlMask Then
+        cmdFirst_Click
+      Else
+        cmdPrevious_Click
+      End If
+    Case vbKeyPageDown
+      If Shift = vbCtrlMask Then
+        cmdLast_Click
+      Else
+        cmdNext_Click
+      End If
+    Case vbKeyF10
+      nAns = MsgBox(" ÂíÇÈÑÇí Ç ÏÝÊÑå ÇÞÓÇØ ãØãÆä åÓÊíÏ¿ ", vbYesNo, "íÛÇã")
+      If nAns = vbYes Then
+         frmPrnAghsat.Left = Me.Left + (Me.Width - frmPrnAghsat.Width) / 2
+         frmPrnAghsat.Top = 3000 'Me.Top + Me.txtBox(3).Top
+         frmPrnAghsat.Show vbModal
+      End If
+  End Select
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+  If isDataChanged() Then
+    Ans = Message(vbYesNo, "ÇØáÇÚÇÊ ÊÛííÑßÑÏå!!! ÈÑÇí ÎÑæÌ ãØãÆä åÓÊíÏ¿ ", "ÇÎØÇÑ")
+    If Ans = vbNo Then
+      Cancel = True  ' User chose No.
+    Else
+      Screen.MousePointer = vbDefault
+      MainForm.Toolbar1.Buttons.Item(1).Enabled = True
+      MainForm.StatusBar1.Panels(6).Visible = False
+
+    End If
+  Else
+    MainForm.StatusBar1.Panels(6).Visible = False
+  End If
+End Sub
+
+Private Sub adoPrimaryRS_MoveComplete(ByVal adReason As ADODB.EventReasonEnum, ByVal pError As ADODB.Error, adStatus As ADODB.EventStatusEnum, ByVal pRecordset As ADODB.Recordset)
+  'This will display the current record position for this recordset
+ If adoPrimaryRS.AbsolutePosition > 0 Then
+    lblStatus.Caption = "ÑßæÑÏ :" & CStr(adoPrimaryRS.AbsolutePosition)
+ Else
+    lblStatus.Caption = "ÑßæÑÏ :"
+ End If
+End Sub
+Private Sub adoPrimaryRS_WillChangeRecord(ByVal adReason As ADODB.EventReasonEnum, ByVal cRecords As Long, adStatus As ADODB.EventStatusEnum, ByVal pRecordset As ADODB.Recordset)
+  'This is where you put validation code
+  'This event gets called when the following actions occur
+  Dim bCancel As Boolean
+
+  Select Case adReason
+  Case adRsnAddNew
+  Case adRsnClose
+  Case adRsnDelete
+  Case adRsnFirstChange
+  Case adRsnMove
+  Case adRsnRequery
+  Case adRsnResynch
+  Case adRsnUndoAddNew
+  Case adRsnUndoDelete
+  Case adRsnUndoUpdate
+  Case adRsnUpdate
+  End Select
+
+  If bCancel Then adStatus = adStatusCancel
+End Sub
+Private Sub cmdAdd_Click()
+  With adoPrimaryRS
+    If Not (.BOF Or .EOF) Then
+      mvBookMark = .Bookmark
+      lblHesab.Visible = False
+      .MoveLast
+      .MoveNext
+    End If
+    FillData (False)
+    mbAddNewFlag = True
+    mbEditFlag = False
+    SetButtons False
+    SetFieldsGet True
+    txtCode.SetFocus
+    txtCode.Text = ""
+    lblFamily.Caption = ""
+    cmdApproved.Visible = False
+'    MSHFlexGrid1.Enabled = True
+  End With
+  Exit Sub
+End Sub
+Private Sub cmdDelete_Click()
+  Dim Response, vBookMrk As Variant
+  On Error GoTo DeleteErr
+  If adoPrimaryRS.EOF Or adoPrimaryRS.BOF Then Exit Sub
+  Response = Message(vbYesNo, "ÂíÇÈå ÍÐÝ æÇã ãØãÆä åÓÊíÏ ¿", "ÇÎØÇÑ")
+  If Response = vbYes Then   ' User chose Yes.
+    mvBookMark = IIf(adoPrimaryRS.RecordCount > adoPrimaryRS.Bookmark, adoPrimaryRS.Bookmark, adoPrimaryRS.Bookmark - 1)
+    Con.Execute ("Delete From Pardar Where Req_No = " & adoPrimaryRS.Fields.Item("Req_No"))
+    Con.Execute ("Delete From Pvam where Req_No = " & adoPrimaryRS.Fields.Item("Req_No"))
+    adoPrimaryRS.Requery
+    adoPrimaryRS.Bookmark = mvBookMark
+  End If
+  If adoPrimaryRS.EOF Then FillData (False) Else FillData (True)
+  SetFieldsGet False
+  MainForm.StatusBar1.Panels(7).Text = "ãæÌæÏí ÕäÏæÞ : " & Format(Con.Execute("Select CurQty+FirstQty As Qty From Sandogh Where Code = '01'")!Qty, "###,###") & "ÑíÇá"
+  On Error GoTo 0
+Exit Sub
+DeleteErr:
+  ErrorHandler err.Number, "del"
+  adoPrimaryRS.CancelUpdate
+End Sub
+
+Private Sub cmdEdit_Click()
+  On Error GoTo EditErr
+  If adoPrimaryRS.EOF Or adoPrimaryRS.BOF Or adoPrimaryRS.Fields.Item("Gst_Pay") > 0 Then Exit Sub
+'  FillData (True)
+  lblStatus.Caption = "ÇÕáÇÍ ÑßæÑÏ"
+  mvBookMark = adoPrimaryRS.Bookmark
+  mbEditFlag = True
+  mbAddNewFlag = False
+  SetButtons False
+  SetFieldsGet True
+  txtCode.SetFocus
+  cmdApproved.Visible = False
+  'MSHFlexGrid1.Enabled = True
+  Exit Sub
+
+EditErr:
+  MsgBox err.Description
+End Sub
+Private Sub cmdCancel_Click()
+  Dim Ans
+  On Error Resume Next
+  If isDataChanged() Then
+    Ans = Message(vbYesNo, "ÇØáÇÚÇÊ ÊÛííÑßÑÏå!!! ÈÑÇí ÎÑæÌ ãØãÆä åÓÊíÏ¿ ", "ÇÎØÇÑ")
+    If Ans = vbNo Then Exit Sub  ' User chose No.
+  End If
+  mbCancelClick = True
+  SetButtons True
+  mbEditFlag = False
+  mbAddNewFlag = False
+  
+  adoPrimaryRS.CancelUpdate
+  adoPrimaryRS.Requery
+
+  If mvBookMark > 0 Then
+    adoPrimaryRS.Bookmark = mvBookMark
+  Else
+    adoPrimaryRS.MoveFirst
+  End If
+  If adoPrimaryRS.EOF Or adoPrimaryRS.BOF Then FillData False Else FillData True
+  SetFieldsGet False
+End Sub
+
+
+Private Sub cmdClose_Click()
+  Unload Me
+End Sub
+
+Private Sub cmdFirst_Click()
+  On Error GoTo GoFirstError
+
+  If Not adoPrimaryRS.BOF Then adoPrimaryRS.MoveFirst
+  FillData (True)
+  mbDataChanged = False
+
+  Exit Sub
+
+GoFirstError:
+  MsgBox err.Description
+End Sub
+
+Private Sub cmdLast_Click()
+  On Error GoTo GoLastError
+
+  If Not adoPrimaryRS.EOF Then adoPrimaryRS.MoveLast
+  FillData (True)
+  mbDataChanged = False
+
+  Exit Sub
+
+GoLastError:
+  MsgBox err.Description
+End Sub
+
+Private Sub cmdNext_Click()
+  On Error GoTo GoNextError
+  cmdPrevious.Enabled = True
+  cmdFirst.Enabled = True
+
+  If Not adoPrimaryRS.EOF Then adoPrimaryRS.MoveNext
+  If adoPrimaryRS.EOF And adoPrimaryRS.RecordCount > 0 Then
+    Beep
+    adoPrimaryRS.MoveLast
+    cmdNext.Enabled = False
+    cmdLast.Enabled = False
+  End If
+  FillData (True)
+
+  'show the current record
+  mbDataChanged = False
+
+  Exit Sub
+GoNextError:
+  MsgBox err.Description
+End Sub
+Private Sub cmdPrevious_Click()
+  On Error GoTo GoPrevError
+  cmdNext.Enabled = True
+  cmdLast.Enabled = True
+  
+  If Not adoPrimaryRS.BOF Then adoPrimaryRS.MovePrevious
+  If adoPrimaryRS.BOF And adoPrimaryRS.RecordCount > 0 Then
+    Beep
+    adoPrimaryRS.MoveFirst
+    cmdPrevious.Enabled = False
+    cmdFirst.Enabled = False
+  End If
+
+  FillData (True)
+  mbDataChanged = False
+  Exit Sub
+GoPrevError:
+  MsgBox err.Description
+End Sub
+Private Sub SetButtons(bVal As Boolean)
+  cmdAdd.Visible = bVal
+  cmdEdit.Visible = bVal
+  cmdUpdate.Visible = Not bVal
+  cmdCancel.Visible = Not bVal
+  cmdDelete.Visible = bVal
+  cmdClose.Visible = bVal
+  cmdSearch.Visible = bVal
+  cmdNext.Enabled = bVal
+  cmdFirst.Enabled = bVal
+  cmdLast.Enabled = bVal
+  cmdPrevious.Enabled = bVal
+End Sub
+Private Sub SetFieldsGet(bVal As Boolean)
+  FraHelpM.Visible = False
+  Frame1.Enabled = bVal
+End Sub
+Private Sub FillData(Flag)
+  Dim i, j
+  If Flag Then ' rem    ÇØáÇÚÇÊ ÑÔÏå áÇÒã ÇÓÊ
+     With adoPrimaryRS
+       If Not (.EOF Or .BOF) Then
+          txtCode.Text = .Fields.Item("Req_No")
+          lblFamily.Caption = RTrim(IIf(IsNull(.Fields.Item("family")), "", .Fields.Item("family"))) + " " + RTrim(.Fields.Item("Name")) + IIf(Trim(.Fields.Item("father")) = "", "", "(" + RTrim(.Fields.Item("father")) + ")")
+          lblHesab.Visible = True
+          lblHesab.Caption = " ÍÓÇÈ " & Con.Execute("SELECT hesab_no From HESAB WHERE pcode = '" & .Fields.Item("PCode") & "'").Fields(0)
+          txtBox(1).Text = IIf(IsNull(adoPrimaryRS.Fields.Item("MblgVam")), 0, Format(adoPrimaryRS.Fields.Item("MblgVam"), "###,###"))
+          ComDate(2).Text = IIf(IsNull(adoPrimaryRS!Date_d), "  ", Left(adoPrimaryRS!Date_d, 4))
+          ComDate(1).Text = IIf(IsNull(adoPrimaryRS!Date_d), "  ", Mid(adoPrimaryRS!Date_d, 6, 2))
+          ComDate(0).Text = IIf(IsNull(adoPrimaryRS!Date_d), "  ", Right(adoPrimaryRS!Date_d, 2))
+         ' ComDate1(2).Text = IIf(IsNull(adoPrimaryRS!Date_g), "  ", Left(adoPrimaryRS!Date_g, 2))
+         ' ComDate1(1).Text = IIf(IsNull(adoPrimaryRS!Date_g), "  ", Mid(adoPrimaryRS!Date_g, 4, 2))
+         ' ComDate1(0).Text = IIf(IsNull(adoPrimaryRS!Date_g), "  ", Right(adoPrimaryRS!Date_g, 2))
+          ComDate1(2).ListIndex = IIf(IsNull(adoPrimaryRS!Date_G), -1, Val(Left(adoPrimaryRS!Date_G, 4) - 1370))
+          ComDate1(1).ListIndex = IIf(IsNull(adoPrimaryRS!Date_G), -1, Val(Mid(adoPrimaryRS!Date_G, 6, 2) - 1))
+          ComDate1(0).ListIndex = IIf(IsNull(adoPrimaryRS!Date_G), -1, Val(Right(adoPrimaryRS!Date_G, 2) - 1))
+          txtBox(2).Text = IIf(IsNull(adoPrimaryRS.Fields.Item("Gst_No")), 0, adoPrimaryRS.Fields.Item("Gst_No"))
+          txtBox(3).Text = IIf(IsNull(adoPrimaryRS.Fields.Item("Gst2")), 0, Format(adoPrimaryRS.Fields.Item("Gst2"), "###,###"))
+          txtBox(4).Text = IIf(IsNull(adoPrimaryRS.Fields.Item("Gst1")), 0, Format(adoPrimaryRS.Fields.Item("Gst1"), "###,###"))
+          txtBox(5).Text = IIf(IsNull(adoPrimaryRS.Fields.Item("PKarmozd")), 0, adoPrimaryRS.Fields.Item("PKarmozd"))
+          txtBox(6).Text = IIf(IsNull(adoPrimaryRS.Fields.Item("MKarmozd")), 0, Format(adoPrimaryRS.Fields.Item("MKarmozd"), "###,###"))
+          cmdEdit.Enabled = IIf(IsNull(.Fields.Item("gst_pay")), True, IIf(.Fields.Item("gst_pay") > 0, False, True)) And lUpdateOk
+          cmdDelete.Enabled = IIf(IsNull(.Fields.Item("gst_pay")), True, IIf(.Fields.Item("gst_pay") > 0, False, True)) And lDeleteOk
+          If IIf(IsNull(.Fields.Item("Gst_Pay")), True, IIf(.Fields.Item("Gst_Pay") >= 0, False, True)) Then
+             Frame1.Caption = "ãÔÎÕÇÊ æÇã"
+             cmdApproved.Visible = False
+          Else
+             Frame1.Caption = " ÊÕæíÈ ÔÏå "
+             cmdApproved.Caption = Format(adoPrimaryRS.Fields.Item("Paid"), "###,##0") & "   ÊÓæíå ÔÏå"
+             cmdApproved.Visible = True
+          End If
+       Else
+          txtBox(1).Text = ""
+          txtBox(2).Text = ""
+          txtBox(3).Text = ""
+          txtBox(4).Text = ""
+          txtBox(5).Text = ""
+          txtBox(6).Text = ""
+'          ComDate(2).Text = ""
+'          ComDate(1).Text = ""
+'          ComDate(0).Text = ""
+'          ComDate1(2).Text = ""
+'          ComDate1(1).Text = ""
+'          ComDate1(0).Text = ""
+          cmdApproved.Visible = False
+          lblHesab.Visible = False
+          mbAddNewFlag = True
+          Frame1.Caption = "ãÔÎÕÇÊ æÇã"
+       End If
+     End With
+  Else    '  rem ÇØáÇÚÇÊ ÎÇáí áÇÒã ÇÓÊ
+'     txtBox(0).Text = ""
+     lblFamily.Caption = ""
+     txtBox(1).Text = ""
+     txtBox(2).Text = ""
+     txtBox(3).Text = ""
+     txtBox(4).Text = ""
+     txtBox(5).Text = ""
+     txtBox(6).Text = ""
+     ComDate(2).ListIndex = -1
+     ComDate(1).ListIndex = -1
+     ComDate(0).ListIndex = -1
+     ComDate1(2).ListIndex = -1
+     ComDate1(1).ListIndex = -1
+     ComDate1(0).ListIndex = -1
+'     txtBox(3).Text = ""
+     'OptSex(1).Value = True
+     'OptStatus(1).Value = True
+  End If
+  Exit Sub
+err:
+  If err.Number = 53 Then ' file Not Found
+   cmdDoc.Enabled = False
+   Resume Next
+  End If
+End Sub
+
+Private Function ValidData()
+Dim Ans
+  If txtCode.Text = "" Then
+     Ans = Message(vbCritical, " !!!˜ÏÊÞÇÖÇí æÇã äÈÇíÏÎÇáí ÈÇÔÏ ", "ÇÎØÇÑ")
+     ValidData = False
+     Exit Function
+  End If
+  If Trim(ComDate(2).Text) = "" Or Trim(ComDate(1).Text) = "" Or Trim(ComDate(0).Text) = "" Then
+    Message vbCritical, "ÊÇÑíÎ æÇã ÑÇ ÕÍíÍ æÇÑÏ ßäíÏ !!! ", "ÎØÇ"
+    ComDate(0).SetFocus
+    ValidData = False
+    Exit Function
+  End If
+  If Val(Format(txtBox(1).Text, "###")) > Con.Execute("Select CurQty+FirstQty As Qty From Sandogh Where Code = '01'")!Qty Then
+    Message vbCritical, "ãæÌæÏí ÕäÏæÞ ˜ÇÝí äíÓÊ !!! ", "ÎØÇ"
+    ComDate(0).SetFocus
+    ValidData = False
+    Exit Function
+  End If
+  ComDate(1).Text = Right("00" & Trim(ComDate(1).Text), 2)
+  ComDate(0).Text = Right("00" & Trim(ComDate(0).Text), 2)
+  If Trim(ComDate1(2).Text) = "" Or Trim(ComDate1(1).Text) = "" Or Trim(ComDate1(0).Text) = "" Then
+    Message vbCritical, "ÊÇÑíÎ ÑÏÇÎÊ ÞÓØ ÑÇ ÕÍíÍ æÇÑÏ ßäíÏ !!! ", "ÎØÇ"
+    ComDate(0).SetFocus
+    ValidData = False
+    Exit Function
+  End If
+  ComDate1(1).Text = Right("00" & Trim(ComDate1(1).Text), 2)
+  ComDate1(0).Text = Right("00" & Trim(ComDate1(0).Text), 2)
+  If txtBox(1).Text = "" Then
+     Ans = Message(vbCritical, "ÔãÇÑå ÊÞÇÖÇ äÈÇíÏÎÇáí ÈÇÔÏ !!! ", "ÇÎØÇÑ")
+     ValidData = False
+     Exit Function
+  End If
+  If txtBox(2).Text = "" Then
+     Ans = Message(vbCritical, "ãÈáÛ æÇã äÈÇíÏÎÇáí ÈÇÔÏ !!! ", "ÇÎØÇÑ")
+     ValidData = False
+     Exit Function
+  End If
+'  If Not Con.Execute("Select * From QVam Where PCode = '" & txtCode.Text & "' And Status <> '1' ").EOF Then
+'     Ans = Message(vbCritical, "ÈÑÇí Çíä ÚÖæ ÊÞÇÖÇ ËÈÊ ÔÏå ÇÓÊ !!! ", "ÇÎØÇÑ")
+'     ValidData = False
+'     Exit Function
+'  End If
+  
+  ValidData = True
+End Function
+Private Sub SetOnOffButtons(bVal As Boolean)
+  cmdAdd.Visible = bVal
+  cmdEdit.Visible = bVal
+  cmdDelete.Visible = bVal
+  cmdClose.Visible = bVal
+  cmdSearch.Visible = bVal
+  cmdNext.Visible = bVal
+  cmdFirst.Visible = bVal
+  cmdLast.Visible = bVal
+  cmdPrevious.Visible = bVal
+  lblStatus.Visible = bVal
+  cmdExitGrid.Visible = Not bVal
+  GridSearch.Visible = Not bVal
+
+End Sub
+Private Sub MakeNeedsRst()
+  Dim StrSql As String
+  Set adoPrimaryRS = New Recordset
+  Set RstQVam = New Recordset
+  
+  StrSql = "SELECT  PVAM.*, PERSON.family, PERSON.name, PERSON.father, " & vbNewLine
+  StrSql = StrSql + "RTRIM(PERSON.family) + ' ' + PERSON.name AS Fam, QVAM.PCODE AS PCode," & vbNewLine
+  StrSql = StrSql + " Case City When 1 Then 'ÔÇåÑæÏ' when 2 then 'ÑÇä' when 3 then 'ÊåÑÇä' when 4 then 'ÓÇíÑ' else '' end As CityOnv ," & vbNewLine
+  StrSql = StrSql + "ISNULL(Sum(DARGST.gstmblg), 0) As Paid" & vbNewLine
+  StrSql = StrSql + "FROM PVAM INNER JOIN" & vbNewLine
+  StrSql = StrSql + "     QVAM ON PVAM.req_no = QVAM.REQ_NO INNER JOIN" & vbNewLine
+  StrSql = StrSql + "     PERSON ON QVAM.PCODE = PERSON.code INNER JOIN" & vbNewLine
+  StrSql = StrSql + "     DARGST ON PVAM.req_no = DARGST.req_no" & vbNewLine
+  StrSql = StrSql + "Where (PVAM.type = '" & cTypeVam & "')" & vbNewLine
+  StrSql = StrSql + "GROUP BY PVAM.req_no, PVAM.scode, PVAM.mblgvam, PVAM.gst1, PVAM.gst2, PVAM.gst_no, PVAM.date_d, PVAM.date_g, PVAM.gst_pay, PVAM.status," & vbNewLine
+  StrSql = StrSql + "PVAM.sabtdate, PVAM.pkarmozd, PVAM.mkarmozd, PVAM.lastdate, PVAM.type, PVAM.mblgmain, PERSON.family, PERSON.name, PERSON.father," & vbNewLine
+  StrSql = StrSql + "RTRIM(PERSON.family) + ' ' + PERSON.name, QVAM.PCODE," & vbNewLine
+  StrSql = StrSql + "Case City When 1 Then 'ÔÇåÑæÏ' when 2 then 'ÑÇä' when 3 then 'ÊåÑÇä' when 4 then 'ÓÇíÑ' else '' end" & vbNewLine
+  StrSql = StrSql + "Order By PVam.Req_No"
+
+  
+  
+'  StrSql = "SELECT PVAM.*, Family, Name, Father, rtrim(Family)+' '+ Name As Fam, "
+'  StrSql = StrSql + " QVam.PCode As PCode,"
+'  StrSql = StrSql + " Case City When 1 Then 'ÔÇåÑæÏ' when 2 then 'ÑÇä' when 3 then 'ÊåÑÇä' when 4 then 'ÓÇíÑ' else '' end As CityOnv " & vbNewLine
+'  StrSql = StrSql + "From PVAM INNER JOIN QVAM On PVAM.REQ_NO = QVAM.REQ_NO Inner Join PERSON ON QVAM.PCODE = PERSON.code " & vbNewLine
+'  StrSql = StrSql + "Where PVam.Type = '" & cTypeVam & "' "
+  adoPrimaryRS.Open StrSql, Con, adOpenStatic, adLockOptimistic
+
+  StrSql = "SELECT *, rtrim(Family)+' '+ Name As Fam, "
+  StrSql = StrSql + " PCode As PCode,"
+  StrSql = StrSql + " Case City When 1 Then 'ÔÇåÑæÏ' when 2 then 'ÑÇä' when 3 then 'ÊåÑÇä' when 4 then 'ÓÇíÑ' else '' end As CityOnv "
+  StrSql = StrSql + "From QVAM INNER JOIN PERSON ON QVAM.PCODE = PERSON.code Where QVAM.Status <> '1' And QVam.Type = '" & cTypeVam & "' "
+  RstQVam.Open StrSql, Con, adOpenStatic, adLockReadOnly
+
+End Sub
+Private Function isDataChanged()
+  With adoPrimaryRS
+    If .EOF Then
+       If txtCode.Text <> "" Then isDataChanged = True Else isDataChanged = False
+       Exit Function
+    End If
+    If Val(Format(txtBox(1).Text, "###")) <> .Fields.Item("MblgVam") Or _
+       ComDate(2).Text & "/" & ComDate(1).Text & "/" & ComDate(0).Text <> .Fields.Item("Date_d") Or _
+       ComDate1(2).Text & "/" & ComDate1(1).Text & "/" & ComDate1(0).Text <> .Fields.Item("Date_g") Or _
+       txtCode.Text <> .Fields.Item("Req_No") Or _
+       Val(txtBox(2).Text) <> .Fields.Item("Gst_no") Or _
+       Val(Format(txtBox(3).Text, "###")) <> .Fields.Item("Gst2") Or _
+       Val(Format(txtBox(4).Text, "###")) <> .Fields.Item("Gst1") Or _
+       Val(Format(txtBox(5).Text, "###")) <> .Fields.Item("PKarmozd") Or _
+       Val(Format(txtBox(6).Text, "###")) <> .Fields.Item("MKarmozd") Then isDataChanged = True Else isDataChanged = False
+
+  End With
+End Function
+
+Private Sub GridSearch_Paint()
+ If GridKeys = "PVam" Then FillData (True)
+End Sub
+
+
+Private Sub GridSearch_RowColChange(LastRow As Variant, ByVal LastCol As Integer)
+If GridSearch.Col <> SelectedCol Then
+  AdjustSuitCol GridSearch.Col
+  GridSearch.Col = SelectedCol
+End If
+End Sub
+
+''//////////////////////
+Private Sub txtBox_Change(Index As Integer)
+ If Index = 2 Or Index = 5 Then txtBox(Index).Text = Format(txtBox(Index).Text, "###")
+ If Index >= 1 Then txtBox(Index).Text = Format(txtBox(Index).Text, "###,###")
+ If Index < 3 And txtBox(2).Text <> "" Then
+    nGst1 = Int(Round(Val(Format(txtBox(1).Text, "###")) / Val(txtBox(2).Text) / 10000)) * 10000
+    nGst2 = Val(Format(txtBox(1).Text, "###")) - nGst1 * (Val(txtBox(2).Text) - 1)
+    txtBox(3).Text = nGst2
+    txtBox(4).Text = nGst1
+    txtBox(6).Text = Val(Format(txtBox(1).Text, "###")) * Val(txtBox(5).Text) / 100#
+ End If
+ If Index = 5 Then
+    txtBox(6).Text = Val(Format(txtBox(1).Text, "###")) * Val(txtBox(5).Text) / 100#
+ End If
+
+'  If isDataChanged Then cmdEdit.Enabled = True Else cmdEdit.Enabled = False
+End Sub
+
+Private Sub txtBox_GotFocus(Index As Integer)
+ txtBox(Index).BackColor = &HC0FFFF
+End Sub
+
+Private Sub txtBox_LostFocus(Index As Integer)
+Dim nGst1 As Double, nGst2 As Double
+ txtBox(Index).BackColor = &HFFFFFF
+ If Index = 3 Then
+    txtBox(4).Text = (Val(Format(txtBox(1).Text, "###")) - Val(Format(txtBox(3).Text, "###"))) / (Val(txtBox(2).Text) - 1)
+ End If
+ If Index = 4 Then
+    txtBox(3).Text = Val(Format(txtBox(1).Text, "###")) - Val(Format(txtBox(4).Text, "###")) * (Val(txtBox(2).Text) - 1)
+ End If
+ If Index = 5 And txtBox(6).Text = "" Then
+    txtBox(6).Text = Val(Format(txtBox(1).Text, "###")) * Val(txtBox(5).Text) / 100#
+ End If
+' If isDataChanged Then cmdEdit.Enabled = True Else cmdEdit.Enabled = False
+End Sub
+Private Sub txtBox_KeyPress(Index As Integer, KeyAscii As Integer)
+ SendKeys "{End}"
+ If illegalKey(KeyAscii) Then KeyAscii = 0
+End Sub
+
+''///////////////
+Private Sub txtBox_KeyDown(Index As Integer, KeyCode As Integer, Shift As Integer)
+  KeyControl KeyCode
+  Select Case KeyCode
+  End Select
+
+End Sub
+
+Private Sub cmdSearch_Click()
+Shape1.Visible = False
+Frame2.Visible = False
+Frame3.Top = Frame2.Top
+
+SetOnOffButtons False
+HieghtForm = Me.Height
+Me.Height = Me.Height + Frame3.Height - Frame2.Height
+Frame3.Visible = True
+GridSearch.Enabled = True
+GridSearch.SetFocus
+GridSearch.Col = 0
+SelectedCol = 0
+If GridKeys = "PVam" Then
+   Set GridSearch.DataSource = adoPrimaryRS
+   GridSearch.Caption = "ãÔÎÕÇÊ æÇãåÇ"
+   GridSearch.Columns(3).Caption = "ÔãÇÑå æÇã"
+Else
+   Set GridSearch.DataSource = RstQVam
+   GridSearch.Caption = "ÊÞÇÖÇåÇí æÇã"
+   GridSearch.Columns(3).Caption = "ÔãÇÑå ÊÞÇÖÇ"
+End If
+
+End Sub
+Private Sub AdjustSuitCol(ColIndex)
+  Dim vBookMrk
+  lblSearchStr = ""
+  SelectedCol = ColIndex
+  If GridKeys = "PVam" Then
+     vBookMrk = adoPrimaryRS.Bookmark
+     adoPrimaryRS.Sort = GridSearch.Columns(ColIndex).DataField
+     adoPrimaryRS.Bookmark = vBookMrk
+  Else
+     vBookMrk = RstQVam.Bookmark
+     RstQVam.Sort = GridSearch.Columns(ColIndex).DataField
+     RstQVam.Bookmark = vBookMrk
+  End If
+
+End Sub
+Private Sub EditCaptionSearch(nCol, nKey)
+  Dim nLenField
+  Select Case nCol
+    Case 0
+      nLenField = 5
+    Case 1, 2, 3
+      nLenField = 20
+  End Select
+  If nKey = vbKeyBack Then
+    If Len(lblSearchStr) > 0 Then lblSearchStr.Caption = Mid(lblSearchStr, 1, Len(lblSearchStr) - 1)
+  Else
+    If Len(lblSearchStr) < nLenField Then
+      lblSearchStr.Caption = lblSearchStr.Caption + Chr$(nKey)
+    End If
+  End If
+End Sub
+Private Sub GridSearch_HeadClick(ByVal ColIndex As Integer)
+  AdjustSuitCol (ColIndex)
+  GridSearch.Col = SelectedCol
+  GridSearch.Row = 0
+End Sub
+Private Sub GridSearch_KeyUp(KeyCode As Integer, Shift As Integer)
+  If KeyCode = vbKeyUp Or KeyCode = vbKeyPageUp Or _
+     KeyCode = vbKeyDown Or KeyCode = vbKeyPageDown Then
+     If GridKeys = "PVam" Then FillData True
+  End If
+End Sub
+
+Private Sub GridSearch_KeyPress(KeyAscii As Integer)
+Dim FindStr, cPrevBookMark, cCode As String
+Dim rst As Recordset
+  If GridKeys = "PVam" Then
+     Set rst = adoPrimaryRS
+  Else
+     Set rst = RstQVam
+  End If
+  If SelectedCol >= 5 Then Exit Sub
+'  If Not (KeyAscii >= 48 And KeyAscii <= 57) Then Exit Sub
+  If KeyAscii = vbKeyReturn Or KeyAscii = vbKeyEscape Then
+    If rst.EOF Then Exit Sub
+    cCode = GridSearch.Columns(3).CellText(rst.Bookmark)
+    txtCode.Text = cCode
+    lblFamily.Caption = Trim(GridSearch.Columns(1).CellText(rst.Bookmark)) + "(" + Trim(GridSearch.Columns(2).CellText(rst.Bookmark)) + ")"
+    cmdExitGrid_Click
+    If KeyAscii = vbKeyReturn Then
+       If GridKeys = "PVam" Then cmdEdit_Click 'Else SendKeys "{tab}"
+    End If
+    DoEvents
+    Exit Sub
+  End If
+  
+  'If adoPrimaryRS.Fields(GridSearch.Columns(SelectedCol).DataField).Type = 129 Then
+     EditCaptionSearch GridSearch.Col, KeyAscii
+     If Len(lblSearchStr) > 0 Then
+        If SelectedCol = 3 Then
+          FindStr = GridSearch.Columns(SelectedCol).DataField + " = " + lblSearchStr.Caption
+        Else
+          FindStr = GridSearch.Columns(SelectedCol).DataField + " Like '" + lblSearchStr.Caption + "%'"
+        End If
+        cPrevBookMark = rst.Bookmark
+        rst.Find FindStr, , , 1
+        If rst.EOF Then
+          lblSearchStr.ForeColor = vbRed
+          rst.Bookmark = cPrevBookMark
+        Else
+          lblSearchStr.ForeColor = vbBlack
+          If GridKeys = "PVam" Then FillData (True)
+        End If
+     End If
+End Sub
+
+
+Private Sub cmdExitGrid_Click()
+Me.Height = HieghtForm
+SetOnOffButtons True
+If GridKeys = "PVam" Then
+Else
+   SetButtons (False)
+End If
+Shape1.Visible = True
+Frame2.Visible = True
+Frame3.Visible = False
+GridSearch.Enabled = False
+Set GridSearch.DataSource = Nothing
+
+End Sub
+
+Private Sub KeyControl(KeyCode)
+
+  FraHelpM.Visible = False
+  Select Case KeyCode
+    Case vbKeyReturn
+      SendKeys "{tab}"
+    Case vbKeyF2
+      cmdUpdate_Click
+    Case vbKeyF1
+      FraHelpM.Visible = True
+      FraHelpM.ZOrder Top
+    Case vbKeyPageUp
+      If isDataChanged() Then
+         Ans = Message(vbYesNo, "ÇØáÇÚÇÊ ÊÛííÑßÑÏå!!! ËÈÊ ÔæÏ ¿ ", "ÇÎØÇÑ")
+         If Ans = vbNo Then
+         Else
+           cmdUpdate_Click
+'           cmdPrevious_Click
+         End If
+      End If
+      If Shift = vbCtrlMask Then
+        cmdFirst_Click
+      Else
+        cmdPrevious_Click
+      End If
+    Case vbKeyPageDown
+      If isDataChanged() Then
+         Ans = Message(vbYesNo, "ÇØáÇÚÇÊ ÊÛííÑßÑÏå!!! ËÈÊ ÔæÏ ¿ ", "ÇÎØÇÑ")
+         If Ans = vbNo Then
+         Else
+           cmdUpdate_Click
+'           cmdNext_Click
+         End If
+      End If
+      If Shift = vbCtrlMask Then
+        cmdLast_Click
+      Else
+        cmdNext_Click
+      End If
+    Case vbKeyEscape
+'      If isDataChanged() Then
+'         Ans = Message(vbYesNo, "ÇØáÇÚÇÊ ÊÛííÑßÑÏå!!! áÛæ ÔæÏ ¿ ", "ÇÎØÇÑ")
+'         If Ans = vbNo Then
+'         Else
+'           cmdCancel_Click
+'         End If
+'      Else
+         cmdCancel_Click
+'      End If
+  End Select
+  DoEvents
+
+End Sub
+
+Private Sub txtCode_GotFocus()
+ txtCode.BackColor = &HC0FFFF
+End Sub
+
+Private Sub txtCode_LostFocus()
+Dim FindStr As String, nOldReq_No As Integer
+ txtCode.BackColor = &HFFFFFF
+ 'If adoPrimaryRS.EOF Then Exit Sub
+ If Trim(txtCode.Text) <> "" Then
+    FindStr = "Req_No = " & Val(Trim(txtCode.Text))
+    If Not adoPrimaryRS.EOF Then nOldReq_No = adoPrimaryRS.Fields.Item("Req_No")
+    
+    If nOldReq_No <> Val(Trim(txtCode.Text)) Then
+       If Not adoPrimaryRS.EOF Then adoPrimaryRS.MoveFirst
+       adoPrimaryRS.Find FindStr, , adSearchForward, 1
+       If Not adoPrimaryRS.EOF Then
+          FillData True
+          Exit Sub
+       End If
+       If Not RstQVam.EOF Then RstQVam.MoveFirst
+       RstQVam.Find FindStr, , adSearchForward, 1
+       If RstQVam.EOF Then
+         Message vbCritical, " ÊÞÇÖÇí æÇã ËÈÊ äÔÏå ÇÓÊ !!!", "ÇÎØÇÑ"
+         txtCode.SetFocus
+       Else
+         lblFamily.Caption = Trim(RstQVam.Fields.Item("fam")) + "(" + Trim(RstQVam.Fields.Item("Father")) + ")"
+         txtBox(1).Text = IIf(IsNull(RstQVam.Fields.Item("Mblg")), 0, Format(RstQVam.Fields.Item("Mblg"), "###,###"))
+'         ComDate(0).SetFocus
+       End If
+       
+    Else
+       Exit Sub
+    End If
+  Else
+  '   Ans = Message(vbCritical, "ÊÞÇÖÇí æÇã äÈÇíÏ ÎÇáí ÈÇÔÏ !!!", "ÇÎØÇÑ")
+  '   txtCode.SetFocus
+  End If
+' If isDataChanged Then cmdEdit.Enabled = True Else cmdEdit.Enabled = False
+End Sub
+
+Private Sub txtCode_KeyPress(KeyAscii As Integer)
+ SendKeys "{End}"
+ If illegalKey(KeyAscii) Then KeyAscii = 0
+End Sub
+Private Sub txtCode_KeyDown(KeyCode As Integer, Shift As Integer)
+If KeyCode = vbKeyEscape Then cmdCancel_Click
+If KeyCode = vbKeyF4 Then GridKeys = "PVam": cmdSearch_Click
+If KeyCode = vbKeyBack Then Exit Sub
+If txtCode.Text = "" And KeyCode = vbKeyReturn Then
+  If Not Frame3.Visible Then GridKeys = "QVam": cmdSearch_Click
+Else
+ If KeyCode = vbKeyReturn Then
+    SendKeys "{tab}"
+ End If
+End If
+DoEvents
+End Sub
+
+Private Sub ComDate_GotFocus(Index As Integer)
+   If Index = 0 Or Val(ComDate(2).Text) = 0 Then
+     If cCurDate = "" Then
+        cDat = FDate(Date)
+        '    cCurDate = cDat
+     Else
+        cDat = cCurDate
+     End If
+
+    ' cDat = FDate(Date)
+     ComDate(0).Text = Right(cDat, 2)
+     ComDate(1).Text = Mid(cDat, 6, 2)
+     ComDate(2).Text = Left(cDat, 4)
+   End If
+
+End Sub
+Private Sub ComDate_KeyPress(Index As Integer, KeyAscii As Integer)
+   Select Case KeyAscii
+      Case vbKeyReturn, vbKeyDown
+         SendKeys "{Tab}"
+      Case vbKeyEscape
+         ComDate(0).SetFocus
+   End Select
+End Sub
+Private Sub comDate_LostFocus(Index As Integer)
+  Select Case Index
+    Case 1
+      If ComDate(1).Text > "06" And ComDate(0).Text = "31" Then
+        ComDate(0).Text = "30"
+       ' comDate(0).SelText = 30
+      End If
+  End Select
+
+End Sub
+Private Sub ComDate1_GotFocus(Index As Integer)
+   If Index = 0 Or Val(ComDate1(2).Text) = 0 Then
+     ComDate1(0).Text = "10"
+     If ComDate(0).Text <= "12" Then   ' ÞÈá ÇÒ 12 åÑãÇå 10 ãÇå ÈÚÏ
+        If ComDate(1).Text < "12" Then
+            ComDate1(1).Text = Right("00" & Val(ComDate(1).Text) + 1, 2)
+            ComDate1(2).Text = ComDate(2).Text
+        Else
+            ComDate1(1).Text = "01"
+            ComDate1(2).Text = Right(Val(ComDate(2).Text) + 1, 4)
+        End If
+     Else
+        Select Case ComDate(1).Text
+            Case "11"
+              ComDate1(1).Text = "01"
+              ComDate1(2).Text = Right(Val(ComDate(2).Text) + 1, 4)
+            Case "12"
+              ComDate1(1).Text = "02"
+              ComDate1(2).Text = Right(Val(ComDate(2).Text) + 1, 4)
+            Case Else
+              ComDate1(1).Text = Right("00" & Val(ComDate(1).Text) + 2, 2)
+              ComDate1(2).Text = ComDate(2).Text
+        End Select
+    End If
+'     ComDate1(2).Text = Left(cDat, 2)
+   End If
+End Sub
+Private Sub ComDate1_KeyPress(Index As Integer, KeyAscii As Integer)
+   Select Case KeyAscii
+      Case vbKeyReturn, vbKeyDown
+         SendKeys "{Tab}"
+      Case vbKeyEscape
+         ComDate1(0).SetFocus
+   End Select
+End Sub
+Private Sub comDate1_LostFocus(Index As Integer)
+  Select Case Index
+    Case 1
+      If ComDate1(1).Text > "06" And ComDate(0).Text = "31" Then
+        ComDate1(0).Text = "30"
+       ' comDate(0).SelText = 30
+      End If
+  End Select
+  If ComDate1(1).Text = "12" And ComDate(0).Text = "30" Then
+     ComDate1(0).Text = "29"
+  End If
+
+End Sub
+Private Sub cmdUpdate_Click()
+  Dim Ans, cStat, cUnit, cStrsql As String, FindStr As String
+  Dim nOldMblg As Double, cOldCode As String
+  Dim cPCode As String, vBookMark As Variant, cNamePer As String
+  Dim cDateVam As String, nKarmozd As Double, cBabat As String
+  Dim lNeedToMakeGst As Boolean, tmpRst As New Recordset
+  On Error GoTo UpdateErr
+
+  If Not ValidData() Then Exit Sub
+  If Not isDataChanged() Then
+    mbEditFlag = False
+    SetButtons True
+    SetFieldsGet False
+    mbDataChanged = False
+    Exit Sub
+  End If
+  Con.Errors.Clear
+  Con.BeginTrans
+  cDateVam = ComDate(2).Text & "/" & ComDate(1).Text & "/" & ComDate(0).Text
+  nKarmozd = Val(Format(txtBox(6).Text, "###"))
+  cStrsql = "SELECT QVAM.PCODE, RTRIM(PERSON.name) + ' ' + RTRIM(PERSON.family) AS Fam " & vbnew
+  cStrsql = cStrsql + "FROM QVAM INNER JOIN PERSON ON QVAM.PCODE = PERSON.code " & vbNewLine
+  cStrsql = cStrsql + "Where QVAM.REQ_NO = " & txtCode.Text
+  tmpRst.Open cStrsql, Con, adOpenForwardOnly, adLockReadOnly
+  
+  cPCode = tmpRst.Fields.Item("PCode")
+  cNamePer = tmpRst.Fields.Item("Fam")
+
+  If adoPrimaryRS.EOF Then
+    cStat = "ADD"
+    lNeedToMakeGst = True
+    adoPrimaryRS.AddNew
+    adoPrimaryRS.Fields.Item("Req_No") = txtCode.Text
+    If nKarmozd > 0 Then ' Karmozd
+       cBabat = " ˜ÇÑãÒÏ æÇã " & cNamePer & " " & txtCode.Text
+       cStrsql = "Insert Into Pardar (scode, pcode, action, mblg, date, req_no, babat) "
+       cStrsql = cStrsql + "Values ('01','00000', '1'," & nKarmozd & ",'" & cDateVam & "'," & txtCode.Text & ", '" & cBabat & "')"
+       Con.Execute (cStrsql)
+       
+       cBabat = " ˜ÇÑãÒÏ æÇã " & txtCode.Text
+       cStrsql = "Insert Into Pardar (scode, pcode, action, mblg, date, req_no, babat) "
+       cStrsql = cStrsql + "Values ('01','" & cPCode & "', '2'," & nKarmozd & ",'" & cDateVam & "'," & txtCode.Text & ", '" & cBabat & "')"
+       Con.Execute (cStrsql)
+    End If
+  Else
+    cStat = "UPDATE"
+    If adoPrimaryRS.Fields.Item("Gst_No") <> Val(Format(txtBox(2).Text, "###")) Or _
+       adoPrimaryRS.Fields.Item("Date_G") <> ComDate1(2).Text & "/" & ComDate1(1).Text & "/" & ComDate1(0).Text Then
+       Con.Execute ("Delete From DarGst Where Req_No = " & txtCode.Text)
+       lNeedToMakeGst = True
+    End If
+    If adoPrimaryRS.Fields.Item("MKarmozd") <> nKarmozd Then   ' Changed Karmozd
+       cStrsql = "Delete From Pardar Where PCode = '00000' And Action = '1' And Req_No = " & txtCode.Text
+       Con.Execute (cStrsql)
+          
+       cStrsql = "Delete From Pardar Where PCode = '" & cPCode & "' And Action = '2' And Req_No = " & txtCode.Text
+       Con.Execute (cStrsql)
+       If nKarmozd > 0 Then
+          cBabat = " ˜ÇÑãÒÏ æÇã " & cNamePer & " " & txtCode.Text
+          cStrsql = "Insert Into Pardar (scode, pcode, action, mblg, date, req_no, babat) "
+          cStrsql = cStrsql + "Values ('01','00000', '1'," & nKarmozd & ",'" & cDateVam & "'," & txtCode.Text & ", '" & cBabat & "')"
+          Con.Execute (cStrsql)
+       
+          cBabat = " ˜ÇÑãÒÏ æÇã " & txtCode.Text
+          cStrsql = "Insert Into Pardar (scode, pcode, action, mblg, date, req_no, babat) "
+          cStrsql = cStrsql + "Values ('01','" & cPCode & "', '2'," & nKarmozd & ",'" & cDateVam & "'," & txtCode.Text & ", '" & cBabat & "')"
+          Con.Execute (cStrsql)
+       End If
+    End If
+  End If
+  adoPrimaryRS.Fields.Item("mblgvam") = Val(Format(txtBox(1).Text, "###"))
+  adoPrimaryRS.Fields.Item("mblgMain") = Val(Format(txtBox(1).Text, "###"))
+  adoPrimaryRS.Fields.Item("Gst2") = Val(Format(txtBox(3).Text, "###"))
+  adoPrimaryRS.Fields.Item("Gst1") = Val(Format(txtBox(4).Text, "###"))
+  adoPrimaryRS.Fields.Item("Gst_No") = Val(Format(txtBox(2).Text, "###"))
+  adoPrimaryRS.Fields.Item("Date_d") = ComDate(2).Text & "/" & ComDate(1).Text & "/" & ComDate(0).Text
+  adoPrimaryRS.Fields.Item("Date_g") = ComDate1(2).Text & "/" & ComDate1(1).Text & "/" & ComDate1(0).Text
+  adoPrimaryRS.Fields.Item("PKarmozd") = Val(txtBox(5).Text)
+  adoPrimaryRS.Fields.Item("MKarmozd") = Val(Format(txtBox(6).Text, "###"))
+  adoPrimaryRS.Fields.Item("Type") = cTypeVam ' RstQVam.Fields.Item("Type")
+  adoPrimaryRS.Update
+  
+  If lNeedToMakeGst Then MakeRecordsGst
+  
+  Con.CommitTrans
+  RstQVam.Requery
+  
+  MainForm.StatusBar1.Panels(7).Text = "ãæÌæÏí ÕäÏæÞ : " & Format(Con.Execute("Select CurQty+FirstQty As Qty From Sandogh Where Code = '01'")!Qty, "###,###") & "ÑíÇá"
+ 
+  On Error GoTo 0
+  
+  If mbAddNewFlag Then
+     cmdAdd_Click
+     Exit Sub
+  End If
+  vBookMark = adoPrimaryRS.Bookmark
+  adoPrimaryRS.Requery
+  adoPrimaryRS.Bookmark = vBookMark
+  FillData (True)
+  mbEditFlag = False
+  SetButtons True
+  SetFieldsGet False
+  Exit Sub
+UpdateErr:
+  ErrorHandler err.Number, cStat
+  Con.RollbackTrans
+'  adoPrimaryRS.CancelUpdate
+  If mbAddNewFlag Then
+    'adoPrimaryRS.MoveLast              'move to the new record
+  Else
+   ' txtBox(0).Text = adoPrimaryRS.Fields.Item("úGharNo")
+  End If
+End Sub
+
+Private Sub MakeRecordsGst()
+  Dim i As Integer
+  Dim nGst_No As Integer
+  Dim cDateGst As String, Date_Gst As String
+  Dim cReqNo As String
+  Dim cStrsql As String
+  cDateGst = ComDate1(2).Text & "/" & ComDate1(1).Text & "/" & ComDate1(0).Text
+  Date_Gst = cDateGst
+  cReqNo = txtCode.Text
+  On Error GoTo err:
+  nGst_No = Val(txtBox(2).Text)
+  For i = 1 To nGst_No
+     cStrsql = "Insert Into DarGst (Req_No, Gst_No, Date_G) Values (" & cReqNo & ", " & i & ", '" & cDateGst & "')"
+     Con.Execute cStrsql
+     If Val(Mid(Date_Gst, 9, 2)) < 30 Then
+       If Val(Mid(cDateGst, 6, 2)) < 12 Then
+          cDateGst = Left(cDateGst, 5) & Right("0" & Val(Mid(cDateGst, 6, 2)) + 1, 2) & Right(Date_Gst, 3)
+       Else
+          cDateGst = Right(Val(Left(cDateGst, 4)) + 1 & "/01" & Right(Date_Gst, 3), 10)
+       End If
+     Else
+       If Val(Mid(cDateGst, 6, 2)) < 6 Then
+          cDateGst = Left(cDateGst, 5) & Right("0" & Val(Mid(cDateGst, 6, 2)) + 1, 2) & Right(Date_Gst, 3)
+       Else
+          If Val(Mid(cDateGst, 6, 2)) < 12 Then
+             cDateGst = Left(cDateGst, 5) & Right("0" & Val(Mid(cDateGst, 6, 2)) + 1, 2) & IIf(Val(Mid(cDateGst, 6, 2)) = 11, "/29", "/30")
+          Else
+             cDateGst = Right(Val(Left(cDateGst, 4)) + 1 & "/01" & Right(Date_Gst, 3), 10)
+          End If
+       End If
+     End If
+  Next i
+  Exit Sub
+err:
+i = 1
+End Sub
+

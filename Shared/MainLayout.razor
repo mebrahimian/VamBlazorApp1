@@ -1,0 +1,144 @@
+﻿
+@using VamBlazor.Client.Application.Services
+
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject DateService DateService
+@inject SandoghService SandoghService
+@inject DatabaseContext _Db
+@inject IJSRuntime JS
+
+<MudRTLProvider RightToLeft="true">
+    <MudPopoverProvider/>
+    <MudDialogProvider />
+    <MudSnackbarProvider/>
+    <MudThemeProvider Theme="myTheme"/>
+    <MudLayout Dir="rtl" Class="full-page">
+        <MudAppBar Dense="true" Class="border-3" style="background-color:purple;z-index: 1">
+            <MudTooltip Text="منوی سیستم" Placement="Placement.Top" Delay="1000">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => ToggleDrawer())" Class="mr-lg-5" />
+            </MudTooltip>
+            <MudTooltip Text="معرفی سپرده گذاران" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true" Delay="1000">
+                <MudIconButton Icon="@Icons.Material.Filled.GroupAdd" Color="Color.Inherit" Edge="Edge.End" Class="mx-lg-5" OnClick="NavigateToPagePerson" />
+            </MudTooltip>
+            <MudTooltip Text="افتتاح حساب" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true" Delay="1000">
+                <MudIconButton Icon="@Icons.Material.Filled.CardMembership" Color="Color.Inherit" Edge="Edge.End" Class="mx-lg-5" OnClick="NavigateToPageAccount" />
+            </MudTooltip>
+            <MudTooltip Text="پرداخت/دریافت" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true" Delay="1000">
+                <MudIconButton Icon="@Icons.Material.Filled.Payment" Color="Color.Inherit" Edge="Edge.End" Class="mx-lg-5" OnClick="NavigateToPagePardar" />
+            </MudTooltip>
+            <MudTooltip Text="متقاضیان دریافت وام" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true" Delay="1000">
+                <MudIconButton Icon="@Icons.Material.Filled.CreditCardOff" Color="Color.Inherit" Edge="Edge.End" Class="mx-lg-5" OnClick="NavigateToPageQVam" />
+            </MudTooltip>
+            <MudTooltip Text="پرداخت وام به متقاضیان" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true" Delay="1000">
+                <MudIconButton Icon="@Icons.Material.Filled.CreditScore" Color="Color.Inherit" Edge="Edge.End" Class="mx-lg-5" OnClick="NavigateToPagePVam" />
+            </MudTooltip>
+            <MudSpacer />
+            <MudText Typo="Typo.h5" @onclick="ToggleCardVisibility" style=" background-color: antiquewhite; color:purple ; padding: 5px 10px; border-radius: 50%;">@SandoghDesc</MudText>
+            <MudSpacer />
+            <MudTooltip Text="بازپرداخت اقساط" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true" Delay="1000">
+                <MudIconButton Icon="@Icons.Material.Filled.AddCard" Color="Color.Inherit" Edge="Edge.End" Class="mx-lg-5" OnClick="NavigateToPersonStatus" />
+            </MudTooltip>
+            <MudTooltip Text="گزارش کارت بانک" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true" Delay="1000">
+                <MudIconButton Icon="@Icons.Material.Filled.AssuredWorkload" Color="Color.Inherit" Edge="Edge.End" Class="mx-lg-5" OnClick="NavigateToCardBank" />
+            </MudTooltip>
+            <MudTooltip Text="گزارش عملکرداشخاص" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true" Delay="1000">
+                <MudIconButton Icon="@Icons.Material.Filled.PersonSearch" Color="Color.Inherit" Edge="Edge.End" Class="mx-lg-5" OnClick="NavigateToGraphCurVam" />
+            </MudTooltip>
+            <MudTooltip Text="آنالیزوامهای جاری" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true" Delay="1000">
+                <MudIconButton Icon="@Icons.Material.Filled.BarChart" Color="Color.Inherit" Edge="Edge.End" Class="mx-lg-5" OnClick="NavigateToGraphCurVam" />
+            </MudTooltip>
+            
+
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Calculate" Style="color:white" Class="ml-n8" OnClick="LaunchCalculator">@cToday</MudButton>
+            
+        </MudAppBar>
+        @if (showCard)
+        {
+            <MudCard @onclick="ToggleCardVisibility" Style="background-color: lightblue; width: 20%; position: fixed; left:0; top: 60px; z-index: 1000; padding: 1px; border: 3px solid darkblue;">
+                <MudCardContent Style="background-color: lightgreen; color: black; padding: 0px; height: 30px;">
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;موجودی صندوق <span style="padding-left: 20px;">@SandoghMojodi.ToString("N0")</span>
+                </MudCardContent>
+            </MudCard>
+        }
+        <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always">
+            <NavMenu/>
+        </MudDrawer>
+
+        <MudMainContent>
+
+            @Body
+
+        </MudMainContent>
+
+    </MudLayout>
+</MudRTLProvider>
+
+@code {
+    private string previousUri;
+    private bool _drawerOpen = true;
+    private string? SandoghDesc;
+    private long SandoghMojodi;
+    private string? cToday;
+    private bool showCard = false;
+    private ElementReference calcLink;
+    private async Task OpenCalculatorByRef()
+    {
+        await JS.InvokeVoidAsync("clickLink", calcLink);
+    }
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void ToggleCardVisibility()
+    {
+        // تغییر وضعیت نمایش کارت
+        showCard = !showCard;
+        SandoghMojodi = SandoghService.GetCurrentSandogh();
+    }
+    private MudTheme myTheme = new MudTheme()
+        {
+            Typography = new Typography()
+            {
+                Default = new Default()
+                {
+                    FontFamily = ["VazirUI", "sans-serif"]
+
+                }
+            }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {         
+        cToday = DateService.TodayHDate();
+        SandoghDesc = SandoghService.GetSandoghName();
+    }
+    
+    private void LaunchCalculator()
+    {
+        try
+        {
+            var psi = new System.Diagnostics.ProcessStartInfo("calc.exe")
+                {
+                    UseShellExecute = true
+                };
+            System.Diagnostics.Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("خطا در اجرای calc: " + ex.Message);
+        }
+    }
+
+    private void NavigateToPagePerson() => Navigation.NavigateTo("/pageperson");
+    private void NavigateToPageAccount() => Navigation.NavigateTo("/pageaccount");
+    private void NavigateToPageQVam() => Navigation.NavigateTo("/pageqvam");
+    private void NavigateToPagePVam() => Navigation.NavigateTo("/pagepvam");
+    private void NavigateToPagePardar() => Navigation.NavigateTo("/pagepardar");
+    private void NavigateToCardBank() => Navigation.NavigateTo("/pagebankcard");
+    private void NavigateToPageDargst() => Navigation.NavigateTo("/pagedargstall/1");
+    private void NavigateToGraphCurVam() => Navigation.NavigateTo("/graphcurrentvams");
+    private void NavigateToPersonStatus() => Navigation.NavigateTo("/pagepersonstatus");
+    
+}

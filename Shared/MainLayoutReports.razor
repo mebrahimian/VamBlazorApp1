@@ -1,0 +1,39 @@
+﻿@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using VamBlazor.Client.Application.Services
+@using VamBlazor.Client.Domain.Entities
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject DateService DateService
+@inject DatabaseContext _Db
+<MudRTLProvider RightToLeft="true">
+    <MudPopoverProvider/>
+    <MudDialogProvider />
+    <MudSnackbarProvider/>
+    <MudThemeProvider Theme="myTheme"/>
+    <MudLayout Dir="rtl" Class="full-page">
+        @Body
+    </MudLayout>
+</MudRTLProvider>
+
+@code {
+    private bool _drawerOpen = true;
+    private string? SandoghDesc;
+    private string? cToday;
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private MudTheme myTheme = new MudTheme()
+        {
+            Typography = new Typography()
+            {
+                Default = new Default()
+                {
+                    FontFamily = ["VazirUI", "sans-serif"]
+
+                }
+            }
+    };
+
+}

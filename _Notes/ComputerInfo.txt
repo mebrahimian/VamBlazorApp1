@@ -1,0 +1,10 @@
+ComputerName : MiladPC
+UserNamw : Milad
+Pass     : Hesam
+--------------------
+user2    : Majid
+Pass     : Sadaf4585
+--------------------------
+Sql Sa Password : Milad
+User Sql : Milad
+Password : Hesam
