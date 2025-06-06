@@ -503,8 +503,8 @@
         var createViewQuery = @" Create View vwPersonFullData As
                                  SELECT  dbo.PERSON.Code,
                                  LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END AS FullName,
-                                 dbo.PERSON.Sex,CASE WHEN sex = '1' THEN 'مرد ' ELSE 'زن' END AS SexDesc,
-                                 dbo.PERSON.City,CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END AS CityDesc,
+                                 dbo.PERSON.MelliCode, dbo.PERSON.Sex,CASE WHEN sex = '1' THEN 'مرد ' ELSE 'زن' END AS SexDesc, dbo.PERSON.City,
+                                 CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END AS CityDesc,
                                  dbo.PERSON.Status, CASE PERSON.status WHEN '1' THEN 'فعال ' WHEN '2' THEN 'غیرفعال' END AS StatusDesc,
                                  dbo.HESAB.Pcode,dbo.HESAB.hesab_no As HesabNo, dbo.HESAB.FirstQty, dbo.HESAB.date As HDate,dbo.HESAB.CurQty, dbo.HESAB.MonthQty,
                                  dbo.HESAB.firstqty + dbo.HESAB.curqty AS Mojodi,dbo.HESAB.id___di AS Moaref,dbo.QVAM.REQ_NO AS QReqNo,

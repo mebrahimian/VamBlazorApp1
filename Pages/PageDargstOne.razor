@@ -192,8 +192,8 @@
                         <div class="mt-2" style=@styleSavedOrNot
                             <!-- فیلد روز -->
                             <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
-                                <MudNumericField T="int" Variant="Variant.Outlined"
-                                Value="@Paid_Day"
+                                <MudNumericField T="byte" Variant="Variant.Outlined"
+                                @bind-Value="@Paid_Day"
                                 Min="1"
                                 Max="31"
                                 Immediate="true"/>
@@ -201,8 +201,8 @@
 
                             <!-- فیلد ماه -->
                             <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
-                                <MudNumericField T="int" Variant="Variant.Outlined"
-                                Value="@Paid_Month"
+                                <MudNumericField T="byte" Variant="Variant.Outlined"
+                                @bind-Value="@Paid_Month"
                                 Min="1"
                                 Max="12" 
                                 Immediate="true" />
@@ -211,7 +211,7 @@
                             <!-- فیلد سال -->
                             <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                 <MudNumericField T="int" Variant="Variant.Outlined"
-                                Value="@Paid_Year" 
+                                @bind-Value="@Paid_Year"
                                 Style="width:125px"
                                 Min="1300"
                                 Max="1499"
@@ -225,14 +225,14 @@
                     <MudPaper Elevation="0" Class="py-4 px-0" Style="height: 50px;background-color:white">
 
                         <MudTextField T="string" Class="mt-n5"
-                                      @bind-Value="@SandoghMojodiStr"
-                                      Label=" موجودی صندوق "
-                                      Adornment="Adornment.End"
-                                      AdornmentText="ریال"
-                                      Variant="Variant.Outlined"
-                                      Typo="Typo.body1"
-                                      Style="font-size: 1.2vw; background-color:white;color:purple"
-                                      readonly="true" />
+                        @bind-Value="@SandoghMojodiStr"
+                        Label=" موجودی صندوق "
+                        Adornment="Adornment.End"
+                        AdornmentText="ریال"
+                        Variant="Variant.Outlined"
+                        Typo="Typo.body1"
+                        Style="font-size: 1.2vw; background-color:white;color:purple"
+                        readonly="true" />
 
                     </MudPaper>
                     <hr>
@@ -309,6 +309,9 @@
             // var record = _Db.tblDates.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
             cDateShamsi = DateService.TodayHDate();
+            Paid_Year = DateService.GetHYear(cDateShamsi);
+            Paid_Month = DateService.GetHMonth(cDateShamsi);
+            Paid_Day = DateService.GetHDay(cDateShamsi);
             //     var _tbldate = DateService.TblDate;
             //     cDateShamsi = _tbldate.FirstOrDefault(d => d.GDate == DateTime.Now.Date).HDate; // مقایسه فقط تاریخ بدون زمان
             var cper = _personSelectList.First().FullName;
@@ -354,7 +357,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personSelectList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullName, value));
+                             && TextHelper.NormalContain(c.FullName+" "+c.Mellicode, value)).OrderBy(c => c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();
@@ -398,7 +401,7 @@
             MonthlyGst = CurrentPersonLastGstDto.GstMblg;
             MonthlyPas = CurrentPersonLastGstDto.MonthQty;
             if(CurrentPersonLastGstDto.CurrentGstSaved) styleSavedOrNot = "background-color:khaki; display: flex; font-size: 16px; font-weight: bold; width: 100%; height: 100%; justify-content: space-between;";
-            
+
             else styleSavedOrNot = "display: flex; font-size: 16px; font-weight: bold; width: 100%; height: 100%; justify-content: space-between;";
 
             if (!(PrevPersonLastGstDto == null || NextPersonLastGstDto == null))
@@ -406,7 +409,7 @@
             else isValidGst = true;
 
             selectedPerson.FullName = CurrentPersonLastGstDto.FullName; // + " ش.حساب : " + CurrentPersonLastGstDto.HesabNo;
-                                                                        // selectedPerson.FullName = CurrentPersonLastGstDto.FullName;
+            // selectedPerson.FullName = CurrentPersonLastGstDto.FullName;
             selectedPerson.HesabNo = CurrentPersonLastGstDto.HesabNo;
             selectedPerson.Code = CurrentPersonLastGstDto.Code;
             Gst_Year = DateService.GetHYear(CurrentPersonLastGstDto.GstDate);
@@ -414,9 +417,15 @@
             Gst_Day = DateService.GetHDay(CurrentPersonLastGstDto.GstDate);
             if (!CurrentPersonLastGstDto.CurrentGstSaved)  // قسط پرداخت نشده
             {
-                Paid_Year = DateService.GetHYear(cDateShamsi);
-                Paid_Month = DateService.GetHMonth(cDateShamsi);
-                Paid_Day = DateService.GetHDay(cDateShamsi);
+                // Paid_Year = DateService.GetHYear(cDateShamsi);
+                // Paid_Month = DateService.GetHMonth(cDateShamsi);
+                // Paid_Day = DateService.GetHDay(cDateShamsi);
+            }
+            else
+            {
+                Paid_Year = DateService.GetHYear(CurrentPersonLastGstDto.PaidDate);
+                Paid_Month = DateService.GetHMonth(CurrentPersonLastGstDto.PaidDate);
+                Paid_Day = DateService.GetHDay(CurrentPersonLastGstDto.PaidDate);
             }
 
             cVamInfoStr = "وام شماره " + CurrentPersonLastGstDto.ReqNo

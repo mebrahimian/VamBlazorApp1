@@ -265,7 +265,9 @@
             _personFullDataList = _Db.vwPersonFullData.AsNoTracking().Where(v => v.Code != "00000" && v.Code != "00100") // شرط‌های دلخواه
                                      .Select(v => new PersonFullDataDto
                                            {
-                                             FullNameWCode = v.FullName + "حساب:" + v.HesabNo + "کد:" + v.Code,
+                                             FullNameWCode = string.IsNullOrWhiteSpace(v.MelliCode)
+                                                                               ? v.FullName + "حساب : " + v.HesabNo
+                                                                               : v.FullName + "حساب : " + v.HesabNo + " کدملی : " + v.MelliCode,
                                              FullName = v.FullName,
                                              HesabNo = v.HesabNo,
                                              Code = v.Code   
@@ -305,7 +307,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personFullDataList.Where(c => !string.IsNullOrEmpty(c.FullNameWCode) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullNameWCode, value));
+                             && TextHelper.NormalContain(c.FullNameWCode, value)).OrderBy(c => c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();

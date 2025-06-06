@@ -1,0 +1,126 @@
+﻿@page "/pagevampriority"
+@layout MainLayout
+@inject DatabaseContext _Db
+@inject NavigationManager Navigation
+@inject NavigationManager NavigationManager
+@inject VamBlazor.Client.Application.Services.PersonServices PersonServices
+@inject EmailService _emailService
+@inject SandoghService SandoghService
+@inject DateService DateService
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using MudBlazor
+@using VamBlazor.Client.Application.CommonFunc
+@using VamBlazor.Client.Application.Dtos
+@using VamBlazor.Client.Application.Services
+@inject IJSRuntime JSRuntime
+
+<MudContainer style="font-family:'VazirUI'">
+
+    <MudGrid Justify="Justify.Center" AlignItems="Center" Style="height: 100vh;">
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.body2" Align="Align.Center" Style="width:100%;height:25px;background-color:cadetblue" Class="mt-2">گزارش الویت وام</MudText>
+            <MudPaper Elevation="3" Style="padding: 20px;">
+                <MudGrid>
+
+                    <MudItem xs="12" sm="5">
+                        <div style="width:100%;">
+                            <MudTooltip Text="لطفاً سقف وام را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="long" Label="سقف وام" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
+                                Style="font-size:14px"
+                                @bind-Value=@nSaghfVam
+                                Format="###,###"
+                                HideSpinButtons="true" />
+                            </MudTooltip>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12" sm="4" Style="margin-top:5">
+                        <div style="width:100%;">
+                            <MudTooltip Text="لطفاً حداقل موجودی را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="long" Label="حداقل موجودی" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
+                                Style="font-size:14px"
+                                @bind-Value=@nMinMojodi
+                                Format="###,###"
+                                HideSpinButtons="true" />
+                            </MudTooltip>
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12" sm="3" Style="margin-top:5">
+                        <div style="width:100%;">
+                            <MudTooltip Text="لطفاً درصد کارمزد را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Label="کارمزد" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="%"
+                                Style="font-size:14px"
+                                @bind-Value=@nPer
+                                Format="##"
+                                HideSpinButtons="true" />
+                            </MudTooltip>
+                        </div>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="12">
+                        <MudButton class="mt-2" 
+                        @onclick="PrintReport" Variant="Variant.Filled"
+                        StartIcon="@Icons.Material.Filled.Print"
+                        IconColor="Color.Primary"
+                        style="width:100%">
+                            چاپ گزارش
+                        </MudButton>
+                    </MudItem>
+
+                    @if (AlertMessage != null)
+                    {
+                        <div class="alert alert-warning">
+                            @AlertMessage      // sample in PageBankCard Razor Page
+                        </div>
+                    }
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+
+@code {
+    private string AlertMessage { get; set; }
+    private string cDateShamsi = "";
+    private long nSaghfVam; private long nMinMojodi; private int nPer;
+    private bool isNeedUpdate;
+    private List<PersonAccountDto> _personFullDataList = new List<PersonAccountDto>();
+    private PersonAccountDto selectedPersonFrom; private PersonAccountDto selectedPersonTo;
+    private long? Hesab1Searchable = 0;
+    private long? Hesab2Searchable = 0;
+    private List<PersonReportStatusDto> ReportRecords { get; set; }
+    private List<IGrouping<long, PersonReportStatusDto>> groupedRecords { get; set; }
+
+    protected override async Task OnInitializedAsync()
+
+    {
+
+        nSaghfVam = 300000000;
+        nMinMojodi = 150000000;
+        nPer = 7;
+
+    }
+
+    // دستور چاپ با استفاده از JSInterop
+    private void  PrintReport()
+    {
+        if (isValidParameters())
+        {
+            NavigationManager.NavigateTo($"/PriorityRep?nSaghfVam={nSaghfVam}&nMinMojodi={nMinMojodi}&nPer={nPer}");
+        }
+        else
+        {
+            _snackBar.Add(" مقادیر مناسب وارد کنید ", Severity.Warning);
+        }
+    }
+
+    private bool isValidParameters()
+    {
+        if (nMinMojodi * nSaghfVam * nPer == 0) return false;
+        return true;
+    }
+        
+    
+}

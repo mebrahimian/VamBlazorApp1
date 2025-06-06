@@ -1,4 +1,4 @@
-﻿@page "/sandoghrep"
+﻿@page "/priorityrep"
 @inject DatabaseContext _Db
 @inject SandoghService SandoghService
 @inject VamBlazor.Client.Application.Services.PersonServices PersonServices
@@ -41,7 +41,7 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
         justify-content: center;
         align-items: center;
         z-index: 9999;
-            ">
+    ">
         <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
         <div class="text-center mt-2">⏳ لطفاً منتظر بمانید...</div>
     </div>
@@ -57,7 +57,7 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
         @SandoghName
     </div>
 
-   
+
     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
         <div style="flex: 1;"></div> <!-- فضای سمت راست -->
         <div style="flex: 1; text-align: center;">
@@ -67,69 +67,47 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
             <span style="display: inline-block; width:20ch;"></span>
             <MudText Typo="Typo.body1">@DateService.TodayHDateString()</MudText>
         </div>
-        
+
     </div>
 
     <!-- این خط برای جلوگیری از تداخل و شروع جدید در هر رکورد -->
     <div style="clear: both;"></div>
     <div style="display: flex; width: 100%; margin-left:0;">
-        <MudTable T="PersonStatusUpToDto" Items="@ReportRecords" Hover="true" Bordered="true" Striped="true" Dense="true" Style="width:95%; align-content:center; font-size:10px; table-layout: fixed;">
+        <MudTable T="vwPersonStatusCurrent" Items="@ReportRecords" Hover="true" Bordered="true" Striped="true" Dense="true" Style="width:95%; align-content:center; font-size:10px; table-layout: fixed;">
             <HeaderContent>
                 <MudTh Style="width:75px;text-align:center">ردیف</MudTh> <!-- ستون شماره ردیف -->
                 <MudTh Style="width:75px">ش.حساب</MudTh>
                 <MudTh Style="width:250px">مشخصات سپرده گذار</MudTh>
-                <MudTh Style="width:75px">تاریخ</MudTh>
-                <MudTh Style="width:75px">اقساط معوقه</MudTh>
-                <MudTh Style="width:110px">مانده وام</MudTh>
                 <MudTh Style="width:110px">موجودی</MudTh>
+                <MudTh Style="width:110px">مانده وام</MudTh>
+                <MudTh Style="width:110px">کسری</MudTh>
+                <MudTh Style="width:110px">کارمزد</MudTh>
+                <MudTh Style="width:110px">مبلغ وام</MudTh>
+                <MudTh Style="width:110px">جمع کسور</MudTh>
+                <MudTh Style="width:110px">وام پرداختی</MudTh>
             </HeaderContent>
             <RowTemplate>
-                @if (ReportRecords.IndexOf(context) != ReportRecords.Count - 1) //  شماره ردیف آخر نیاید 
-                {
+                
                     <MudTd>@TextHelper.ConvertToPersian((ReportRecords.IndexOf(context) + 1).ToString(), false)</MudTd> <!-- شماره ردیف --> <!-- اعداد فارسی بدون کاما  -->
-                    <MudTd>@TextHelper.ConvertToPersian(context.Hesab_No.ToString(), false)</MudTd>
-                    <MudTd>@context.Fam</MudTd>
-                    <MudTd>@TextHelper.ConvertNumbersInStringToPersian(context.Date_D)</MudTd>
-                    <MudTd>@TextHelper.ConvertToPersian(context.DelayAghsat.ToString(), false)</MudTd>
-                    <MudTd>@TextHelper.ConvertToPersian((context.VamRemain).ToString("N0"))</MudTd>
-                    <MudTd>@TextHelper.ConvertToPersian((context.Mojodi).ToString("N0"))</MudTd>
-                }
-                else
-                {
-                    <MudTd></MudTd>
-                    <MudTd></MudTd>
-                    <MudTd>@context.Fam</MudTd>
-                    <MudTd></MudTd>
-                    <MudTd></MudTd>
-                    <MudTd>@TextHelper.ConvertToPersian((context.VamRemain).ToString("N0"))</MudTd>
-                    <MudTd></MudTd>
-                }
+                    <MudTd>@TextHelper.ConvertToPersian(context.HesabNo.ToString(), false)</MudTd>
+                    <MudTd>@context.FullName</MudTd>
+                    <MudTd>@TextHelper.ConvertToPersian(context.Mojodi.ToString())</MudTd>
+                    <MudTd>@TextHelper.ConvertToPersian((context.MblgVam-context.PaidVam).ToString("N0"))</MudTd>
+                    <MudTd>@TextHelper.ConvertToPersian((long.Parse(cMinMojodi)- context.Mojodi).ToString("N0"))</MudTd>
+                    <MudTd>@TextHelper.ConvertToPersian((long.Parse(cSaghfVam) * int.Parse(cPer)/100).ToString("N0"))</MudTd>
+                    <MudTd>@TextHelper.ConvertToPersian((long.Parse(cSaghfVam)).ToString("N0"))</MudTd>
+                    <MudTd>@TextHelper.ConvertToPersian((long.Parse(cMinMojodi) - context.Mojodi + (long.Parse(cSaghfVam) * int.Parse(cPer) / 100) + (context.MblgVam - context.PaidVam)).ToString("N0"))</MudTd>
+                    <MudTd>@TextHelper.ConvertToPersian((long.Parse(cSaghfVam) - (long.Parse(cMinMojodi) - context.Mojodi + (long.Parse(cSaghfVam) * int.Parse(cPer) / 100) + (context.MblgVam - context.PaidVam))).ToString("N0"))</MudTd>
 
+                
             </RowTemplate>
-            <FooterContent>
-                <MudTd colspan="4" Class="text-right">جمع:</MudTd> <!-- جمع برای 4 ستون اول -->
-                <MudTd>@TextHelper.ConvertToPersian(ReportRecords.Sum(x => x.DelayAghsat).ToString())</MudTd>  <!-- جمع موجودی حساب (ستون ۷) -->
-                <MudTd>@TextHelper.ConvertToPersian(ReportRecords.Sum(x => x.VamRemain).ToString("N0"))</MudTd>  <!-- جمع مانده وام (ستون ۸) -->
-                <MudTd>@TextHelper.ConvertToPersian(ReportRecords.Sum(x => x.Mojodi).ToString("N0"))</MudTd>  <!-- جمع ق.معوق -->
-                @{
-                    nSumAgsat = ReportRecords.Sum(XmlConfigurationExtensions => XmlConfigurationExtensions.Gst1);
-                    nSumPasandaz = ReportRecords.Sum(XmlConfigurationExtensions => XmlConfigurationExtensions.MonthQty);
-                }
-            </FooterContent>
+            
         </MudTable>
     </div>
     <br />
     <br />
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span style="display: inline-block; width: 50ch;"></span>
-        <MudText Typo="Typo.body1"> مجموع اقساط ماهانه : @TextHelper.ConvertToPersian(ReportRecords.Sum(x => x.Gst1).ToString("N0"))</MudText>
-        <MudText Typo="Typo.body1">&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;</MudText>
-        <MudText Typo="Typo.body1">مجموع پس‌ اندار ماهانه : @TextHelper.ConvertToPersian(ReportRecords.Sum(x => x.MonthQty).ToString("N0"))</MudText>
-    </div>
-    <br />
-    <br />
-    <br />
-    <br />
+    
+   
 
 
 
@@ -140,13 +118,16 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
 @code {
     private int PageNumber { get; set; } = 1; // شماره صفحه (پیش‌فرض صفحه اول)
     private int PageSize { get; set; } = 20;  // تعداد رکوردها در هر صفحه (پیش‌فرض 20 رکورد)
-    private List<PersonStatusUpToDto> ReportRecords { get; set; }
-    private List<PersonStatusUpToDto> ReportDet { get; set; }
+    private List<vwPersonStatusCurrent> ReportRecords { get; set; }
+    
     private List<IGrouping<long, PersonReportStatusDto>> groupedRecords { get; set; }
     private string CurrentPersonPictureAddress = string.Empty;
     private string SandoghName = "";
     private long? nSumAgsat = 0;
     private long? nSumPasandaz = 0;
+    private string? cSaghfVam = "";
+    private string? cMinMojodi = "";
+    private string? cPer = "";
 
     public string cDate { get; set; }
 
@@ -162,33 +143,19 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
         // دریافت پارامترهای URL
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
 
-        cDate = GetQueryStringValue(uri, "date1");
+        cSaghfVam = GetQueryStringValue(uri, "nSaghfVam");
+        cMinMojodi = GetQueryStringValue(uri, "nMinMojodi");
+        cPer = GetQueryStringValue(uri, "nPer");
+        cDate = DateService.TodayHDate();
         try
         {
 
             isLoading = true;    ///// کنترل بارگذاری داده ها
             StateHasChanged();
 
-            ReportDet = _Db.Set<PersonStatusUpToDto>()
-            .FromSqlRaw("EXEC sp_PersonStatusUpTo @cDateTo = {0}", cDate)
-            .ToList();
-            var balanceAtDate = new List<PersonStatusUpToDto>
-                        {new PersonStatusUpToDto
-                              {
-                                 Hesab_No = 0,
-                                 Date_D = " ",
-                                 DelayAghsat = 0,
-                                 Mojodi = 0,
-                                 Fam = "مانده صندوق در پایان " + cDate,
-                                 VamRemain =  _Db.vwPersonAllTransactions
-                                          .Where(t => string.Compare(t.Date, cDate) <= 0)
-                                          .Sum(t => t.GstPaid + t.Pasandaz - t.Vam - t.Karmozd) // بجای مانده استفاده میشود
-                              }
-                        };
-
-            ReportRecords = ReportDet
-                           .Concat(balanceAtDate)
-                           .ToList();
+            ReportRecords = _Db.vwPersonStatusCurrent.OrderBy(c => c.HesabNo).ToList();
+    
+                        
             isLoading = false;  // اتمام بارگذاری داده ها
             StateHasChanged();
 

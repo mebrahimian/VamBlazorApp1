@@ -447,7 +447,7 @@
             _personFullDataList = query.Select(q => new PersonFullDataDto
                 {
                     FullName = q.FullName,
-                    FullNameWCode = q.FullName + " شماره تقاضا " + q.ReqNoQ + " ش.حساب " + q.HesabNo,
+                    FullNameWCode = q.FullName + " شماره تقاضا " + q.ReqNoQ + " ش.حساب " + q.HesabNo + "",
                     Code = q.Pcode,
                     HesabNo = q.HesabNo,
                     Status = q.Status,
@@ -490,7 +490,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personFullDataList.Where(c => !string.IsNullOrEmpty(c.FullNameWCode) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullNameWCode, value));
+                             && TextHelper.NormalContain(c.FullNameWCode, value)).OrderBy(c=>c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();

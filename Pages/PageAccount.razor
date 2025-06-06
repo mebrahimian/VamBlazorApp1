@@ -234,14 +234,14 @@
                 <MudTextField @bind-Value="searchString1" Placeholder="جستجوی سپرده گذار" Immediate="true" OnKeyUp="OnSearchTextChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
             </ToolBarContent>
             <HeaderContent>
-                <MudTh><MudTableSortLabel SortBy="new Func<PersonAccountDto, object>(x=>x.Pcode)"></MudTableSortLabel>کـــد</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<PersonAccountDto, object>(x=>x.MelliCode)"></MudTableSortLabel>کـدملــی</MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<PersonAccountDto, object>(x=>x.FullName)"></MudTableSortLabel>نـــام ونام خانوادگی</MudTh>
                 <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<PersonAccountDto, object>(x=>x.HesabNo)"></MudTableSortLabel>شماره حساب</MudTh>
 
                 <MudTh>عملیات</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd>@context.Pcode</MudTd>
+                <MudTd>@(string.IsNullOrWhiteSpace(context.MelliCode) ? context.Pcode : context.MelliCode)</MudTd>
                 <MudTd>@context.FullName</MudTd>
                 <MudTd>@context.HesabNo</MudTd>
                 <MudTd>
@@ -313,6 +313,7 @@
                          select new PersonAccountDto
                              {
                                  FullName = person.FullName,
+                                 MelliCode = person.Mellicode,
                                  Family = person.Family,
                                  Name = person.Name,
                                  Father = person.Father,
@@ -343,8 +344,11 @@
             _personList = await _Db.Persons.AsNoTracking().Where(v => v.Code != "000000" && v.Code != "001000") // شرط‌های دلخواه
                                            .Select(v => new PersonDto
                                                {
-                                                   FullName = v.FullName + " کد : " + v.Code,
-                                                   Code = v.Code
+                                                   FullName = string.IsNullOrWhiteSpace(v.Mellicode)
+                                                                   ? v.FullName
+                                                                   : v.FullName + " کدملی : " + v.Mellicode,
+                                                   Code = v.Code,
+                                                   Mellicode = v.Mellicode
                                                })
                                            .ToListAsync();
 
@@ -380,7 +384,7 @@
         {
             if (_personAccount.FullName != null && TextHelper.NormalContain(_personAccount.FullName, searchString))
                 return true;
-            if ($"{_personAccount.Pcode} {_personAccount.HesabNo} {_personAccount.Moaref}".Contains(searchString))
+            if ($"{_personAccount.MelliCode} {_personAccount.HesabNo} {_personAccount.Moaref}".Contains(searchString))
                 return true;
         }
         return false;
@@ -390,7 +394,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullName, value));
+                             && TextHelper.NormalContain(c.FullName+" "+c.Mellicode, value));
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();

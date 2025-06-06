@@ -10,6 +10,7 @@ namespace VamBlazor.Client.Application.Dtos
         public string? Family { get; set; }
         public string? Name { get; set; }
         public string? Father { get; set; }
+        public string? MelliCode { get; set; }
         public string? Scode { get; set; }
         [Display(Name = "کد سپرده گذار")]
         [Required(ErrorMessage = "کدسپرده گذاراجباری است ")]

@@ -271,11 +271,14 @@
             _personFullDataList = _Db.vwPersonFullData.Where(v => v.Code != "000000" && v.Code != "001000") // شرط‌های دلخواه
                                            .Select(v => new PersonFullDataDto
                                                {
-                                                   FullNameWCode = v.FullName + " حساب " + v.HesabNo,
+                                                   FullNameWCode = string.IsNullOrWhiteSpace(v.MelliCode)
+                                                                           ? v.FullName + "حساب : " + v.HesabNo
+                                                                           : v.FullName + "حساب : " + v.HesabNo + " کدملی : " + v.MelliCode,
                                                    FullName = v.FullName,
                                                    Code = v.Code,
                                                    HesabNo = v.HesabNo,
-                                                   Mojodi = v.Mojodi
+                                                   Mojodi = v.Mojodi,
+                                                   MelliCode = v.MelliCode  
                                                })
                                            .Distinct()
                                            .ToList();
@@ -311,7 +314,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personFullDataList.Where(c => !string.IsNullOrEmpty(c.FullNameWCode) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullNameWCode, value));
+                             && TextHelper.NormalContain(c.FullNameWCode+" " + c.MelliCode , value)).OrderBy(c=>c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();
@@ -390,7 +393,9 @@
                                              V_Year = Pardar.V_Year,
                                              Babat = Pardar.Babat,
                                              IdDi = Pardar.IdDi,    // key record
-                                             Mojodi = hesab.Firstqty + hesab.Curqty
+                                             Mojodi = hesab.Firstqty + hesab.Curqty,
+                                             Mellicode = person.Mellicode
+                                             
                                          }).ToList();  // تبدیل به لیست;
 
             }

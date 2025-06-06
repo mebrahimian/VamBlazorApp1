@@ -30,6 +30,7 @@ namespace VamBlazor.Client.Application.Dtos
 
         public long V_HesabNo { get; set; }
         public long Mojodi { get; set; } = (long)0;
+        public string? Mellicode { get; set; }
 
     }
 }

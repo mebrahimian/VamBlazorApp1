@@ -197,8 +197,9 @@
                      orderby account.HesabNo
                      select new PersonAccountDto
                          {
-                             FullName = person.FullName + " ش.حساب " + account.HesabNo + " معرف " + (account.IdDi == 0 ? account.HesabNo : account.IdDi),
+                             FullName = person.FullName + " ش.حساب " + account.HesabNo + " معرف " + (account.IdDi == 0 ? account.HesabNo : account.IdDi) + (string.IsNullOrWhiteSpace(person.Mellicode) ? "" : " کدملی : " + person.Mellicode),
                              Family = person.Family,
+                             MelliCode = person.Mellicode,
                              Name = person.Name,
                              Father = person.Father,
                              Scode = account.Scode,
@@ -230,7 +231,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personFullDataList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
-                             && (TextHelper.NormalContain(c.FullName, value)));
+                             && (TextHelper.NormalContain(c.FullName, value))).OrderBy(c=>c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();

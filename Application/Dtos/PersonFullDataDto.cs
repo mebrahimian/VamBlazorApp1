@@ -39,6 +39,7 @@ namespace VamBlazor.Client.Application.Dtos
         public long Mblg { get; set; }
         public char Type { get; set; }
         public int PReqNo { get; set; }
+        public string? MelliCode { get; set; }
 
     }
 }

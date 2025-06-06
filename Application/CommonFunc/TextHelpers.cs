@@ -34,8 +34,10 @@
        
             // تابع تبدیل عدد به فارسی با جداکننده کاما
             public static string ConvertToPersian(string number, bool isCommaSep = true)
-            {
+            { 
+                bool isNegative = false;
                 if (number == "") return "۰";
+            if (number.Contains('-')) isNegative = true;
                 // ابتدا جداکننده های هزارگان ',' را از رشته حذف می کنیم
                 number = number.Replace(",", "");
                 number = number.Replace("-", "");
@@ -47,7 +49,10 @@
 
             // بعد از تبدیل به فارسی، جداکننده های هزارگان را دوباره اعمال می کنیم
                 string result = isCommaSep ? AddCommaSeparators(persianNumber) : persianNumber;
-
+                if(isNegative)
+            {
+                result = "(" + result + ")";
+            }
                 return result;
             }
 
