@@ -271,14 +271,13 @@
             _personFullDataList = _Db.vwPersonFullData.Where(v => v.Code != "000000" && v.Code != "001000") // شرط‌های دلخواه
                                            .Select(v => new PersonFullDataDto
                                                {
-                                                   FullNameWCode = string.IsNullOrWhiteSpace(v.MelliCode)
-                                                                           ? v.FullName + "حساب : " + v.HesabNo
-                                                                           : v.FullName + "حساب : " + v.HesabNo + " کدملی : " + v.MelliCode,
+                                                   FullNameWCode = v.FullName + "حساب : " + v.HesabNo,                                                                           
                                                    FullName = v.FullName,
                                                    Code = v.Code,
                                                    HesabNo = v.HesabNo,
                                                    Mojodi = v.Mojodi,
-                                                   MelliCode = v.MelliCode  
+                                                   MelliCode = v.MelliCode,
+                                                   ShenaseBank = v.ShenaseBank
                                                })
                                            .Distinct()
                                            .ToList();
@@ -314,7 +313,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personFullDataList.Where(c => !string.IsNullOrEmpty(c.FullNameWCode) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullNameWCode+" " + c.MelliCode , value)).OrderBy(c=>c.HesabNo);
+                             && TextHelper.NormalContain(c.FullNameWCode+" "+ c.ShenaseBank.ToString(), value)).OrderBy(c=>c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();

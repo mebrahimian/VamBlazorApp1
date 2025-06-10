@@ -507,7 +507,7 @@
                                  CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END AS CityDesc,
                                  dbo.PERSON.Status, CASE PERSON.status WHEN '1' THEN 'فعال ' WHEN '2' THEN 'غیرفعال' END AS StatusDesc,
                                  dbo.HESAB.Pcode,dbo.HESAB.hesab_no As HesabNo, dbo.HESAB.FirstQty, dbo.HESAB.date As HDate,dbo.HESAB.CurQty, dbo.HESAB.MonthQty,
-                                 dbo.HESAB.firstqty + dbo.HESAB.curqty AS Mojodi,dbo.HESAB.id___di AS Moaref,dbo.QVAM.REQ_NO AS QReqNo,
+                                 dbo.HESAB.firstqty + dbo.HESAB.curqty AS Mojodi,dbo.HESAB.id___di AS Moaref,dbo.HESAB.P AS ShenaseBank,dbo.QVAM.REQ_NO AS QReqNo,
                                  dbo.QVAM.STATUS AS QStatus,dbo.QVAM.Mblg, dbo.QVAM.DATE AS QDate, dbo.QVAM.SABTDATE AS QSabtDate,
                                  dbo.QVAM.TYPE AS QType,CASE WHEN QVAM.TYPE = '1' THEN 'عـادی' ELSE 'ضروری' END AS QTypeDesc,
                                  dbo.PVAM.req_no AS PReqNo, dbo.PVAM.MblgVam, dbo.PVAM.Gst1, dbo.PVAM.Gst2, dbo.PVAM.gst_no As PGstNo,
@@ -547,7 +547,7 @@
                                           (SELECT        MIN(gst_no) AS Expr1
                                            FROM            DARGST AS DG1
                                            WHERE        (req_no = PVAM.req_no) AND (gstmblg = 0)) = Pvam.Gst_no THEN Gst2 ELSE Gst1 END AS CurrentGstMblg,
-                                        isnull(dbo.PERSON.MelliCode, '') As MelliCode
+                                        isnull(dbo.PERSON.MelliCode, '') As MelliCode, dbo.HESAB.P As ShenaseBank
                                  FROM dbo.PERSON INNER JOIN
                                       dbo.HESAB ON dbo.PERSON.code = dbo.HESAB.pcode INNER JOIN
                                       dbo.QVAM ON dbo.HESAB.pcode = dbo.QVAM.PCODE INNER JOIN
@@ -555,7 +555,7 @@
                                       dbo.DARGST ON dbo.PVAM.req_no = dbo.DARGST.req_no
                                  GROUP BY dbo.PERSON.code, dbo.PERSON.family, dbo.PERSON.name, dbo.PERSON.father, dbo.HESAB.hesab_no, dbo.HESAB.firstqty, dbo.HESAB.curqty, dbo.HESAB.monthqty, dbo.PVAM.scode, dbo.PVAM.mblgvam, dbo.PVAM.gst_no,
                                       dbo.PVAM.date_g, dbo.PVAM.gst_pay, dbo.PVAM.pkarmozd, dbo.PVAM.mkarmozd, dbo.PVAM.lastdate, dbo.PVAM.type, dbo.PVAM.mblgmain, dbo.PVAM.gst1, dbo.PVAM.gst2, dbo.PERSON.sex, dbo.PERSON.city,dbo.PVAM.req_no, 
-                                      dbo.QVAM.REQ_NO, dbo.PVAM.date_d, dbo.HESAB.id___di,CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END, dbo.HESAB.date, isnull(dbo.PERSON.MelliCode, '')
+                                      dbo.QVAM.REQ_NO, dbo.PVAM.date_d, dbo.HESAB.id___di, dbo.HESAB.P,CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END, dbo.HESAB.date, isnull(dbo.PERSON.MelliCode, '')
                                  HAVING        (dbo.PVAM.mblgvam > SUM(dbo.DARGST.gstmblg))";
 
         using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))

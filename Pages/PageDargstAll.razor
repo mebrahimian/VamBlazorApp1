@@ -337,7 +337,8 @@
                                                 CurrentPaidDate = v.CurrentPaidDate,
                                                 CurrentGstMblg = v.CurrentGstMblg,
                                                 CurrentGstSaved = false,
-                                                Mellicode = v.MelliCode
+                                                Mellicode = v.MelliCode,
+                                                ShenaseBank = v.ShenaseBank
                                                 
                                             })
                                         .AsNoTracking()
@@ -351,7 +352,8 @@
                     FullName = v.FullName + "حساب:" + v.HesabNo+"معرف:"+ v.Moaref,
                     HesabNo = v.HesabNo,
                     Moaref = v.Moaref,
-                    Mellicode = v.Mellicode
+                    Mellicode = v.Mellicode,
+                    ShenaseBank = v.ShenaseBank
                 }).OrderBy(p => p.Moaref).ThenBy(p => p.HesabNo)
                   .ToList();
             // تبدیل به لیست;
@@ -400,7 +402,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personSelectList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullName + " "+c.Mellicode, value)).OrderBy(c => c.HesabNo);
+                             && TextHelper.NormalContain(c.FullName+" "+c.ShenaseBank.ToString(), value));
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();

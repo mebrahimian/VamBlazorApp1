@@ -294,7 +294,8 @@
                                                 FullName = v.FullName + "ش.حساب:" + v.HesabNo + " معرف: " + v.Moaref,
                                                 HesabNo = v.HesabNo,
                                                 Moaref = v.Moaref,
-                                                ReqNo = v.ReqNo
+                                                ReqNo = v.ReqNo,
+                                                ShenaseBank = v.ShenaseBank
                                             })
                                         .AsNoTracking()
                                         .ToListAsync();
@@ -357,7 +358,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personSelectList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullName+" "+c.Mellicode, value)).OrderBy(c => c.HesabNo);
+                             && TextHelper.NormalContain(c.FullName+" "+c.ShenaseBank.ToString(), value)).OrderBy(c => c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();
@@ -486,6 +487,7 @@
                 {
                     GstRecord.DateP = DateService.DateShamsiFormat(Paid_Year, Paid_Month, Paid_Day);
                     GstRecord.Gstmblg = MonthlyGst;
+                    CurrentPersonLastGstDto.PaidDate = GstRecord.DateP;
                     GstRecord.Pasandaz = MonthlyPas;
                     if (MonthlyGst == 0)
                     {

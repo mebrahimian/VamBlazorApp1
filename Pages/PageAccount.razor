@@ -197,7 +197,10 @@
                 </MudItem>
                 <!-- ردیف چهارم: MelliCode و TelNoو bankType و HesabBank -->
                 <MudItem xs="12" sm="6" md="3">
-                    <div style="width: 150px;">
+                    <div style="width: 100%;align-content:start">
+                        <MudTextField T="long?" Label="شناسه بانک ملت" Immediate="true"
+                                      For="@(() => CurrentPersonAccountDto.P)"
+                                      @bind-Value="CurrentPersonAccountDto.P" @bind-Value:after="isDataChanged"/>
                     </div>
                 </MudItem>
                 <MudItem xs="12" sm="6">
@@ -335,6 +338,7 @@
                              })
             .Skip(currentPage * pageSize)  // صفحه بندی
             .Take(pageSize)  // تعداد رکوردهای هر صفحه
+            .OrderBy(p => p.HesabNo) // مرتب براساس حساب
             .ToList();  // تبدیل به لیست
 
             if (query != null && query.Any())
@@ -809,5 +813,6 @@
         if (OriginalAccount.Date != CurrentPersonAccountDto.Date) isNeedUpdate = true;
         if (OriginalAccount.Monthqty != CurrentPersonAccountDto.Monthqty) isNeedUpdate = true;
         if (OriginalAccount.IdDi != CurrentPersonAccountDto.Moaref) isNeedUpdate = true;
+        if (OriginalAccount.P != CurrentPersonAccountDto.P) isNeedUpdate = true;
     }
 }

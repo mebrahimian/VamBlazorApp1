@@ -27,7 +27,8 @@ namespace VamBlazor.Client.Application.Dtos
         public string? CurrentPaidDate { get; set; }    
         public long CurrentGstMblg { get; set; }
         public bool CurrentGstSaved { get; set; } = false;
-        public string? Mellicode { get; set; }   
+        public string? Mellicode { get; set; }
+        public long? ShenaseBank { get; set; }
 
 
 

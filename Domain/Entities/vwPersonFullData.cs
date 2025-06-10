@@ -16,6 +16,7 @@ namespace VamBlazor.Client.Domain.Entities
         public string Code { get; set; } = null!;
         public string? FullName { get; set; }
         public string? MelliCode { get; set; }
+        public long? ShenaseBank { get; set; }
         public char? Sex { get; set; } = '1';
         public string? SexDesc { get; set; }
         public char? City { get; set; } = '1';

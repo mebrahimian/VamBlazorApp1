@@ -38,7 +38,8 @@ namespace VamBlazor.Client.Domain.Entities
         public string? CurrentPaidDate {  get; set; }
         public long CurrentGstMblg { get; set; } = 0;
         public string? MelliCode { get; set; }
-        
+        public long? ShenaseBank { get; set; }
+
 
     }
 }

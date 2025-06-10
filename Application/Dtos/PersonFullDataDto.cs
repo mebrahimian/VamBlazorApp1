@@ -40,6 +40,7 @@ namespace VamBlazor.Client.Application.Dtos
         public char Type { get; set; }
         public int PReqNo { get; set; }
         public string? MelliCode { get; set; }
+        public long? ShenaseBank { get; set; }
 
     }
 }
