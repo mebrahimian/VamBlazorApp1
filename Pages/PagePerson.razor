@@ -556,7 +556,9 @@
                                  GROUP BY dbo.PERSON.code, dbo.PERSON.family, dbo.PERSON.name, dbo.PERSON.father, dbo.HESAB.hesab_no, dbo.HESAB.firstqty, dbo.HESAB.curqty, dbo.HESAB.monthqty, dbo.PVAM.scode, dbo.PVAM.mblgvam, dbo.PVAM.gst_no,
                                       dbo.PVAM.date_g, dbo.PVAM.gst_pay, dbo.PVAM.pkarmozd, dbo.PVAM.mkarmozd, dbo.PVAM.lastdate, dbo.PVAM.type, dbo.PVAM.mblgmain, dbo.PVAM.gst1, dbo.PVAM.gst2, dbo.PERSON.sex, dbo.PERSON.city,dbo.PVAM.req_no, 
                                       dbo.QVAM.REQ_NO, dbo.PVAM.date_d, dbo.HESAB.id___di, dbo.HESAB.P,CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END, dbo.HESAB.date, isnull(dbo.PERSON.MelliCode, '')
-                                 HAVING        (dbo.PVAM.mblgvam > SUM(dbo.DARGST.gstmblg))";
+                                 HAVING  (dbo.PVAM.mblgvam > SUM(dbo.DARGST.gstmblg)) OR
+                                         (MAX(dbo.PVAM.lastdate) >= (SELECT HDate FROM dbo.tblDate10
+                                                                     WHERE (GDate = CAST(DATEADD(MONTH, - 1, GETDATE()) AS DATE))))";
 
         using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
         {

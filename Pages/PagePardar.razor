@@ -41,7 +41,7 @@
                 <MudItem xs="12">
                     <MudAutocomplete T="PersonFullDataDto"
                     Label="لطفا سپرده گذار را انتخاب کنید ..."
-                    @bind-Value="selectedPerson"
+                    @bind-Value="selectedPerson" @bind-Value:after="isDataChanged"
                     SearchFunc="@SearchPerson"
                     ToStringFunc="@(_personFullDataList => _personFullDataList?.FullNameWCode ?? "")"
                     Dense="true" Clearable
@@ -271,7 +271,7 @@
             _personFullDataList = _Db.vwPersonFullData.Where(v => v.Code != "000000" && v.Code != "001000") // شرط‌های دلخواه
                                            .Select(v => new PersonFullDataDto
                                                {
-                                                   FullNameWCode = v.FullName + "حساب : " + v.HesabNo,                                                                           
+                                                   FullNameWCode = v.FullName + "حساب : " + v.HesabNo + (v.Moaref == 0 ? "" : " معرف: " + v.Moaref),
                                                    FullName = v.FullName,
                                                    Code = v.Code,
                                                    HesabNo = v.HesabNo,
@@ -313,7 +313,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personFullDataList.Where(c => !string.IsNullOrEmpty(c.FullNameWCode) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullNameWCode+" "+ c.ShenaseBank.ToString(), value)).OrderBy(c=>c.HesabNo);
+                             && TextHelper.SmartContain(c.FullNameWCode+" "+ c.ShenaseBank.ToString(), value)).OrderBy(c=>c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();
@@ -398,6 +398,7 @@
                                          }).ToList();  // تبدیل به لیست;
 
             }
+            // LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END
             catch (SqlException ex)
             {
                 Console.WriteLine("SQL Error: " + ex.Message);
@@ -485,7 +486,6 @@
         // مثال: اعتبارسنجی یک فرم
         if (CurrentPardarDto.Mblg <= 0) return false;
         if (string.IsNullOrEmpty(CurrentPardarDto.Babat)) return false;
-        if (string.IsNullOrEmpty(CurrentPardarDto.FullName)) return false;
         if (!_tblDate.Any(d => d.HDate == CurrentPardarDto.Date)) return false;
         isDataCorrected = ValidateModel();
         if (!isDataCorrected) return false;
@@ -516,7 +516,6 @@
                 CurrentPardarDto.FullName = selectedPerson.FullName;
                 var newPardar = Mapper.Map<Pardar>(CurrentPardarDto); // Mapping DTO to Entity
                 _personPardarList.Add(CurrentPardarDto);
-                // newQvam.Sabtdate = newQvam.Date;
                 _Db.Pardars.Add(newPardar);
                 _snackBar.Add($"عملیات {CurrentPardarDto.FullName} ثبت شد", Severity.Success);
             }
@@ -543,7 +542,7 @@
     private void EditPardar(PardarDto pardardto)
     {
         CurrentPardarDto = _personPardarList.FirstOrDefault(p => p.IdDi == pardardto.IdDi) ?? new PardarDto();
-
+        CurrentPardarDto.FullName = pardardto.FullName;
         isEditing = true;
         isNeedUpdate = false;
         isDataCorrected = true;
@@ -645,7 +644,25 @@
 
     private void isDataChanged()
     {
-        isNeedUpdate = true;
+        isNeedUpdate = false;
+        if (CurrentPardarDto.IdDi != 0)
+        {
+            var OriginPardarDto = _Db.Pardars.FirstOrDefault(p => p.IdDi == CurrentPardarDto.IdDi);
+            if (OriginPardarDto.Babat != CurrentPardarDto.Babat) isNeedUpdate = true;
+            if (OriginPardarDto.V_ActionDesc != CurrentPardarDto.V_ActionDesc) isNeedUpdate = true;
+            if (OriginPardarDto.Date != CurrentPardarDto.Date) isNeedUpdate = true;
+            if (OriginPardarDto.Mblg != CurrentPardarDto.Mblg) isNeedUpdate = true;
+            if (OriginPardarDto.V_Year != CurrentPardarDto.V_Year) isNeedUpdate = true;
+            if (OriginPardarDto.V_Month != CurrentPardarDto.V_Month) isNeedUpdate = true;
+            if (OriginPardarDto.V_Day != CurrentPardarDto.V_Day) isNeedUpdate = true;
+            ValidateForm();
+            //   ValidateModel();
+
+        }
+        else
+        {
+            isNeedUpdate = true;
+        }
 
     }
 

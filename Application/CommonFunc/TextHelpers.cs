@@ -1,4 +1,7 @@
-﻿namespace VamBlazor.Client.Application.CommonFunc
+﻿using MudBlazor;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace VamBlazor.Client.Application.CommonFunc
 {
     public static class TextHelper
     {
@@ -27,13 +30,45 @@
             return source.Contains(findstr);
 
         }
+        public static bool SmartContain(string source, string findstr)
+        {
+            if (source == null || findstr == null) return false;
+           // source = TextHelper.NormalizeString(source);
+           // findstr = TextHelper.NormalizeString(findstr);
+
+            if (string.IsNullOrWhiteSpace(findstr))
+                return false;
+
+            // اگر ورودی فقط عدد باشد
+            if (findstr.All(char.IsDigit))
+            {
+                // تقسیم رشته به بخش‌ها (مثلاً: نام، نام خانوادگی، کد ملی)
+                string[] parts = source.Split(' ');
+                string lastPart = parts.LastOrDefault() ?? "";
+                string rest = string.Join(" ", parts.Take(parts.Length - 1));
+
+                // اگر عدد در بقیه بخش‌ها هم بود → جستجوی نرمال
+                if (rest.Contains(findstr))
+                    return source.Contains(findstr); // یا فقط return true;
+
+                // در غیر اینصورت فقط بررسی کن که عدد با کد ملی شروع می‌شود یا نه
+                return lastPart.StartsWith(findstr);
+            }
+            else
+            {
+                // اگر ورودی حروف یا ترکیب بود، جستجوی عادی (Contains)
+                return source.Contains(findstr);
+            }
+
+        }
+        
 
         // تابع تبدیل اعداد به فارسی
 
         // تابع تبدیل اعداد به فارسی
-       
-            // تابع تبدیل عدد به فارسی با جداکننده کاما
-            public static string ConvertToPersian(string number, bool isCommaSep = true)
+
+        // تابع تبدیل عدد به فارسی با جداکننده کاما
+        public static string ConvertToPersian(string number, bool isCommaSep = true)
             { 
                 bool isNegative = false;
                 if (number == "") return "۰";

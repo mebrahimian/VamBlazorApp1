@@ -53,41 +53,41 @@
                         @if (CurrentPersonAccountDto.V_Mojodi >= 10000000000)
                         {
                             <MudNumericField T="long"
-                                             @bind-Value="CurrentPersonAccountDto.V_Mojodi"
-                                             Format="###,###"
-                                             Adornment="Adornment.End"
-                                             AdornmentText="ریال"
-                                             Label="موجودی"
-                                             Variant="Variant.Outlined"
-                                             HideSpinButtons="true"
-                                             Style="font-size:17px;background-color:antiquewhite"
+                            @bind-Value="CurrentPersonAccountDto.V_Mojodi"
+                            Format="###,###"
+                            Adornment="Adornment.End"
+                            AdornmentText="ریال"
+                            Label="موجودی"
+                            Variant="Variant.Outlined"
+                            HideSpinButtons="true"
+                            Style="font-size:17px;background-color:antiquewhite"
                             readonly="true" />
                         }
                         else if (CurrentPersonAccountDto.V_Mojodi >= 100000000)
                         {
                             <MudNumericField T="long"
-                                             @bind-Value="CurrentPersonAccountDto.V_Mojodi"
-                                             Format="###,###"
-                                             Adornment="Adornment.End"
-                                             AdornmentText="ریال"
-                                             Label="موجودی"
-                                             Variant="Variant.Outlined"
-                                             HideSpinButtons="true"
-                                             Style="font-size:20px;background-color:antiquewhite"
-                                             readonly="true" />
+                            @bind-Value="CurrentPersonAccountDto.V_Mojodi"
+                            Format="###,###"
+                            Adornment="Adornment.End"
+                            AdornmentText="ریال"
+                            Label="موجودی"
+                            Variant="Variant.Outlined"
+                            HideSpinButtons="true"
+                            Style="font-size:20px;background-color:antiquewhite"
+                            readonly="true" />
                         }
                         else
                         {
                             <MudNumericField T="long"
-                                             @bind-Value="CurrentPersonAccountDto.V_Mojodi"
-                                             Format="###,###"
-                                             Adornment="Adornment.End"
-                                             AdornmentText="ریال"
-                                             Label="موجودی"
-                                             Variant="Variant.Outlined"
-                                             HideSpinButtons="true"
-                                             Style="font-size:25px;background-color:antiquewhite"
-                                             readonly="true" />
+                            @bind-Value="CurrentPersonAccountDto.V_Mojodi"
+                            Format="###,###"
+                            Adornment="Adornment.End"
+                            AdornmentText="ریال"
+                            Label="موجودی"
+                            Variant="Variant.Outlined"
+                            HideSpinButtons="true"
+                            Style="font-size:25px;background-color:antiquewhite"
+                            readonly="true" />
                         }
 
                     }
@@ -107,7 +107,7 @@
                         InputType="InputType.Text"
                         Format="###"
                         OnBlur="OnAccountChanged"
-                         />
+                        />
 
                         <MudText Style="justify-content:left;width:45%" Class="mt-5 ml-n3">تاریخ افتتاح :</MudText>
                     </div>
@@ -178,7 +178,7 @@
                             @bind-Value="CurrentPersonAccountDto.Monthqty" @bind-Value:after="isDataChanged"
                             Format="###,###"
                             HideSpinButtons="true"
-                             />
+                            />
                         </MudTooltip>
                     </div>
                 </MudItem>
@@ -199,8 +199,8 @@
                 <MudItem xs="12" sm="6" md="3">
                     <div style="width: 100%;align-content:start">
                         <MudTextField T="long?" Label="شناسه بانک ملت" Immediate="true"
-                                      For="@(() => CurrentPersonAccountDto.P)"
-                                      @bind-Value="CurrentPersonAccountDto.P" @bind-Value:after="isDataChanged"/>
+                        For="@(() => CurrentPersonAccountDto.P)"
+                        @bind-Value="CurrentPersonAccountDto.P" @bind-Value:after="isDataChanged"/>
                     </div>
                 </MudItem>
                 <MudItem xs="12" sm="6">
@@ -425,6 +425,7 @@
         if (CurrentPersonAccountDto.Pcode == null) return false;
         if (CurrentPersonAccountDto.HesabNo == 0) return false;
         if (CurrentPersonAccountDto.Firstqty == 0) return false;
+        if (CurrentPersonAccountDto.P == 0) return false;
         isDataCorrected = ValidateModel();
         if (!isDataCorrected) return false;
         return isNeedUpdate;
@@ -464,9 +465,9 @@
         PCodeSearchable = CurrentPersonAccountDto.Pcode;
         if (selectedPerson == null) { selectedPerson = new PersonDto(); }
         selectedPerson.FullName = personaccountdto.FullName + " کد : " + personaccountdto.Pcode;
-    //  selectedPerson.FullName = personaccountdto.FullName;
+        //  selectedPerson.FullName = personaccountdto.FullName;
         selectedPerson.Code = personaccountdto.Pcode;
-    //  selectedPerson.HesabNo = personaccountdto.HesabNo;
+        //  selectedPerson.HesabNo = personaccountdto.HesabNo;
         var MoarefCode = CurrentPersonAccountDto.Moaref;
         isEditing = true;
         isNeedUpdate = false;
@@ -474,7 +475,7 @@
         {
             _MoarefDesc = _personAccountList?.FirstOrDefault(p => p.HesabNo == MoarefCode)?.FullName;
         }
-       
+
         myTextField.FocusAsync();
     }
 
@@ -492,6 +493,7 @@
                     editHesab.HesabNo = CurrentPersonAccountDto.HesabNo;
                     editHesab.IdDi = CurrentPersonAccountDto.Moaref;
                     editHesab.Monthqty = CurrentPersonAccountDto.Monthqty;
+                    editHesab.P = CurrentPersonAccountDto.P;
 
                 }
                 else
@@ -691,10 +693,10 @@
                 if (selectedPerson == null) { selectedPerson = new PersonDto(); }
                 selectedPerson.Code = PCodeSearchable;
                 selectedPerson.FullName = personAccount.FullName + " کد : " + personAccount.Pcode;
-             //   selectedPerson.FullName = personAccount.FullName;
+                //   selectedPerson.FullName = personAccount.FullName;
                 FillPersonAccountInfo(personAccount);
-              //  _snackBar.Add($" حساب متعلق به {personAccount.FullName} می باشد", Severity.Warning);
-              //  HesabNoSearchable = CurrentPersonAccountDto.HesabNo;
+                //  _snackBar.Add($" حساب متعلق به {personAccount.FullName} می باشد", Severity.Warning);
+                //  HesabNoSearchable = CurrentPersonAccountDto.HesabNo;
             }
         }
         else
@@ -744,7 +746,7 @@
             else { _MoarefDesc = ""; }
         }
     }
-   
+
 
     /// <summary>
     ///   transfer data
@@ -783,6 +785,8 @@
         CurrentPersonAccountDto.Monthqty = 0;
         CurrentPersonAccountDto.Moaref = 0;
         CurrentPersonAccountDto.FullName = "";
+        CurrentPersonAccountDto.Pcode = "";
+        CurrentPersonAccountDto.P = 0;
         _MoarefDesc = "";
 
 
@@ -805,7 +809,7 @@
         CurrentPersonAccountDto.V_Mojodi = personToAdd.V_Mojodi;
 
     }
-    
+
     private void isDataChanged()
     {
         isNeedUpdate = false;
@@ -814,5 +818,7 @@
         if (OriginalAccount.Monthqty != CurrentPersonAccountDto.Monthqty) isNeedUpdate = true;
         if (OriginalAccount.IdDi != CurrentPersonAccountDto.Moaref) isNeedUpdate = true;
         if (OriginalAccount.P != CurrentPersonAccountDto.P) isNeedUpdate = true;
+        if (OriginalAccount.Pcode != CurrentPersonAccountDto.Pcode) isNeedUpdate = true;
+        if (OriginalAccount.HesabNo != CurrentPersonAccountDto.HesabNo) isNeedUpdate = true;
     }
 }
