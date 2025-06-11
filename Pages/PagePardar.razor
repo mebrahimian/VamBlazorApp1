@@ -40,14 +40,14 @@
             <MudGrid>
                 <MudItem xs="12">
                     <MudAutocomplete T="PersonFullDataDto"
-                                     Label="لطفا سپرده گذار را انتخاب کنید ..."
-                                     @bind-Value="selectedPerson"
-                                     SearchFunc="@SearchPerson"
-                                     ToStringFunc="@(_personFullDataList => _personFullDataList?.FullNameWCode ?? "")"
-                                     Dense="true" Clearable
-                                     OnBlur="OnPCodeChanged"
-                                     MaxItems="50"
-                                     ShowProgressIndicator="true" />
+                    Label="لطفا سپرده گذار را انتخاب کنید ..."
+                    @bind-Value="selectedPerson"
+                    SearchFunc="@SearchPerson"
+                    ToStringFunc="@(_personFullDataList => _personFullDataList?.FullNameWCode ?? "")"
+                    Dense="true" Clearable
+                    OnBlur="OnPCodeChanged"
+                    MaxItems="50"
+                    ShowProgressIndicator="true" />
 
                 </MudItem>
                 <!-- ردیف دوم: ReqNo & Date -->
@@ -74,31 +74,31 @@
 
                         <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                             <MudNumericField T="int" Variant="Variant.Outlined"
-                                             @bind-Value="CurrentPardarDto.V_Day" @bind-Value:after="isDataChanged"
-                                             Min="1"
-                                             Max="31"
-                                             Immediate="true" />
+                            @bind-Value="CurrentPardarDto.V_Day" @bind-Value:after="isDataChanged"
+                            Min="1"
+                            Max="31"
+                            Immediate="true" />
                         </MudTooltip>
 
                         <!-- فیلد ماه -->
 
                         <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                             <MudNumericField T="int" Variant="Variant.Outlined"
-                                             @bind-Value="CurrentPardarDto.V_Month" @bind-Value:after="isDataChanged"
-                                             Min="1"
-                                             Max="12"
-                                             Immediate="true" />
+                            @bind-Value="CurrentPardarDto.V_Month" @bind-Value:after="isDataChanged"
+                            Min="1"
+                            Max="12"
+                            Immediate="true" />
                         </MudTooltip>
 
                         <!-- فیلد سال -->
 
                         <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                             <MudNumericField T="int" Variant="Variant.Outlined"
-                                             @bind-Value="CurrentPardarDto.V_Year" @bind-Value:after="isDataChanged"
-                                             Min="1300"
-                                             Max="1499"
-                                             Style="width:100px"
-                                             Immediate="true" />
+                            @bind-Value="CurrentPardarDto.V_Year" @bind-Value:after="isDataChanged"
+                            Min="1300"
+                            Max="1499"
+                            Style="width:100px"
+                            Immediate="true" />
                         </MudTooltip>
 
                     </div>
@@ -107,11 +107,11 @@
                     <div class="mt-n6" style="width:100%;">
                         <MudTooltip Text="لطفاً مبلغ واریز/برداشت را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                             <MudNumericField T="long" Label="مبلغ واریز/برداشت" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
-                                             For="@(() => CurrentPardarDto.Mblg)"
-                                             @bind-Value="CurrentPardarDto.Mblg" @bind-Value:after="isDataChanged"
-                                             Style="font-size:19px"
-                                             Format="###,###"
-                                             HideSpinButtons="true" />
+                            For="@(() => CurrentPardarDto.Mblg)"
+                            @bind-Value="CurrentPardarDto.Mblg" @bind-Value:after="isDataChanged"
+                            Style="font-size:19px"
+                            Format="###,###"
+                            HideSpinButtons="true" />
                         </MudTooltip>
                     </div>
                 </MudItem>
@@ -121,41 +121,41 @@
                         @if (CurrentPardarDto.Mojodi >= 10000000000)
                         {
                             <MudNumericField T="long"
-                                             @bind-Value="CurrentPardarDto.Mojodi"
-                                             Format="###,###"
-                                             Adornment="Adornment.End"
-                                             AdornmentText="ریال"
-                                             Label="موجودی"
-                                             Variant="Variant.Outlined"
-                                             HideSpinButtons="true"
-                                             Style="font-size:20px; height:60px;background-color:antiquewhite"
-                                             readonly="true" />
+                            @bind-Value="CurrentPardarDto.Mojodi"
+                            Format="###,###"
+                            Adornment="Adornment.End"
+                            AdornmentText="ریال"
+                            Label="موجودی"
+                            Variant="Variant.Outlined"
+                            HideSpinButtons="true"
+                            Style="font-size:20px; height:60px;background-color:antiquewhite"
+                            readonly="true" />
                         }
                         else if (CurrentPardarDto.Mojodi >= 100000000)
                         {
                             <MudNumericField T="long"
-                                             @bind-Value="CurrentPardarDto.Mojodi"
-                                             Format="###,###"
-                                             Adornment="Adornment.End"
-                                             AdornmentText="ریال"
-                                             Label="موجودی"
-                                             Variant="Variant.Outlined"
-                                             HideSpinButtons="true"
-                                             Style="font-size:22px; height:60px;background-color:antiquewhite"
-                                             readonly="true" />
+                            @bind-Value="CurrentPardarDto.Mojodi"
+                            Format="###,###"
+                            Adornment="Adornment.End"
+                            AdornmentText="ریال"
+                            Label="موجودی"
+                            Variant="Variant.Outlined"
+                            HideSpinButtons="true"
+                            Style="font-size:22px; height:60px;background-color:antiquewhite"
+                            readonly="true" />
                         }
                         else
                         {
                             <MudNumericField T="long"
-                                             @bind-Value="CurrentPardarDto.Mojodi"
-                                             Format="###,###"
-                                             Adornment="Adornment.End"
-                                             AdornmentText="ریال"
-                                             Label="موجودی"
-                                             Variant="Variant.Outlined"
-                                             HideSpinButtons="true"
-                                             Style="font-size:28px; height:60px;background-color:antiquewhite"
-                                             readonly="true" />
+                            @bind-Value="CurrentPardarDto.Mojodi"
+                            Format="###,###"
+                            Adornment="Adornment.End"
+                            AdornmentText="ریال"
+                            Label="موجودی"
+                            Variant="Variant.Outlined"
+                            HideSpinButtons="true"
+                            Style="font-size:28px; height:60px;background-color:antiquewhite"
+                            readonly="true" />
                         }
 
                     }
@@ -209,10 +209,10 @@
                 </RowTemplate>
                 <PagerContent>
                     <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, int.MaxValue }"
-                                   RowsPerPageString="@rowsPerPageString"
-                                   InfoFormat="@infoFormat"
-                                   AllItemsText="@allItemsText"
-                                   HorizontalAlignment="@horizontalAlignment" />
+                    RowsPerPageString="@rowsPerPageString"
+                    InfoFormat="@infoFormat"
+                    AllItemsText="@allItemsText"
+                    HorizontalAlignment="@horizontalAlignment" />
                 </PagerContent>
             </MudTable>
         }
@@ -226,7 +226,7 @@
     private List<PardarDto> _personPardarList = new List<PardarDto>();
     private List<PersonFullDataDto> _personFullDataList = new List<PersonFullDataDto>();
     private PardarDto CurrentPardarDto = new PardarDto();
-    
+
     private string? PCodeSearchable = string.Empty;
 
     private bool isNeedUpdate { get; set; } = false;
@@ -373,7 +373,7 @@
                 PCodeSearchable = selectedPerson.Code;
                 CurrentPardarDto.Pcode = PCodeSearchable;
                 CurrentPardarDto.Mojodi = GetMojodi(PCodeSearchable);
-
+                CurrentPardarDto.FullName = selectedPerson.FullName;
 
                 _personPardarList = (from Pardar in _Db.Pardars
                                      join person in _Db.Persons on Pardar.Pcode equals person.Code
@@ -394,7 +394,7 @@
                                              IdDi = Pardar.IdDi,    // key record
                                              Mojodi = hesab.Firstqty + hesab.Curqty,
                                              Mellicode = person.Mellicode
-                                             
+
                                          }).ToList();  // تبدیل به لیست;
 
             }
@@ -485,6 +485,7 @@
         // مثال: اعتبارسنجی یک فرم
         if (CurrentPardarDto.Mblg <= 0) return false;
         if (string.IsNullOrEmpty(CurrentPardarDto.Babat)) return false;
+        if (string.IsNullOrEmpty(CurrentPardarDto.FullName)) return false;
         if (!_tblDate.Any(d => d.HDate == CurrentPardarDto.Date)) return false;
         isDataCorrected = ValidateModel();
         if (!isDataCorrected) return false;
