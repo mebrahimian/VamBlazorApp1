@@ -349,7 +349,7 @@
            _personSelectList = vwPersonList.Select(v => new PersonLastGstDto
                 {
                     Code = v.Code,
-                    FullName = v.FullName + "حساب:" + v.HesabNo+"معرف:"+ v.Moaref,
+                    FullName = v.FullName + "حساب:" + v.HesabNo,
                     HesabNo = v.HesabNo,
                     Moaref = v.Moaref,
                     Mellicode = v.Mellicode,
@@ -370,7 +370,7 @@
             Paid_Month = DateService.GetHMonth(cDateShamsi);
             Paid_Day = DateService.GetHDay(cDateShamsi);
 
-            var cper = _personOrderdList.First().FullName + "حساب:" + _personOrderdList.First().HesabNo + "معرف:" + _personOrderdList.First().Moaref;
+            var cper = _personOrderdList.First().FullName + "حساب:" + _personOrderdList.First().HesabNo ;
             selectedPerson = new PersonLastGstDto();
             selectedPerson.FullName = cper;
             selectedPerson.Code = _personOrderdList.First().Code;
@@ -447,7 +447,7 @@
 
             else styleSavedOrNot = "display: flex; font-size: 16px; font-weight: bold; width: 100%; height: 100%; justify-content: space-between;";
 
-            selectedPerson.FullName = CurrentPersonLastGstDto.FullName + " ش.حساب : " + CurrentPersonLastGstDto.HesabNo + "معرف:" + CurrentPersonLastGstDto.Moaref;
+            selectedPerson.FullName = CurrentPersonLastGstDto.FullName + " ش.حساب : " + CurrentPersonLastGstDto.HesabNo ;
             // selectedPerson.FullName = CurrentPersonLastGstDto.FullName;
             selectedPerson.HesabNo = CurrentPersonLastGstDto.HesabNo;
             selectedPerson.Code = CurrentPersonLastGstDto.Code;
