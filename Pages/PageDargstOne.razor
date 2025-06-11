@@ -303,9 +303,7 @@
             // تبدیل به لیست;
             ///         بخاطر باگ Autocomplete دو لیست ساختیم یکی برای Autocomplete یکی هم کنترل عملیات
             //  _personOrderdList = vwPersonList.OrderBy(p => p.HesabNo).ToList();// تبدیل به لیست;
-            _personSelectList = query.OrderBy(p => p.Moaref)
-                                     .ThenBy(p => p.HesabNo)
-                                     .ToList();
+            _personSelectList = query.OrderBy(p => p.HesabNo).ToList();
 
             // var record = _Db.tblDates.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
@@ -375,6 +373,7 @@
 
             _personOrderdList = MakeVamRecordSet();
             CurrentIndex = _personOrderdList.FindIndex(p => p.ReqNo == selectedPerson.ReqNo && string.IsNullOrWhiteSpace(p.PaidDate));
+            if (CurrentIndex == -1) CurrentIndex = _personOrderdList.Count - 1;
             if (CurrentIndex < _personOrderdList.Count - 1)
                 NextPersonLastGstDto = _personOrderdList[CurrentIndex + 1];
             else NextPersonLastGstDto = null;

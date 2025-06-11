@@ -354,11 +354,10 @@
                     Moaref = v.Moaref,
                     Mellicode = v.Mellicode,
                     ShenaseBank = v.ShenaseBank
-                }).OrderBy(p => p.Moaref).ThenBy(p => p.HesabNo)
-                  .ToList();
+                }).OrderBy(p => p.HesabNo).ToList();
             // تبدیل به لیست;
             ///         بخاطر باگ Autocomplete دو لیست ساختیم یکی برای Autocomplete یکی هم کنترل عملیات
-            _personOrderdList = vwPersonList.OrderBy(p => p.Moaref).ThenBy(p => p.HesabNo).ToList();// تبدیل به لیست;
+            _personOrderdList = vwPersonList.OrderBy(p => p.HesabNo).ToList();// تبدیل به لیست;
 
 
             // var record = _Db.tblDates.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان

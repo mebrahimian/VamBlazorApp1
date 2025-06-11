@@ -535,15 +535,21 @@
                                  SELECT dbo.PERSON.Code, LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END AS FullName, dbo.PERSON.Sex As Sex,
                                         dbo.PERSON.City, CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END AS CityDesc,dbo.HESAB.hesab_no As HesabNo,dbo.HESAB.date As StartDate, CASE WHEN Hesab.id___di = 0 THEN Hesab.Hesab_No ELSE Hesab.id___di END AS Moaref, dbo.HESAB.MonthQty, dbo.HESAB.FirstQty + dbo.HESAB.CurQty AS Mojodi, dbo.QVAM.REQ_NO As ReqNo, dbo.PVAM.Type, dbo.PVAM.date_d As DateD, dbo.PVAM.MblgVam, dbo.PVAM.PKarmozd,
                                         dbo.PVAM.MKarmozd, dbo.PVAM.gst_no As GstNo, dbo.PVAM.gst_pay As GstPay, dbo.PVAM.LastDate, SUM(dbo.DARGST.gstmblg) AS PaidVam,
-                                          (SELECT        MIN(gst_no) AS Expr1
+                                         isnull( (SELECT        MIN(gst_no) AS Expr1
                                            FROM            dbo.DARGST AS DG1
-                                           WHERE        (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)) AS CurrentGstNo,
-                                          (SELECT        MIN(date_g) AS Expr1
+                                           WHERE        (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)), (SELECT Max(gst_no) AS Expr1
+                                           FROM            dbo.DARGST AS DG1
+                                           WHERE        (req_no = dbo.PVAM.req_no))) AS CurrentGstNo,
+                                         isnull( (SELECT        MIN(date_g) AS Expr1
                                            FROM            dbo.DARGST AS DG2
-                                           WHERE        (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)) AS CurrentGstDate,
-                                          (SELECT        MIN(date_p) AS Expr1
+                                           WHERE        (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)), (SELECT Max(date_g) AS Expr1
                                            FROM            dbo.DARGST AS DG2
-                                           WHERE        (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)) AS CurrentPaidDate, CASE WHEN
+                                           WHERE        (req_no = dbo.PVAM.req_no))) AS CurrentGstDate,
+                                         isnull( (SELECT        MIN(date_p) AS Expr1
+                                           FROM            dbo.DARGST AS DG2
+                                           WHERE        (req_no = dbo.PVAM.req_no) AND (gstmblg = 0)), (SELECT Max(date_p) AS Expr1
+                                           FROM            dbo.DARGST AS DG2
+                                           WHERE        (req_no = dbo.PVAM.req_no))) AS CurrentPaidDate, CASE WHEN
                                           (SELECT        MIN(gst_no) AS Expr1
                                            FROM            DARGST AS DG1
                                            WHERE        (req_no = PVAM.req_no) AND (gstmblg = 0)) = Pvam.Gst_no THEN Gst2 ELSE Gst1 END AS CurrentGstMblg,
