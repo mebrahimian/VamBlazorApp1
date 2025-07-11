@@ -489,11 +489,21 @@
                 comparer = new DtoComparer();
                 if (!comparer.isChangedPardarInfo(CurrentPersonAccountDto, OriginalAccount))
                 {
+                    // اصلاح شماره حساب
                     var editHesab = _Db.Hesabs.FirstOrDefault(p => p.Pcode == PCodeSearchable);
-                    editHesab.HesabNo = CurrentPersonAccountDto.HesabNo;
-                    editHesab.IdDi = CurrentPersonAccountDto.Moaref;
-                    editHesab.Monthqty = CurrentPersonAccountDto.Monthqty;
-                    editHesab.P = CurrentPersonAccountDto.P;
+                    if (editHesab.HesabNo != CurrentPersonAccountDto.HesabNo)
+                    {
+                        _Db.Hesabs.Remove(editHesab);
+                        _Db.SaveChangesAsync();
+                        editHesab.HesabNo = CurrentPersonAccountDto.HesabNo;
+                        _Db.Hesabs.Add(editHesab);
+                    }
+                    else
+                    {
+                        editHesab.IdDi = CurrentPersonAccountDto.Moaref;
+                        editHesab.Monthqty = CurrentPersonAccountDto.Monthqty;
+                        editHesab.P = CurrentPersonAccountDto.P;
+                    }
 
                 }
                 else
@@ -501,6 +511,7 @@
                     _snackBar.Add($" مجاز به تغییر این مقادیر نیستید", Severity.Error);
                     CurrentPersonAccountDto.Firstqty = OriginalAccount.Firstqty;
                     CurrentPersonAccountDto.Date = OriginalAccount.Date;
+                    CurrentPersonAccountDto.HesabNo = OriginalAccount.HesabNo;
                     CurrentPersonAccountDto.V_Year = DateService.GetHYear(OriginalAccount.Date);
                     CurrentPersonAccountDto.V_Month = DateService.GetHMonth(OriginalAccount.Date);
                     CurrentPersonAccountDto.V_Day = DateService.GetHDay(OriginalAccount.Date);

@@ -80,7 +80,7 @@ namespace VamBlazor.Client.Application.Dto_Utilities
                 return false;
             }
 
-            if (newDto.HesabNo != oldDb.HesabNo || newDto.Firstqty != oldDb.Firstqty || newDto.V_Year != oldDb.V_Year || 
+            if (newDto.Firstqty != oldDb.Firstqty || newDto.V_Year != oldDb.V_Year || 
                 newDto.V_Month != oldDb.V_Month || newDto.V_Day != oldDb.V_Day) 
             {
                 return true;

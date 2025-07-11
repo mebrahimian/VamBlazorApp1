@@ -280,6 +280,7 @@
                                                    ShenaseBank = v.ShenaseBank
                                                })
                                            .Distinct()
+                                           .OrderBy(p=>p.HesabNo)
                                            .ToList();
 
 
@@ -521,9 +522,18 @@
             }
             _Db.SaveChanges();
             CurrentPardarDto.Mojodi = GetMojodi(CurrentPardarDto.Pcode);
+           // isNeedUpdate = false;
+            var curr = _personFullDataList.FirstOrDefault(p => p.Code == selectedPerson.Code);
+            int index = _personFullDataList.IndexOf(curr);
+            if (index < _personFullDataList.Count -1 )
+            {
+                //Mapper.Map(new PersonFullDataDto(), selectedPerson);
+                var next = _personFullDataList[index + 1];
+                selectedPerson = Mapper.Map<PersonFullDataDto>(next);
+                OnPCodeChanged();
 
-
-            isNeedUpdate = false;
+            }
+          
 
         }
         catch (DbUpdateException ex)

@@ -171,9 +171,10 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
                                              }
                                      };
         // محاسبه رکوردها برای "Transaction Between Date1 and Date2"
+        
         var groupedTransactions = (from transaction in _Db.vwPersonAllTransactions
                                    join person in _Db.Persons on transaction.Pcode equals person.Code
-                                   where string.Compare(transaction.Date, cDate1) >= 0 && string.Compare(transaction.Date, cDate2) <= 0
+                                   where string.Compare(transaction.Date, cDate1) >= 0 && string.Compare(transaction.Date, cDate2) <= 0 && transaction.Karmozd == 0 && (transaction.HesabNo != 9999 || transaction.ReqNo == 0)
                                    group new { transaction, person } by new
                                    {
                                        transaction.Pcode,
@@ -196,6 +197,8 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
                                            ColPasandaz = 0 // بجای مانده استفاده میشود
 
                                        })
+                           // WHERE        (date BETWEEN '1404/04/03' AND '1404/04/03') AND not((hesab_no = 9999) AND (req_no <> 0))
+                           //.Where(t => (t.HesabNo != 9999 || t.ReqNo == 0))
                            .OrderBy(t => t.Date)
                            .ThenBy(t => t.HesabNo)
                            .ToList();
