@@ -82,7 +82,7 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
     protected override async Task OnInitializedAsync()
     {
 
-        ReportRecords = _Db.vwPersonStatusCurrent.OrderByDescending(p => p.DelayGst).ThenBy(p => p.Moaref).ToList();
+        ReportRecords = _Db.vwPersonStatusCurrent.OrderBy(p => p.HesabNo).ThenBy(p => p.DelayGst).ToList();
 
         SandoghName = SandoghService.GetSandoghName();
     }

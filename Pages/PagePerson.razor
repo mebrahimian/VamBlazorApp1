@@ -135,6 +135,7 @@
                 <MudItem xs="12" sm="6">
                     <MudTextField Label="آدرس" @bind-Value="CurrentPersonDto.Address" @bind-Value:after="isDataChanged" Lines="2" />
                 </MudItem>
+                
 
             </MudGrid>
 
@@ -377,7 +378,7 @@
 
         var dialog = DialogService.Show<DeleteConfirmationDialog>("حذف سپرده گذار", parameters);
         var result = await dialog.Result;
-        if (!result?.Canceled == false)
+        if (!result?.Canceled == true)
         {
             // اگر کاربر گزینه Yes را انتخاب کرده باشد، عملیات حذف انجام می‌شود
             CurrentPersonId = context.IdDi;
