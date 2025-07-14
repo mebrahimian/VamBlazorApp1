@@ -197,7 +197,7 @@
                      orderby account.HesabNo
                      select new PersonAccountDto
                          {
-                             FullName = person.FullName + " ش.حساب " + account.HesabNo + " معرف " + (account.IdDi == 0 ? account.HesabNo : account.IdDi) + (string.IsNullOrWhiteSpace(person.Mellicode) ? "" : " کدملی : " + person.Mellicode),
+                             FullName = person.FullName + " ش.حساب " + account.HesabNo + " معرف " + (account.IdDi == 0 ? account.HesabNo : account.IdDi) ,
                              Family = person.Family,
                              MelliCode = person.Mellicode,
                              Name = person.Name,

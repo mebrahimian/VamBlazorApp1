@@ -5,6 +5,7 @@
 @inject IConfiguration Configuration
 @inject VamBlazor.Client.Application.Services.PersonServices PersonServices
 @inject DateService DateService
+@inject SandoghService SandoghService
 @inject IMapper Mapper
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
@@ -165,6 +166,24 @@
                         <MudTextField Label="بابت" @bind-Value="CurrentPardarDto.Babat" @bind-Value:after="isDataChanged" />
                     </MudTooltip>
                 </MudItem>
+                <MudItem xs="12" Class="mt-n5">
+                    <hr>
+                    <MudPaper Elevation="0" Class="py-4 px-0" Style="height: 50px;background-color:white">
+
+                        <MudTextField T="string" Class="mt-n5"
+                        @bind-Value="@SandoghMojodiStr"
+                        Label=" موجودی صندوق "
+                        Adornment="Adornment.End"
+                        AdornmentText="ریال"
+                        Variant="Variant.Outlined"
+                        Typo="Typo.body1"
+                        Style="font-size: 1.2vw; background-color:white;color:purple"
+                        readonly="true" />
+
+                    </MudPaper>
+                    <hr>
+
+                </MudItem>
             </MudGrid>
 
             <div style="display: flex;" class="mt-n14">
@@ -240,10 +259,12 @@
     private MudForm PardarForm;
     private string? searchString1 = string.Empty;
     private Person person = new Person();
-    //   private Person1 person1 = new Person1();
+    private long SandoghMojodi;
+    private string SandoghMojodiStr;
     private bool isFormValid;
     private bool ShowPersonList = false;
     private string cDateShamsi;
+    private string cDateSaved = "";
     ///
     /// </summary> /////////////////////////////////////////////////////////////
     ///
@@ -261,6 +282,8 @@
     {
         try
         {
+            SandoghMojodi = SandoghService.GetCurrentSandogh();
+            SandoghMojodiStr = SandoghMojodi.ToString("N0");
             if (PardarForm != null)
             {
                 // isFormValid = form.IsValid;
@@ -396,7 +419,8 @@
                                              Mojodi = hesab.Firstqty + hesab.Curqty,
                                              Mellicode = person.Mellicode
 
-                                         }).ToList();  // تبدیل به لیست;
+                                         }
+                                    ).ToList();  // تبدیل به لیست;
 
             }
             // LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END
@@ -515,6 +539,19 @@
             else
             {
                 CurrentPardarDto.FullName = selectedPerson.FullName;
+                if (cDateSaved == "")
+                {
+                    cDateSaved = CurrentPardarDto.Date;
+                    cDateShamsi = CurrentPardarDto.Date;
+                }
+                else
+                {
+                    if (cDateSaved != CurrentPardarDto.Date)
+                    {
+                        _snackBar.Add($"تاریخ مجاز {cDateSaved} می باشد", Severity.Error);
+                        return;
+                    }
+                }
                 var newPardar = Mapper.Map<Pardar>(CurrentPardarDto); // Mapping DTO to Entity
                 _personPardarList.Add(CurrentPardarDto);
                 _Db.Pardars.Add(newPardar);
