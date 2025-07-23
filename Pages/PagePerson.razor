@@ -1,6 +1,7 @@
 ﻿@page "/pageperson"
 @inject IJSRuntime JS
 @inject DatabaseContext _Db
+@inject DateService DateService
 @inject IConfiguration Configuration
 @inject ILogger<PagePerson> _logger
 @inject VamBlazor.Client.Application.Services.PersonServices PersonServices
@@ -40,12 +41,12 @@
                 <MudItem xs="12" sm="6" md="3">
                     <div style="width: 100px;">
                         <MudTextField Label="کد سپرده گذار" Immediate="true" Required @ref="myTextField"
-                                      For="@(() => CurrentPersonDto.Code)"
-                                      @bind-Value="PCodeSearchable"
-                                      MaxLength="5"
-                                      InputType="InputType.Text"
-                                      onkeyup="OnPCodeChanged"
-                                      ErrorText="@GetErrorMessageForField(nameof(CurrentPersonDto.Code))" />
+                        For="@(() => CurrentPersonDto.Code)"
+                        @bind-Value="PCodeSearchable"
+                        MaxLength="5"
+                        InputType="InputType.Text"
+                        onkeyup="OnPCodeChanged"
+                        ErrorText="@GetErrorMessageForField(nameof(CurrentPersonDto.Code))" />
                     </div>
                 </MudItem>
                 <MudItem xs="12" sm="6" md="3">
@@ -77,17 +78,17 @@
                 <MudItem xs="12" sm="6" md="3">
                     <div style="width: 200px;">
                         <MudTextField Label="نام خانوادگی" Required
-                                      For="@(() => CurrentPersonDto.Family)"
-                                      @bind-Value="CurrentPersonDto.Family" @bind-Value:after="isDataChanged"
-                                      ErrorText="@GetErrorMessageForField(nameof(CurrentPersonDto.Family))" />
+                        For="@(() => CurrentPersonDto.Family)"
+                        @bind-Value="CurrentPersonDto.Family" @bind-Value:after="isDataChanged"
+                        ErrorText="@GetErrorMessageForField(nameof(CurrentPersonDto.Family))" />
                     </div>
                 </MudItem>
                 <MudItem xs="12" sm="6" md="3">
                     <div style="width: 200px;">
                         <MudTextField Label="نــــام" Required
-                                      For="@(() => CurrentPersonDto.Name)"
-                                      @bind-Value="CurrentPersonDto.Name" @bind-Value:after="isDataChanged"
-                                      ErrorText="@GetErrorMessageForField(nameof(CurrentPersonDto.Name))" />
+                        For="@(() => CurrentPersonDto.Name)"
+                        @bind-Value="CurrentPersonDto.Name" @bind-Value:after="isDataChanged"
+                        ErrorText="@GetErrorMessageForField(nameof(CurrentPersonDto.Name))" />
                     </div>
                 </MudItem>
                 <MudItem xs="12" sm="6" md="3">
@@ -96,14 +97,45 @@
                     </div>
                 </MudItem>
                 <MudItem xs="12" sm="6" md="3">
-                    <div style="width: 150px;">
-                        <MudTextField Label="شماره شناسنامه" @bind-Value="CurrentPersonDto.IssueNo" @bind-Value:after="isDataChanged" />
+                    <div class="mr-n10 ml-10" style="display: flex;font-size: 16px; font-weight: bold;">
+
+                        <!-- فیلد روز -->
+
+                        <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="int" Label="تاریخ" Variant="Variant.Outlined"
+                            @bind-Value="CurrentPersonDto.V_Day" @bind-Value:after="isDataChanged"
+                            Min="1"
+                            Max="31"
+                            Immediate="true" />
+                        </MudTooltip>
+
+                        <!-- فیلد ماه -->
+
+                        <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="int" Label="تولد" Variant="Variant.Outlined"
+                            @bind-Value="CurrentPersonDto.V_Month" @bind-Value:after="isDataChanged"
+                            Min="1"
+                            Max="12"
+                            Immediate="true" />
+                        </MudTooltip>
+
+                        <!-- فیلد سال -->
+
+                        <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudNumericField T="int" Label="." Variant="Variant.Outlined"
+                            @bind-Value="CurrentPersonDto.V_Year" @bind-Value:after="isDataChanged"
+                            Min="1300"
+                            Max="1499"
+                            Style="width:100px"
+                            Immediate="true" />
+                        </MudTooltip>
+
                     </div>
                 </MudItem>
                 <!-- ردیف سوم: MelliCode و TelNoو bankType و HesabBank -->
                 <MudItem xs="12" sm="6" md="3">
                     <div style="width: 150px;">
-                        <MudTextField Label="کد ملی" @bind-Value="CurrentPersonDto.Mellicode" @bind-Value:after="isDataChanged" InputType=" InputType.Text" />
+                        <MudTextField Label="کد ملی" Required @bind-Value="CurrentPersonDto.Mellicode" @bind-Value:after="isDataChanged" InputType=" InputType.Text" />
                     </div>
                 </MudItem>
                 <MudItem xs="12" sm="6" md="3">
@@ -133,9 +165,9 @@
                     </div>
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudTextField Label="آدرس" @bind-Value="CurrentPersonDto.Address" @bind-Value:after="isDataChanged" Lines="2" />
+                    <MudTextField Label="آدرس" Required @bind-Value="CurrentPersonDto.Address" @bind-Value:after="isDataChanged" Lines="2" />
                 </MudItem>
-                
+
 
             </MudGrid>
 
@@ -184,10 +216,10 @@
             </RowTemplate>
             <PagerContent>
                 <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, int.MaxValue }"
-                               RowsPerPageString="@rowsPerPageString"
-                               InfoFormat="@infoFormat"
-                               AllItemsText="@allItemsText"
-                               HorizontalAlignment="@horizontalAlignment" />
+                RowsPerPageString="@rowsPerPageString"
+                InfoFormat="@infoFormat"
+                AllItemsText="@allItemsText"
+                HorizontalAlignment="@horizontalAlignment" />
             </PagerContent>
         </MudTable>
     }
@@ -249,7 +281,9 @@
 
             Banks = _Db.Banks.ToList();
 
+            PCodeSearchable = (int.Parse(Persons.Max(p => p.Code))+1).ToString().PadLeft(Persons.Max(p => p.Code).Length,'0');
             Mapper.Map(new Person(), CurrentPersonDto);
+            CurrentPersonDto.Code = PCodeSearchable;
 
         }
         catch (SqlException ex)
@@ -300,7 +334,7 @@
         {
             if (_person.FullName != null && TextHelper.NormalContain(_person.FullName, searchString))
                 return true;
-            if ($"{_person.Code} {_person.Mellicode} {_person.IssueNo}".Contains(searchString))
+            if ($"{_person.Code} {_person.Mellicode}".Contains(searchString))
                 return true;
         }
         return false;
@@ -325,7 +359,7 @@
             }
             else
             {
-                CurrentPersonDto.Code = PCodeSearchable;
+
                 var newPerson = Mapper.Map<Person>(CurrentPersonDto); // Mapping DTO to Entity
                 CurrentPersonId = 0;
                 _Db.Persons.Add(newPerson);
@@ -354,7 +388,7 @@
     {
         CurrentPersonDto = Mapper.Map<PersonDto>(person);
         OriginalPerson = _Db.Persons.FirstOrDefault(p => p.Code == person.Code) ?? new Person();// یک کپی برای کنترل تغییرات
-                                                                                                //  OriginalPerson = _Db.Qvams.FirstOrDefault(p => p.ReqNo == personqvamdto.ReqNo) ?? new Qvam();// یک کپی برای کنترل تغییرات
+        //  OriginalPerson = _Db.Qvams.FirstOrDefault(p => p.ReqNo == personqvamdto.ReqNo) ?? new Qvam();// یک کپی برای کنترل تغییرات
 
         CurrentPersonId = person.IdDi;
         PCodeSearchable = CurrentPersonDto.Code;
@@ -499,7 +533,7 @@
 
     private async Task AdjustDB()
     {    /// View vwPersonFullData
-         ///
+        ///
         var ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwPersonFullData'";
         var createViewQuery = @" Create View vwPersonFullData As
                                  SELECT  dbo.PERSON.Code,
@@ -627,7 +661,7 @@
                                  QVAM AS QVAM_1 ON DARGST.req_no = QVAM_1.REQ_NO INNER JOIN
                                  HESAB ON QVAM_1.PCODE = HESAB.pcode
                             WHERE (DARGST.gstmblg <> 0)";
-  
+
         using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
         {
             await connection.OpenAsync();
@@ -776,11 +810,6 @@
         }
 
 
-
-
-
-
-
         ///
         ///     بازسازی ایندکس ها
         ///
@@ -831,15 +860,15 @@
     /*
     private void OnBlurFnc()
     {
-    CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable);
-    if (_Db.Persons.Any(p => p.Code == PCodeSearchable))   // کد سپرده گذار ثبت شده در صفحه وب اگر موجود بود پرشود
-    {
-    var personToEdit = Persons.FirstOrDefault(p => p.Code == PCodeSearchable);
-    CurrentPersonDto = Mapper.Map<PersonDto>(personToEdit);
-    CurrentPersonId = personToEdit.IdDi;
+        CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable);
+        if (_Db.Persons.Any(p => p.Code == PCodeSearchable))   // کد سپرده گذار ثبت شده در صفحه وب اگر موجود بود پرشود
+        {
+            var personToEdit = Persons.FirstOrDefault(p => p.Code == PCodeSearchable);
+            CurrentPersonDto = Mapper.Map<PersonDto>(personToEdit);
+            CurrentPersonId = personToEdit.IdDi;
 
-    }
-    }
+            }
+        }
     */
     //
     //   کنترل فیلد کدسپرده گذار که بعد ار تایپ 5 حرف ازفیلد خارج شود
@@ -847,15 +876,15 @@
     /*
     private async Task OnInputChange()
     {
-    //await Task.Delay(0);
+        //await Task.Delay(0);
 
-    // وقتی ورودی به 5 کاراکتر رسید
-    if (CurrentPersonDto.Code?.Length >= 4)
+        // وقتی ورودی به 5 کاراکتر رسید
+        if (CurrentPersonDto.Code?.Length >= 4)
         {
-        // فیلد به طور خودکار از حالت فوکوس خارج می‌شود
-        await JS.InvokeVoidAsync("blurElement", "InputData");
-    }
-    }
+            // فیلد به طور خودکار از حالت فوکوس خارج می‌شود
+            await JS.InvokeVoidAsync("blurElement", "InputData");
+            }
+        }
     */
     private void OnPCodeChanged()
     {
@@ -882,6 +911,7 @@
                     //  Mapper.Map(new Person(), CurrentPersonDto);
                     CurrentPersonDto.Code = PCodeSearchable;
                     CurrentPersonId = 0;
+                    ShowClearPersonInfo();
                     isNeedUpdate = true;
                     IsEditing = false;
                 }
@@ -890,6 +920,7 @@
             {
                 _snackBar.Add($"  فیلد باید فقط عددی باشد", Severity.Warning);
                 CurrentPersonId = 0;
+                ShowClearPersonInfo();
                 IsEditing = false;
             }
         }
@@ -917,6 +948,10 @@
         if (CurrentPersonDto.Code == null) return false;
         if (string.IsNullOrEmpty(CurrentPersonDto.Family)) return false;
         if (string.IsNullOrEmpty(CurrentPersonDto.Name)) return false;
+        if (string.IsNullOrEmpty(CurrentPersonDto.Address)) return false;
+        if (string.IsNullOrEmpty(CurrentPersonDto.BirthDate)) return false;
+        if (string.IsNullOrEmpty(CurrentPersonDto.Mellicode)) return false;
+
         isDataCorrected = ValidateModel();
         if (!isDataCorrected) return false;
         return isNeedUpdate;
@@ -926,8 +961,8 @@
     {
 
         Mapper.Map(new PersonDto(), CurrentPersonDto);
-        PCodeSearchable = "";
-        CurrentPersonDto.Code = "";
+        //  PCodeSearchable = "";
+        CurrentPersonDto.Code = PCodeSearchable;
         CurrentPersonDto.Family = "";
         CurrentPersonDto.Father = "";
         CurrentPersonDto.Name = "";
@@ -940,14 +975,15 @@
         CurrentPersonDto.City = '1';
         CurrentPersonDto.Sex = '1';
         CurrentPersonDto.Tel = "";
-
+        CurrentPersonDto.FullName = "";
+        CurrentPersonDto.BirthDate = "";
     }
 
 
     private void isDataChanged()
     {
         isNeedUpdate = false;
-        //  CurrentPersonDto.Date = DateService.DateShamsiFormat(CurrentPersonQVamDto.V_Year, CurrentPersonQVamDto.V_Month, CurrentPersonQVamDto.V_Day);
+        CurrentPersonDto.BirthDate = DateService.DateShamsiFormat(CurrentPersonDto.V_Year, CurrentPersonDto.V_Month, CurrentPersonDto.V_Day);
         if (OriginalPerson.Code != CurrentPersonDto.Code) isNeedUpdate = true;
         if (OriginalPerson.Name != CurrentPersonDto.Name) isNeedUpdate = true;
         if (OriginalPerson.Family != CurrentPersonDto.Family) isNeedUpdate = true;
@@ -961,6 +997,8 @@
         if (OriginalPerson.Mellicode != CurrentPersonDto.Mellicode) isNeedUpdate = true;
         if (OriginalPerson.Sex != CurrentPersonDto.Sex) isNeedUpdate = true;
         if (OriginalPerson.Tel != CurrentPersonDto.Tel) isNeedUpdate = true;
+        if (OriginalPerson.BirthDate != CurrentPersonDto.BirthDate) isNeedUpdate = true;
+
 
 
 

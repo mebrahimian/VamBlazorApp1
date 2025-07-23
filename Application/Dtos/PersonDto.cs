@@ -27,11 +27,13 @@ namespace VamBlazor.Client.Application.Dtos
         public string? IssueNo { get; set; } 
 
         public string? Tel { get; set; }
+        [Required(ErrorMessage = "آدرس اجباری است ")]
         [MaxLengthAttribute(100, ErrorMessage="حداکثر 100 حرف وارد کنید")] 
         public string? Address { get; set; }
 
         public Char City { get; set; } = '1';
 
+        [Required(ErrorMessage = "کدملی اجباری است ")]
         public string? Mellicode { get; set; }
 
         //public long IdDi { get; set; }
@@ -45,6 +47,10 @@ namespace VamBlazor.Client.Application.Dtos
         public string? HesabBank { get; set; }
         public string? V_CityDesc { get; set; } 
         public string? FullName { get; set; }   
-                
+        public string? BirthDate { get; set; }
+        public int V_Day { get; set; }
+        public int V_Month { get; set; }
+        public int V_Year { get; set; }
+
     }
 }

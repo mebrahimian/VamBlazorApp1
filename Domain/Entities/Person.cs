@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using static MudBlazor.Colors;
 using VamBlazor.Client.Domain.Enum;
 using VamBlazor.Client.Application.CommonFunc;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using VamBlazor.Client.Application.Services;
 
 namespace VamBlazor.Client.Domain.Entities
 {
@@ -42,11 +44,18 @@ namespace VamBlazor.Client.Domain.Entities
         public int? BankType { get; set; }
 
         public string? HesabBank { get; set; }
+        public string? BirthDate { get; set; }
         [NotMapped]
         public string FullName => $"{Family?.Trim()} {Name?.Trim()}" +
                               (string.IsNullOrEmpty(Father) ? "" : $" ({Father?.Trim()})");
         [NotMapped]
         public string? V_CityDesc => CodeToStringFunctions.GetCityDesc(City ?? '1');
-    
+        [NotMapped]
+        public int V_Day => DateService.GetHDay(BirthDate);
+        [NotMapped]
+        public int V_Month => DateService.GetHMonth(BirthDate);
+        [NotMapped]
+        public int V_Year => DateService.GetHYear(BirthDate);
+
     }
 }
