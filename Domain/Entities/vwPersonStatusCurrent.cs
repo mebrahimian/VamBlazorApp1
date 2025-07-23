@@ -15,10 +15,9 @@
         public int ReqNo { get; set; }  
         public string DateVam { set; get; } = "";
         public long MblgVam { get; set; }
-        public byte GstNo { get; set; }
+        public int GstNo { get; set; }
         public long Gst1 { get; set; }
         public long Gst2 { get; set; }
-        public char Type { get; set; }  
         public int GstPay {  get; set; }     
         public int PKarmozd { get; set; }   
         public int MKarmozd { get; set; }   

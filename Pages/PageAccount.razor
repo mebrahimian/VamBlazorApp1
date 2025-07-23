@@ -106,8 +106,7 @@
                         @bind-Value="@HesabNoSearchable" @bind-Value:after="isDataChanged"
                         InputType="InputType.Text"
                         Format="###"
-                        OnBlur="OnAccountChanged"
-                        />
+                        OnBlur="OnAccountChanged"/>
 
                         <MudText Style="justify-content:left;width:45%" Class="mt-5 ml-n3">تاریخ افتتاح :</MudText>
                     </div>
@@ -446,7 +445,8 @@
                 var MoarefCode = CurrentPersonAccountDto.Moaref;
                 isEditing = true;
                 isNeedUpdate = false;
-                if (CurrentPersonAccountDto.Moaref != 0)
+                _MoarefDesc = "";
+                if (MoarefCode != 0 && MoarefCode != null)
                 {
                     _MoarefDesc = _personAccountList?.FirstOrDefault(p => p.HesabNo == MoarefCode)?.FullName;
                 }
@@ -456,6 +456,36 @@
         }
         //  isValid = ValidateForm();
     }
+    private void OnAccountChanged()
+    {
+        ///
+        ///   کنترل اینکه طرف حساب دارد یا نه
+        ///
+
+        var personAccount = _personAccountList.FirstOrDefault(p => p.HesabNo == HesabNoSearchable);
+        if (personAccount != null)
+        {
+            var Pcode = personAccount.Pcode;
+            if (Pcode != PCodeSearchable)
+            {
+                HesabNoSearchable = personAccount.HesabNo;
+                PCodeSearchable = personAccount.Pcode;
+                if (selectedPerson == null) { selectedPerson = new PersonDto(); }
+                selectedPerson.Code = PCodeSearchable;
+                selectedPerson.FullName = personAccount.FullName + " کد : " + personAccount.Pcode;
+
+                FillPersonAccountInfo(personAccount);
+
+            }
+        }
+        else
+        {
+            CurrentPersonAccountDto.HesabNo = HesabNoSearchable;
+            if (OriginalAccount.HesabNo != HesabNoSearchable) isNeedUpdate = true;
+        }
+
+    }
+
     private void EditAccount(PersonAccountDto personaccountdto)
     {
         CurrentPersonAccountDto = Mapper.Map<PersonAccountDto>(personaccountdto);
@@ -687,36 +717,6 @@
 
 
 
-    private void OnAccountChanged()
-    {
-        ///
-        ///   کنترل اینکه طرف حساب دارد یا نه
-        ///
-
-        var personAccount = _personAccountList.FirstOrDefault(p => p.HesabNo == HesabNoSearchable);
-        if (personAccount != null)
-        {
-            var Pcode = personAccount.Pcode;
-            if (Pcode != PCodeSearchable)
-            {
-                HesabNoSearchable = personAccount.HesabNo;
-                PCodeSearchable = personAccount.Pcode;
-                if (selectedPerson == null) { selectedPerson = new PersonDto(); }
-                selectedPerson.Code = PCodeSearchable;
-                selectedPerson.FullName = personAccount.FullName + " کد : " + personAccount.Pcode;
-                //   selectedPerson.FullName = personAccount.FullName;
-                FillPersonAccountInfo(personAccount);
-                //  _snackBar.Add($" حساب متعلق به {personAccount.FullName} می باشد", Severity.Warning);
-                //  HesabNoSearchable = CurrentPersonAccountDto.HesabNo;
-            }
-        }
-        else
-        {
-            CurrentPersonAccountDto.HesabNo = HesabNoSearchable;
-            if (OriginalAccount.HesabNo != HesabNoSearchable) isNeedUpdate = true;
-        }
-
-    }
 
     private void OnSearchTextChanged()
     {
@@ -818,6 +818,11 @@
         CurrentPersonAccountDto.V_Month = personToAdd.V_Month;
         CurrentPersonAccountDto.V_Day = personToAdd.V_Day;
         CurrentPersonAccountDto.V_Mojodi = personToAdd.V_Mojodi;
+        _MoarefDesc = "";
+        if (personToAdd.Moaref != 0 && personToAdd.Moaref != null)
+        {
+            _MoarefDesc = _personAccountList?.FirstOrDefault(p => p.HesabNo == personToAdd.Moaref)?.FullName;
+        }
 
     }
 

@@ -752,19 +752,21 @@
 
         ExistCommand = @"Select count(*) as RecNo From sys.views where name = 'vwPersonStatusCurrent'";
         createViewQuery = @"CREATE VIEW [dbo].[vwPersonStatusCurrent] AS
-                            SELECT dbo.PERSON.code, LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END AS FullName, dbo.PERSON.sex,
-                                   CASE WHEN sex = '1' THEN 'مرد ' ELSE 'زن' END AS SexDesc, dbo.PERSON.city, CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END AS CityDesc, dbo.HESAB.hesab_no,
-                                   CASE WHEN hesab.id___di = 0 THEN Hesab_No ELSE hesab.id___di END AS Moaref, dbo.HESAB.firstqty + dbo.HESAB.curqty AS Mojodi, dbo.HESAB.monthqty, ISNULL(dbo.vwPersonLastVamStatus.req_no, 0) AS ReqNo,
-                                   ISNULL(dbo.vwPersonLastVamStatus.date_d, ' ') AS DateVam, ISNULL(dbo.vwPersonLastVamStatus.mblgvam, 0) AS MblgVam, ISNULL(dbo.vwPersonLastVamStatus.gst_no, 0) AS GstNo,
-                                   ISNULL(dbo.vwPersonLastVamStatus.gst1, 0) AS Gst1, ISNULL(dbo.vwPersonLastVamStatus.gst2, 0) AS Gst2, ISNULL(dbo.vwPersonLastVamStatus.gst_pay, 0) AS GstPay, 
-                                   ISNULL(dbo.vwPersonLastVamStatus.type, 0) AS Type, ISNULL(dbo.vwPersonLastVamStatus.pkarmozd, 0) AS PKarmozd, ISNULL(dbo.vwPersonLastVamStatus.mkarmozd, 0) AS MKarmozd,
-                                   ISNULL(dbo.vwPersonLastVamStatus.PaidVam, 0) AS PaidVam, ISNULL(dbo.vwPersonLastVamStatus.CurrentGstNo, 0) AS CurrentGstNo, ISNULL(dbo.vwPersonLastVamStatus.CurrentGstMblg, 0) AS CurrentGstMblg, 
-                                   ISNULL(dbo.vwPersonLastVamStatus.CurrentGstDate, ' ') AS CurrentGstDate, ISNULL(dbo.vwPersonLastVamStatus.DelayGst, 0) AS DelayGst,
-                                   ISNULL(dbo.vwPersonLastVamStatus.mblgvam, 0) - ISNULL(dbo.vwPersonLastVamStatus.PaidVam, 0) AS RemainVam
-                            FROM  dbo.PERSON INNER JOIN
-                                  dbo.HESAB ON dbo.PERSON.code = dbo.HESAB.pcode LEFT OUTER JOIN
-                                  dbo.vwPersonLastVamStatus ON dbo.HESAB.pcode = dbo.vwPersonLastVamStatus.PCODE 
-                            WHERE (dbo.HESAB.firstqty + dbo.HESAB.curqty > 0)";
+                  SELECT dbo.PERSON.code, LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END AS FullName, dbo.PERSON.sex,
+                         CASE WHEN sex = '1' THEN 'مرد ' ELSE 'زن' END AS SexDesc, dbo.PERSON.city, CASE city WHEN '1' THEN 'شاهرود ' WHEN '2' THEN 'گرگان' WHEN '3' THEN 'تهران' ELSE 'سایر' END AS CityDesc, dbo.HESAB.hesab_no,
+                         CASE WHEN hesab.id___di = 0 THEN Hesab_No ELSE hesab.id___di END AS Moaref, MAX(dbo.HESAB.firstqty + dbo.HESAB.curqty) AS Mojodi, MAX(dbo.HESAB.monthqty) AS monthqty,
+                         MAX(ISNULL(dbo.vwPersonLastVamStatus.req_no, 0)) AS ReqNo, MAX(ISNULL(dbo.vwPersonLastVamStatus.date_d, ' ')) AS DateVam, SUM(ISNULL(dbo.vwPersonLastVamStatus.mblgvam, 0)) AS MblgVam,
+                         SUM(ISNULL(dbo.vwPersonLastVamStatus.gst_no, 0)) AS GstNo, SUM(ISNULL(dbo.vwPersonLastVamStatus.gst1, 0)) AS Gst1, SUM(ISNULL(dbo.vwPersonLastVamStatus.gst2, 0)) AS Gst2,
+                         SUM(ISNULL(dbo.vwPersonLastVamStatus.gst_pay, 0)) AS GstPay, MAX(ISNULL(dbo.vwPersonLastVamStatus.pkarmozd, 0)) AS PKarmozd, SUM(ISNULL(dbo.vwPersonLastVamStatus.mkarmozd, 0)) AS MKarmozd,
+                         SUM(ISNULL(dbo.vwPersonLastVamStatus.PaidVam, 0)) AS PaidVam, MAX(ISNULL(dbo.vwPersonLastVamStatus.CurrentGstNo, 0)) AS CurrentGstNo, SUM(ISNULL(dbo.vwPersonLastVamStatus.CurrentGstMblg, 0))
+                         AS CurrentGstMblg, MAX(ISNULL(dbo.vwPersonLastVamStatus.CurrentGstDate, ' ')) AS CurrentGstDate, SUM(ISNULL(dbo.vwPersonLastVamStatus.DelayGst, 0)) AS DelayGst,
+                         SUM(ISNULL(dbo.vwPersonLastVamStatus.mblgvam, 0) - ISNULL(dbo.vwPersonLastVamStatus.PaidVam, 0)) AS RemainVam
+                  FROM dbo.PERSON INNER JOIN
+                         dbo.HESAB ON dbo.PERSON.code = dbo.HESAB.pcode LEFT OUTER JOIN
+                         dbo.vwPersonLastVamStatus ON dbo.HESAB.pcode = dbo.vwPersonLastVamStatus.PCODE
+                  GROUP BY dbo.PERSON.code, LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END, dbo.PERSON.sex, dbo.PERSON.city,
+                         dbo.HESAB.hesab_no, dbo.HESAB.id___di
+                  HAVING  (MAX(dbo.HESAB.firstqty + dbo.HESAB.curqty) > 0)";
 
         using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
         {
@@ -772,12 +774,6 @@
             var result = await connection.ExecuteScalarAsync<int>(ExistCommand);
             if (result <= 0) await connection.ExecuteAsync(createViewQuery);
         }
-
-
-
-
-
-
 
 
 
