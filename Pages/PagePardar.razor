@@ -37,7 +37,6 @@
         <!-- MudForm برای مدیریت فرم و اعتبارسنجی -->
         <MudText Typo="Typo.body2" Align="Align.Center" Style="height:25px;background-color:cadetblue" Class="mt-2">فرم واریز وبرداشت</MudText>
         <MudForm @ref="PardarForm" Model="@CurrentPardarDto" @bind-IsValid="isDataCorrected" Spacing="16" Class="p-4">
-
             <MudGrid>
                 <MudItem xs="12">
                     <MudAutocomplete T="PersonFullDataDto"
@@ -161,10 +160,39 @@
 
                     }
                 </MudItem>
-                <MudItem xs="12" class="mt-n6">
-                    <MudTooltip Text="لطفاً شرح عملیات را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
-                        <MudTextField Label="بابت" @bind-Value="CurrentPardarDto.Babat" @bind-Value:after="isDataChanged" />
-                    </MudTooltip>
+                <MudItem xs="12" sm="6">
+                    <div class="mt-n6" style="display: flex;font-size: 18px; font-weight: bold;">
+
+                        <MudItem xs="12">
+                            <MudSelect T="string" 
+                            @bind-value="CurrentPardarDto.Babat" 
+                            Label="بابت" Variant="Variant.Outlined" Class="w-100">
+                                @foreach (Babat babatitem in Babats)
+                                {
+                                    <MudSelectItem T="string" Value="@babatitem.Sharh">@babatitem.Sharh</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+
+                    </div>
+
+                </MudItem>
+                <MudItem xs="12" sm="6" class="mt-n4 mr-n12">
+                    <div style="display: flex;font-size: 16px; font-weight: bold;">
+
+                        <MudTooltip Text="افزودن به لیست بابت" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                            <MudIconButton Icon="@Icons.Material.Filled.AddCircleOutline" Color="Color.Inherit" Edge="Edge.End" Class="mx-lg-5" OnClick="ToggleAddBabat" />
+                        </MudTooltip>
+                        @if (ShowAddBabat)
+                        {
+                            <MudTooltip Text="لطفاً شرح عملیات را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudTextField Label="@MudLabelBabat"
+                                @bind-Value="@NewBabatString"
+                                OnBlur="AddNewBabat"/>
+                            </MudTooltip>
+                        }
+
+                    </div>
                 </MudItem>
                 <MudItem xs="12" Class="mt-n5">
                     <hr>
@@ -247,7 +275,7 @@
     private PardarDto CurrentPardarDto = new PardarDto();
 
     private string? PCodeSearchable = string.Empty;
-
+    private string? MudLabelBabat = "افزودن شرح جدید";
     private bool isNeedUpdate { get; set; } = false;
     private bool isDataCorrected { get; set; } = false;
 
@@ -263,6 +291,9 @@
     private string SandoghMojodiStr;
     private bool isFormValid;
     private bool ShowPersonList = false;
+    private bool ShowAddBabat = false;
+    private string NewBabatString = "";
+    private int BabatId = 0;
     private string cDateShamsi;
     private string cDateSaved = "";
     ///
@@ -278,6 +309,9 @@
     private int currentPage = 0;
     //    private int totalRecords = 0;
     private List<tblDate> _tblDate = new List<tblDate>();
+    private List<Babat> Babats = new List<Babat>();
+
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -290,6 +324,7 @@
             }
 
             //_tblDate = _Db.tblDates.ToList();
+
             _tblDate = DateService.TblDate;
             _personFullDataList = _Db.vwPersonFullData.Where(v => v.Code != "000000" && v.Code != "001000") // شرط‌های دلخواه
                                            .Select(v => new PersonFullDataDto
@@ -306,6 +341,7 @@
                                            .OrderBy(p=>p.HesabNo)
                                            .ToList();
 
+            Babats = _Db.Babats.OrderBy(p=>p.Sharh).ToList();
 
             var record = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             cDateShamsi = record?.HDate; // اگر record null باشد، cDateShamsi هم null خواهد بود
@@ -386,7 +422,52 @@
         if (ShowPersonList == true) OnPCodeChanged();
 
     }
+    private void ToggleAddBabat()
+    {
+        ShowAddBabat = !ShowAddBabat;
+        if (ShowAddBabat)
+        { 
+            if(string.IsNullOrEmpty(CurrentPardarDto.Babat))
+            {
+                MudLabelBabat = "افزودن شرح جدید";
+                NewBabatString = "";
+                BabatId = 0;
+            }
+            else
+            {
+                MudLabelBabat = " اصلاح شرح " ;
+                NewBabatString = CurrentPardarDto.Babat;
+                BabatId = _Db.Babats.FirstOrDefault(p => p.Sharh == CurrentPardarDto.Babat).Id;
+            }
 
+        }
+    }
+    private void AddNewBabat ()
+    {
+        if (!string.IsNullOrEmpty(NewBabatString))
+        {
+            var newBabat = new Babat();
+            if (BabatId == 0)   // شرح جدید
+            {
+                newBabat.Sharh = NewBabatString;
+                _Db.Babats.Add(newBabat);
+                _Db.SaveChanges();  
+                _snackBar.Add("شرح جدید ثبت شد ...", Severity.Success);
+                Babats = _Db.Babats.OrderBy(p=>p.Sharh).ToList();
+            }
+            else
+            {
+                newBabat = _Db.Babats.FirstOrDefault(p => p.Id == BabatId);
+                newBabat.Sharh = NewBabatString;
+                _Db.Babats.Update(newBabat);
+                _Db.SaveChanges();
+                _snackBar.Add("شرح اصلاح شد ...", Severity.Success);
+                Babats = _Db.Babats.OrderBy(p => p.Sharh).ToList();
+            }
+            ShowAddBabat = false;
+        }
+    }
+    
 
     private void OnPCodeChanged()
     {

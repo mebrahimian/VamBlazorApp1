@@ -19,7 +19,7 @@ namespace DAL
         public  DbSet<AmalkardViewGroup> AmalkardViewGroups { get; set; }
 
         public  DbSet<Bank> Banks { get; set; }
-
+        public  DbSet<Babat> Babats { get; set; }
         public  DbSet<Dargst> Dargsts { get; set; }
 
         public  DbSet<Hesab> Hesabs { get; set; }
@@ -231,7 +231,14 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                     .IsUnicode(false);
             });
 
-          
+            modelBuilder.Entity<Babat>(entity =>
+            {
+                entity.Property(e => e.Sharh)
+                    .HasMaxLength(50);
+                    
+            });
+
+
 
             modelBuilder.Entity<Hesab>(entity =>
             {

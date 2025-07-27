@@ -1,0 +1,49 @@
+﻿@page "/dynamic-mudselect"
+@using MudBlazor
+
+<MudPaper Class="pa-4" Elevation="3">
+    <MudText Typo="Typo.h6" Class="mb-4">نمونه MudSelect پویا</MudText>
+
+    <!-- MudSelect اصلی -->
+    <MudSelect @bind-Value="SelectedValue" 
+               Label="یک گزینه انتخاب کنید"
+               Variant="Variant.Outlined"
+               AnchorOrigin="Origin.BottomCenter">
+        @foreach (var item in Items)
+        {
+            <MudSelectItem Value="item">@item</MudSelectItem>
+        }
+    </MudSelect>
+
+    <!-- فیلد + دکمه افزودن آیتم جدید -->
+    <div class="d-flex align-center mt-4">
+        <MudTextField @bind-Value="NewItemText" 
+                      Label="متن آیتم جدید"
+                      Variant="Variant.Outlined"
+                      Class="mr-2" />
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   OnClick="AddItem"
+                   Disabled="@(string.IsNullOrWhiteSpace(NewItemText))">
+            افزودن
+        </MudButton>
+    </div>
+
+    
+</MudPaper>
+
+@code {
+    private string SelectedValue { get; set; }
+    private List<string> Items = new() { "گزینه ۱", "گزینه ۲", "گزینه ۳" };
+    private string NewItemText { get; set; }
+
+    private void AddItem()
+    {
+        if (!string.IsNullOrWhiteSpace(NewItemText))
+        {
+            Items.Add(NewItemText);
+            SelectedValue = NewItemText; // انتخاب خودکار آیتم جدید
+            NewItemText = ""; // پاک کردن فیلد پس از افزودن
+        }
+    }
+}

@@ -29,12 +29,12 @@ namespace VamBlazor.Client.Application.Dtos
         public char Status { get; set; } = '0'; 
         public char TypeVam { get; set; } = '1';
         public long? HesabNo { get; set; } = 0;
-        public bool? isEditable { get; set; } = false;
+        public bool? isEditable { get; set; } = true;
         public string? V_isEditableDesc => CodeToStringFunctions.GetTasvibDesc(isEditable ?? false);
         public int V_Day {  get; set; } 
         public int V_Month { get; set; } 
         public int V_Year { get; set; }
-        public string?  V_TypeVamDesc { get; set; }  
+        public string? V_TypeVamDesc { get; set; }  
         public string ReqNoPlaceHolder => " شماره تقاضا را وارد کنید ";
 
     }

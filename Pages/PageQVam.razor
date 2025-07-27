@@ -44,7 +44,6 @@
                     ToStringFunc="@(_personFullDataList => _personFullDataList?.FullNameWCode ?? "")"
                     Dense="true" Clearable
                     OnBlur="OnPCodeChanged"
-                    TextChanged="OnPCodeChanged"
                     MaxItems="50"
                     ShowProgressIndicator="true" />
 
@@ -103,7 +102,7 @@
                             @bind-Value:after="isDataChanged"
                             Min="1300"
                             Max="1499"
-                                             Style="width:100px"
+                            Style="width:100px"
                             Immediate="true" />
                         </MudTooltip>
 
@@ -221,7 +220,7 @@
     private string infoFormat = "{first_item}-{last_item} of {all_items}";
     private string allItemsText = "All";
     private int pageSize = 10;
- //   private int currentPage = 0;
+    //   private int currentPage = 0;
     private List<tblDate> _tblDate = new List<tblDate>();
     //   private readonly DateService _dateService;
     protected override async Task OnInitializedAsync()
@@ -249,12 +248,13 @@
                                  Date = Qvam.Date,
                                  Mblg = Qvam.Mblg,
                                  Status = Qvam.Status,
+                                 TypeVam = Qvam.Type,
                                  HesabNo = hesab.HesabNo,
                                  V_Day = Qvam.V_Day,
                                  V_Month = Qvam.V_Month,
                                  V_Year = Qvam.V_Year,
                                  V_TypeVamDesc = Qvam.V_TypeVamDesc,
-                                 isEditable = Qvam.Status == '0'
+                                 isEditable = Qvam.Status == '0' 
                              }).ToList();  // تبدیل به لیست
 
             if (query != null && query.Any())
@@ -265,14 +265,13 @@
             _personFullDataList = _Db.vwPersonFullData.AsNoTracking().Where(v => v.Code != "00000" && v.Code != "00100") // شرط‌های دلخواه
                                      .Select(v => new PersonFullDataDto
                                            {
-                                             FullNameWCode = string.IsNullOrWhiteSpace(v.MelliCode)
-                                                                               ? v.FullName + "حساب : " + v.HesabNo
-                                                                               : v.FullName + "حساب : " + v.HesabNo + " کدملی : " + v.MelliCode,
+                                             FullNameWCode = v.FullName + "حساب : " + v.HesabNo,
                                              FullName = v.FullName,
                                              HesabNo = v.HesabNo,
                                              Code = v.Code   
                                            })
                                      .Distinct()
+                                     .OrderBy(c=>c.HesabNo)
                                      .ToList();
 
 
@@ -376,7 +375,7 @@
                 }
                 else
                 {
-                    if (_Db.vwPersonLastGst.Any(p => p.Code == PCodeSearchable) == true)
+                    if (_Db.vwPersonLastGst.Any(p => p.Code == PCodeSearchable && p.Type == CurrentPersonQVamDto.TypeVam) == true)
                     {
                         isNeedUpdate = false;
                         CancelEdit();
@@ -387,18 +386,24 @@
                     else
                     {
                         CurrentPersonQVamDto.Pcode = PCodeSearchable;
+                        CurrentPersonQVamDto.TypeVam = CurrentPersonQVamDto.TypeVam;
                     }
                     CurrentPersonQVamDto.Sabtdate = cDateShamsi;
                     CurrentPersonQVamDto.FullName = selectedPerson.FullName;
                     CurrentPersonQVamDto.HesabNo = selectedPerson.HesabNo;
                     var newQvam = Mapper.Map<Qvam>(CurrentPersonQVamDto); // Mapping DTO to Entity
                     _personQVamList.Add(CurrentPersonQVamDto);
-                    // newQvam.Sabtdate = newQvam.Date;
+                   
                     _Db.Qvams.Add(newQvam);
                     _snackBar.Add($"تقاضای {CurrentPersonQVamDto.ReqNo} ثبت شد", Severity.Success);
+                    ReqNoSearchable = _personQVamList.Max(p => p.ReqNo) + 1;
+                    CurrentPersonQVamDto.ReqNo = ReqNoSearchable;
+                    CurrentPersonQVamDto.isEditable = true;
+                    selectedPerson = null;
                 }
                 _Db.SaveChangesAsync();
                 isNeedUpdate = false;
+                
             }
             else
             {
@@ -537,6 +542,7 @@
             PCodeSearchable = selectedPerson.Code;
             CurrentPersonQVamDto.Pcode = PCodeSearchable;
             var Per = _personQVamList.FirstOrDefault(p => p.Pcode == PCodeSearchable && p.Status == '0');
+            isEditing = false;
             if (Per != null)
             {
                 ReqNoSearchable = Per.ReqNo;

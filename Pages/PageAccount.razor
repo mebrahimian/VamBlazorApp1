@@ -353,6 +353,7 @@
                                                    Code = v.Code,
                                                    Mellicode = v.Mellicode
                                                })
+                                           .OrderByDescending(p=>p.Code)
                                            .ToListAsync();
 
             ShowClearAccountInfo();
@@ -481,10 +482,45 @@
         else
         {
             CurrentPersonAccountDto.HesabNo = HesabNoSearchable;
+            CurrentPersonAccountDto.P = ShenaseBankFnc(HesabNoSearchable);
             if (OriginalAccount.HesabNo != HesabNoSearchable) isNeedUpdate = true;
         }
 
     }
+    private void OnMoarefValid()
+    {
+        if (OriginalAccount.IdDi != CurrentPersonAccountDto.Moaref)
+        {
+            isNeedUpdate = true;
+            if (CurrentPersonAccountDto.Moaref != 0 && CurrentPersonAccountDto.Moaref != null)
+            {
+                if (_personAccountList.Any(p => p.HesabNo == CurrentPersonAccountDto.Moaref))   // کد معرف در فایل حساب یافت شد
+                {
+                    if (CurrentPersonAccountDto.Moaref == HesabNoSearchable)
+                    {
+                        _snackBar.Add($" معرف مجاز نیست", Severity.Error);
+                        CurrentPersonAccountDto.Moaref = 0;
+                        _MoarefDesc = "";
+                    }
+                    else
+                    {
+                        _MoarefDesc = _personAccountList.FirstOrDefault(p => p.HesabNo == CurrentPersonAccountDto.Moaref).FullName ?? "";
+                        CurrentPersonAccountDto.P = ShenaseBankFnc(CurrentPersonAccountDto.Moaref);
+                    }
+                }
+                else
+                {
+                    _snackBar.Add($" معرف یافت نشد", Severity.Error);
+                    CurrentPersonAccountDto.Moaref = 0;
+                    _MoarefDesc = "";
+
+                }
+
+            }
+            else { _MoarefDesc = ""; }
+        }
+    }
+
 
     private void EditAccount(PersonAccountDto personaccountdto)
     {
@@ -725,38 +761,6 @@
             searchString1 = TextHelper.NormalizeSimpleString(searchString1);
         }
     }
-    private void OnMoarefValid()
-    {
-        if (OriginalAccount.IdDi != CurrentPersonAccountDto.Moaref)
-        {
-            isNeedUpdate = true;
-            if (CurrentPersonAccountDto.Moaref != 0 && CurrentPersonAccountDto.Moaref != null)
-            {
-                if (_personAccountList.Any(p => p.HesabNo == CurrentPersonAccountDto.Moaref))   // کد معرف در فایل حساب یافت شد
-                {
-                    if (CurrentPersonAccountDto.Moaref == HesabNoSearchable)
-                    {
-                        _snackBar.Add($" معرف مجاز نیست", Severity.Error);
-                        CurrentPersonAccountDto.Moaref = 0;
-                        _MoarefDesc = "";
-                    }
-                    else
-                    {
-                        _MoarefDesc = _personAccountList.FirstOrDefault(p => p.HesabNo == CurrentPersonAccountDto.Moaref).FullName ?? "";
-                    }
-                }
-                else
-                {
-                    _snackBar.Add($" معرف یافت نشد", Severity.Error);
-                    CurrentPersonAccountDto.Moaref = 0;
-                    _MoarefDesc = "";
-
-                }
-
-            }
-            else { _MoarefDesc = ""; }
-        }
-    }
 
 
     /// <summary>
@@ -836,5 +840,24 @@
         if (OriginalAccount.P != CurrentPersonAccountDto.P) isNeedUpdate = true;
         if (OriginalAccount.Pcode != CurrentPersonAccountDto.Pcode) isNeedUpdate = true;
         if (OriginalAccount.HesabNo != CurrentPersonAccountDto.HesabNo) isNeedUpdate = true;
+    }
+    public long ShenaseBankFnc(long? cHesabNo)
+    {
+        int[] PatternArray = { 15, 14, 13, 12, 11, 10, 9, 1, 2, 3, 4, 5, 6, 7, 8 };
+        int[] ShenaseArray = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        var cShenase = "456" + cHesabNo.ToString();
+        var nLen = 15 - cShenase.Length;
+        for (int i = nLen; i < 15; i++)
+        {
+            ShenaseArray[i] = int.Parse(cShenase[i - nLen].ToString());
+        }
+        var nSum = 0;
+        for(int i=0;i<15;i++)
+        {
+            nSum += ShenaseArray[i] * PatternArray[i];
+        }
+        var nCheckDigit = nSum % 99;
+
+        return long.Parse(cShenase + nCheckDigit.ToString());
     }
 }

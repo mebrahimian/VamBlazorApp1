@@ -117,6 +117,7 @@ namespace VamBlazor.Client.Application.Services
         }
         public string DateShamsiFormat(int Year, int Month, int Day)
         {
+            if (Year * Month * Day == 0) return " ";
             var cYear = Year.ToString();
             var cMonth = Month.ToString();
             var cDay = Day.ToString();
