@@ -427,7 +427,7 @@
                 else
                 {
                     Persons.Remove(personToRemove);
-                    _Db.Remove(personToRemove);
+                    _Db.Persons.Remove(personToRemove);
                     _Db.SaveChanges();
                     _snackBar.Add($" {personToRemove.Name} {personToRemove.Family} حذف شد ", Severity.Warning);
                 }
@@ -496,7 +496,7 @@
             CityEnum.Gorgan => "گرگان",
             CityEnum.Tehran => "تهران",
             CityEnum.Other => "سایر",
-            _ => "نامشخص"
+            _ => " "
         };
     }
 

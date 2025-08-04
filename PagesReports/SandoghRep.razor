@@ -40,8 +40,7 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        z-index: 9999;
-            ">
+        z-index: 9999;">
         <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
         <div class="text-center mt-2">⏳ لطفاً منتظر بمانید...</div>
     </div>
@@ -57,9 +56,9 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
         @SandoghName
     </div>
 
-   
+
     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-        <div style="flex: 1;"></div> <!-- فضای سمت راست -->
+        <div style="flex: 1;">@cCityDesc</div> <!-- فضای سمت راست -->
         <div style="flex: 1; text-align: center;">
             <MudText Typo="Typo.body1">گزارش عملکرد صندوق</MudText>
         </div>
@@ -67,7 +66,7 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
             <span style="display: inline-block; width:20ch;"></span>
             <MudText Typo="Typo.body1">@DateService.TodayHDateString()</MudText>
         </div>
-        
+
     </div>
 
     <!-- این خط برای جلوگیری از تداخل و شروع جدید در هر رکورد -->
@@ -149,6 +148,8 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
     private long? nSumPasandaz = 0;
 
     public string cDate { get; set; }
+    public string cCity { get; set; }
+    private string cCityDesc = "";
 
     // تعریف متغیر برای ذخیره مانده سطر قبلی
     private decimal previousRemain = 0;  // متغیر برای ذخیره مانده سطر قبلی
@@ -163,15 +164,17 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
 
         cDate = GetQueryStringValue(uri, "date1");
+        cCity = GetQueryStringValue(uri, "ccity");
+        if (string.IsNullOrEmpty(cCity)) cCityDesc = "";
+        if (cCity == "1") cCityDesc = "شاهرود";
+        if (cCity == "2") cCityDesc = "گرگان";
+        if (cCity == "3") cCityDesc = "تهران";
+        if (cCity == "4") cCityDesc = "سایر";
         try
         {
 
             isLoading = true;    ///// کنترل بارگذاری داده ها
             StateHasChanged();
-
-            ReportDet = _Db.Set<PersonStatusUpToDto>()
-            .FromSqlRaw("EXEC sp_PersonStatusUpTo @cDateTo = {0}", cDate)
-            .ToList();
             var balanceAtDate = new List<PersonStatusUpToDto>
                         {new PersonStatusUpToDto
                               {
@@ -185,7 +188,45 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
                                           .Sum(t => t.GstPaid + t.Pasandaz - t.Vam - t.Karmozd) // بجای مانده استفاده میشود
                               }
                         };
+            if ( string.IsNullOrEmpty(cCity))
+            {
+                ReportDet = _Db.Set<PersonStatusUpToDto>()
+                .FromSqlRaw("EXEC sp_PersonStatusUpTo @cDateTo = {0}", cDate)
+                .ToList();
 
+                
+
+            }  
+            else
+            {
+                ReportDet = _Db.Set<PersonStatusUpToDto>()
+                .FromSqlRaw("EXEC sp_PersonStatusUpTo @cDateTo = {0}", cDate)
+                .AsEnumerable()
+                .Where(p=>p.City == cCity[0])
+                .ToList();
+
+                balanceAtDate = new List<PersonStatusUpToDto>
+                        {new PersonStatusUpToDto
+                              {
+                                 Hesab_No = 0,
+                                 Date_D = " ",
+                                 DelayAghsat = 0,
+                                 Mojodi = 0,
+                                 Fam = "مانده صندوق در پایان " + cDate,
+                                 VamRemain =  _Db.vwPersonAllTransactions
+                                          .Where(t => string.Compare(t.Date, cDate) <= 0 )
+                                          .Join(
+                                                 _Db.Persons.Where(p=>p.City == cCity[0]),          // جدول Person
+                                                 t => t.Pcode,        // کلید خارجی از ویو (pcode)
+                                                 p => p.Code,         // کلید اصلی از Person (code)
+                                                 (t, p) => t          // انتخاب رکوردهای تراکنش
+                                               )
+                                          .Sum(t => t.GstPaid + t.Pasandaz - t.Vam - t.Karmozd) // بجای مانده استفاده میشود
+                              }
+                        };
+
+            }
+            
             ReportRecords = ReportDet
                            .Concat(balanceAtDate)
                            .ToList();

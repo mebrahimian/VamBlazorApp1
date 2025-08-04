@@ -390,16 +390,13 @@
 
     private void LoadCurrentPerson()
     {
-
-
-
         if (CurrentIndex < _personOrderdList.Count)
         {
             CurrentPersonLastGstDto = _personOrderdList[CurrentIndex];
             CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(CurrentPersonLastGstDto.Code);
 
             MonthlyGst = CurrentPersonLastGstDto.GstMblg;
-            MonthlyPas = CurrentPersonLastGstDto.MonthQty;
+            MonthlyPas = CurrentPersonLastGstDto.Pasandaz;
             if(CurrentPersonLastGstDto.CurrentGstSaved) styleSavedOrNot = "background-color:khaki; display: flex; font-size: 16px; font-weight: bold; width: 100%; height: 100%; justify-content: space-between;";
 
             else styleSavedOrNot = "display: flex; font-size: 16px; font-weight: bold; width: 100%; height: 100%; justify-content: space-between;";
@@ -546,7 +543,7 @@
                                                 Type = v.Type,
                                                 DateD = v.DateD,
                                                 MblgVam = v.MblgVam,
-                                                Pasandaz = v.MonthQty,
+                                                Pasandaz = v.Pasandaz,
                                                 GstNo = v.GstNo,
                                                 GstMblg = v.GstMblg,
                                                 GstDate = v.GstDate,

@@ -7,6 +7,7 @@ namespace VamBlazor.Client.Application.Dtos
     {
         public string Code { set; get; }
         public string Fam { get; set; }
+        public Char City { get; set; }
         public Char Sex { get; set; } 
         public long Hesab_No { get; set; }
         public string? Date_D { get; set; }

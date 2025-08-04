@@ -6,7 +6,8 @@
         Shahroud = '1',
         Gorgan = '2',
         Tehran = '3',
-        Other = '4'
+        Other = '4',
+        All = ' '
     }
 
     

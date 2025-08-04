@@ -488,6 +488,7 @@
                                      select new PardarDto
                                          {
                                              Pcode = person.Code,
+                                             FullName = person.FullName,
                                              Action = Pardar.Action,
                                              V_ActionDesc = Pardar.V_ActionDesc,
                                              Date = Pardar.Date,
@@ -528,7 +529,7 @@
     // متدی برای دریافت پیغام خطا از داده‌های وارد شده
     private string GetErrorMessageForField(string fieldName)
     {
-        var context = new ValidationContext(CurrentPardarDto);
+        var context1 = new ValidationContext(CurrentPardarDto);
         var validationResults = new List<ValidationResult>();
 
         // اعتبارسنجی فیلد خاص
@@ -576,9 +577,9 @@
     // اعتبارسنجی مدل
     private bool ValidateModel()
     {
-        var context = new ValidationContext(CurrentPardarDto);
+        var context1 = new ValidationContext(CurrentPardarDto);
         var validationResults = new List<ValidationResult>();
-        return Validator.TryValidateObject(CurrentPardarDto, context, validationResults, true);
+        return Validator.TryValidateObject(CurrentPardarDto, context1, validationResults, true);
     }
     // متدی برای ارسال فرم
     // اعتبارسنجی مدل
@@ -640,6 +641,8 @@
             }
             _Db.SaveChanges();
             CurrentPardarDto.Mojodi = GetMojodi(CurrentPardarDto.Pcode);
+            SandoghMojodi = SandoghService.GetCurrentSandogh();
+            SandoghMojodiStr = SandoghMojodi.ToString("N0");
            // isNeedUpdate = false;
             var curr = _personFullDataList.FirstOrDefault(p => p.Code == selectedPerson.Code);
             int index = _personFullDataList.IndexOf(curr);
@@ -694,12 +697,18 @@
             try
             {
                 // اگر کاربر گزینه Yes را انتخاب کرده باشد، عملیات حذف انجام می‌شود
+                var pardarToRemove = _Db.Pardars.FirstOrDefault(p => p.IdDi == context.IdDi);
                 _personPardarList.Remove(context);
+                _Db.Pardars.Remove(pardarToRemove);
+                isNeedUpdate = false;
                 CancelEdit();
 
                 _snackBar.Add($" عملیات واریز/برداشت حذف شد ", Severity.Warning);
                 _Db.SaveChanges();
                 CurrentPardarDto = _personPardarList.Where(p => p.Pcode == PCodeSearchable).OrderByDescending(p => p.Date).FirstOrDefault() ?? new PardarDto();
+                CurrentPardarDto.Mojodi = GetMojodi(context.Pcode);
+                SandoghMojodi = SandoghService.GetCurrentSandogh();
+                SandoghMojodiStr = SandoghMojodi.ToString("N0");
             }
             catch (SqlException ex)
             {
