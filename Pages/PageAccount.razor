@@ -451,6 +451,10 @@
                 {
                     _MoarefDesc = _personAccountList?.FirstOrDefault(p => p.HesabNo == MoarefCode)?.FullName;
                 }
+                else
+                {
+                    MoarefCode = 0;  // سپرده گذار اصلی
+                }
             }
 
 
@@ -566,6 +570,7 @@
                     }
                     else
                     {
+                        if (CurrentPersonAccountDto.Moaref == null) CurrentPersonAccountDto.Moaref = 0;
                         editHesab.IdDi = CurrentPersonAccountDto.Moaref;
                         editHesab.Monthqty = CurrentPersonAccountDto.Monthqty;
                         editHesab.P = CurrentPersonAccountDto.P;

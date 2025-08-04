@@ -83,7 +83,7 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
                 <MudTh Style="width:110px">موجودی</MudTh>
             </HeaderContent>
             <RowTemplate>
-                @if (ReportRecords.IndexOf(context) != ReportRecords.Count - 1) //  شماره ردیف آخر نیاید 
+                @if (ReportRecords.IndexOf(context) != ReportRecords.Count - 1 || !string.IsNullOrEmpty(cCity))  //  شماره ردیف آخر نیاید
                 {
                     <MudTd>@TextHelper.ConvertToPersian((ReportRecords.IndexOf(context) + 1).ToString(), false)</MudTd> <!-- شماره ردیف --> <!-- اعداد فارسی بدون کاما  -->
                     <MudTd>@TextHelper.ConvertToPersian(context.Hesab_No.ToString(), false)</MudTd>
@@ -194,7 +194,9 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
                 .FromSqlRaw("EXEC sp_PersonStatusUpTo @cDateTo = {0}", cDate)
                 .ToList();
 
-                
+                ReportRecords = ReportDet
+                           .Concat(balanceAtDate)
+                           .ToList();
 
             }  
             else
@@ -202,9 +204,9 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
                 ReportDet = _Db.Set<PersonStatusUpToDto>()
                 .FromSqlRaw("EXEC sp_PersonStatusUpTo @cDateTo = {0}", cDate)
                 .AsEnumerable()
-                .Where(p=>p.City == cCity[0])
+                .Where(p => p.City == cCity[0])
                 .ToList();
-
+/*
                 balanceAtDate = new List<PersonStatusUpToDto>
                         {new PersonStatusUpToDto
                               {
@@ -224,12 +226,12 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
                                           .Sum(t => t.GstPaid + t.Pasandaz - t.Vam - t.Karmozd) // بجای مانده استفاده میشود
                               }
                         };
+*/
+                ReportRecords = ReportDet;
 
             }
             
-            ReportRecords = ReportDet
-                           .Concat(balanceAtDate)
-                           .ToList();
+            
             isLoading = false;  // اتمام بارگذاری داده ها
             StateHasChanged();
 
