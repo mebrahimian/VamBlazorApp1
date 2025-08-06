@@ -320,7 +320,7 @@
                                                 HesabNo = v.HesabNo,
                                                 Sex = v.Sex,
                                                 City = v.City,
-                                                MonthQty = v.MonthQty,
+                                                MonthQty = ParamTypeVam[0] == '1' ? v.MonthQty : 0, // وام ضروری
                                                 Mojodi = v.Mojodi,
                                                 ReqNo = v.ReqNo,
                                                 Type = v.Type,
@@ -441,7 +441,6 @@
 
             MonthlyGst = CurrentPersonLastGstDto.CurrentGstMblg;
             MonthlyPas = CurrentPersonLastGstDto.MonthQty;
-
             if (CurrentPersonLastGstDto.CurrentGstSaved) styleSavedOrNot = "background-color:khaki; display: flex; font-size: 16px; font-weight: bold; width: 100%; height: 100%; justify-content: space-between;";
 
             else styleSavedOrNot = "display: flex; font-size: 16px; font-weight: bold; width: 100%; height: 100%; justify-content: space-between;";
@@ -514,7 +513,7 @@
                 {
                     GstRecord.DateP = DateService.DateShamsiFormat(Paid_Year, Paid_Month, Paid_Day);
                     GstRecord.Gstmblg = MonthlyGst;
-                    GstRecord.Pasandaz = MonthlyPas;
+                    GstRecord.Pasandaz =   MonthlyPas;
                     if (MonthlyGst == 0)
                     {
                         GstRecord.DateP = " ";

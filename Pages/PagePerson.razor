@@ -645,7 +645,7 @@
                             SELECT  PARDAR.pcode, HESAB.hesab_no, PARDAR.date, cast(0 as bigint) AS Vam, cast(0 as bigint) AS GstPaid,
                                     cast(CASE WHEN action = '2' AND req_no <> ' ' THEN 0 WHEN action = '2' THEN - mblg ELSE mblg END as bigint) AS Pasandaz,
                                     cast(CASE WHEN action = '2' AND req_no <> ' ' THEN mblg ELSE 0 END as bigint) AS Karmozd, 
-                                    CASE WHEN action = '2' AND req_no <> ' ' THEN 'وام/کارمزد' WHEN action = '2' THEN babat WHEN action = '3' THEN 'افتتاح حساب' WHEN PARDAR.Pcode <> '00000' THEN 'واریز' ELSE babat END AS sharh, 
+                                    CASE WHEN action = '2' AND req_no <> ' ' THEN 'وام/کارمزد' WHEN action = '2' THEN babat WHEN action = '3' THEN 'افتتاح حساب' WHEN not PARDAR.Pcode in ('00000','00100', '00074') THEN 'واریز' ELSE babat END AS sharh, 
                                     PARDAR.req_no, ' ' AS Date_d
                             FROM PARDAR INNER JOIN
                                  HESAB ON PARDAR.pcode = HESAB.pcode

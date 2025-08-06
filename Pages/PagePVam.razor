@@ -616,7 +616,7 @@
                     _snackBar.Add($"وام {CurrentPersonPVamDto.ReqNo} ثبت شد", Severity.Success);
                     isEditing = true;
                 }
-                _Db.SaveChangesAsync();
+                _Db.SaveChanges();
                 MandehVam = GetMandehVamFromSql(CurrentPersonPVamDto.ReqNo) ?? 0;
                 OriginalPVam = Mapper.Map<Pvam>(CurrentPersonPVamDto);
                 isNeedUpdate = false;
@@ -809,13 +809,27 @@
                 V_YearD = DateService.GetHYear(cDateShamsi);
                 V_MonthD = DateService.GetHMonth(cDateShamsi);
                 V_DayD = DateService.GetHDay(cDateShamsi);
-                V_YearG = DateService.GetHYear(cDateShamsiNextMonth);
-                V_MonthG = DateService.GetHMonth(cDateShamsiNextMonth);
-                V_DayG = DateService.GetHDay(cDateShamsiNextMonth);
+
+                V_YearG = V_YearD;
+                if (V_DayD > 10)
+                {
+                    V_DayG = 10;
+                    V_MonthG = V_MonthD + 2;
+                }
+                else
+                {
+                    V_DayG = V_DayD;
+                    V_MonthG = V_MonthD + 1;
+                }
+                if (V_MonthG > 12)
+                {
+                    V_MonthG = 1;
+                    V_YearG++;
+                }
 
                 CurrentPersonPVamDto.DateD = cDateShamsi;
                 CurrentPersonPVamDto.Lastdate = cDateShamsi;
-                CurrentPersonPVamDto.DateG = cDateShamsiNextMonth;
+                CurrentPersonPVamDto.DateG = DateService.DateShamsiFormat(V_YearG, V_MonthG, V_DayG);
                 CurrentPersonPVamDto.Pcode = PCodeSearchable;
                 CurrentPersonPVamDto.FullName = selectedPerson.FullName;
                 CurrentPersonPVamDto.ReqNo = ReqNoSearchable;
@@ -936,12 +950,27 @@
         V_YearD = DateService.GetHYear(cDateShamsi);
         V_MonthD = DateService.GetHMonth(cDateShamsi);
         V_DayD = DateService.GetHDay(cDateShamsi);
-        V_YearG = DateService.GetHYear(cDateShamsiNextMonth);
-        V_MonthG = DateService.GetHMonth(cDateShamsiNextMonth);
-        V_DayG = DateService.GetHDay(cDateShamsiNextMonth);
-        CurrentPersonPVamDto.DateD = cDateShamsi;
+
+        V_YearG = V_YearD;
+        if (V_DayD > 10)
+        {
+            V_DayG = 10;
+            V_MonthG = V_MonthD + 2;
+        }
+        else
+        {
+            V_DayG = V_DayD;
+            V_MonthG = V_MonthD + 1;
+        }
+        if (V_MonthG > 12)
+        {
+            V_MonthG = 1;
+            V_YearG++;
+        }
+
+        CurrentPersonPVamDto.DateD = DateService.DateShamsiFormat(V_YearD, V_MonthD, V_DayD);
         CurrentPersonPVamDto.Lastdate = cDateShamsi;
-        CurrentPersonPVamDto.DateG = cDateShamsiNextMonth;
+        CurrentPersonPVamDto.DateG = DateService.DateShamsiFormat(V_YearG, V_MonthG, V_DayG); ;
         CurrentPersonPVamDto.FullName = "";
         CurrentPersonPVamDto.Type = '1';
         CurrentPersonPVamDto.Mblgvam = 0;
@@ -976,6 +1005,22 @@
     {
         isNeedUpdate = false;
         CurrentPersonPVamDto.DateD = DateService.DateShamsiFormat(V_YearD, V_MonthD, V_DayD);
+        V_YearG = V_YearD;
+        if(V_DayD > 10)
+        {
+            V_DayG = 10;
+            V_MonthG = V_MonthD + 2;
+        }
+        else
+        {
+            V_DayG = V_DayD;
+            V_MonthG = V_MonthD + 1;
+        }
+        if (V_MonthG > 12)
+        {
+            V_MonthG = 1;
+            V_YearG++;
+        }
         CurrentPersonPVamDto.DateG = DateService.DateShamsiFormat(V_YearG, V_MonthG, V_DayG);
         if (OriginalPVam.ReqNo != CurrentPersonPVamDto.ReqNo) isNeedUpdate = true;
         if (OriginalPVam.DateD != CurrentPersonPVamDto.DateD) isNeedUpdate = true;

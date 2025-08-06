@@ -115,6 +115,7 @@ namespace VamBlazor.Client.Application.Services
         public AccountInfoDto GetAccountInfo(string PCode = null, long HesabNo = 0)
         {
             var AccInfo = new vwPersonLastGst();
+            
             if (!string.IsNullOrEmpty(PCode))
             {
                 // دریافت اطلاعات بر اساس personCode

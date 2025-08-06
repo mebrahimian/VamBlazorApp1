@@ -543,7 +543,7 @@
                                                 Type = v.Type,
                                                 DateD = v.DateD,
                                                 MblgVam = v.MblgVam,
-                                                Pasandaz = v.Pasandaz,
+                                                Pasandaz = ParamTypeVam[0] == '1' ? v.Pasandaz : 0, // وام ضروری
                                                 GstNo = v.GstNo,
                                                 GstMblg = v.GstMblg,
                                                 GstDate = v.GstDate,

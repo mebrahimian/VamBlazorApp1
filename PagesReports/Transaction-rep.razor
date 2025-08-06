@@ -30,8 +30,16 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
     @if (@group.Any())
     {
         var firstRow = @group.First();
-        PersonInfo = PersonServices.GetAccountInfo(PCode: firstRow.Pcode,HesabNo:firstRow.HesabNo);
-        CurrentPersonPictureAddress = PersonInfo.PictureAddress;
+        if (_Db.vwPersonLastGst.Any(p => p.Code == firstRow.Pcode))
+        {
+            PersonInfo = PersonServices.GetAccountInfo(PCode: firstRow.Pcode, HesabNo: firstRow.HesabNo);
+            CurrentPersonPictureAddress = PersonInfo.PictureAddress;
+        }
+        else
+        {
+            PersonInfo = new AccountInfoDto();
+            CurrentPersonPictureAddress = "";
+        }
         <!-- این قسمت برای جلوگیری از صفحه خالی قبل از شروع رکورد اول -->
 
         <div style="width: 55%; margin-left:0;margin-right:45%;text-align:center">
