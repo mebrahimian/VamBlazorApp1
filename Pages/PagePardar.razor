@@ -373,7 +373,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personFullDataList.Where(c => !string.IsNullOrEmpty(c.FullNameWCode) && !string.IsNullOrEmpty(value)
-                             && TextHelper.SmartContain(c.FullNameWCode+" "+ c.ShenaseBank.ToString(), value)).OrderBy(c=>c.HesabNo);
+                             && TextHelper.NormalContain(c.FullNameWCode+" "+ c.ShenaseBank.ToString(), value)).OrderBy(c=>c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();

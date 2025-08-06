@@ -356,7 +356,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personSelectList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
-                             && TextHelper.SmartContain(c.FullName+" "+c.ShenaseBank.ToString(), value)).OrderBy(c => c.HesabNo);
+                             && TextHelper.NormalContain(c.FullName+" "+c.ShenaseBank.ToString(), value)).OrderBy(c => c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();
@@ -485,6 +485,12 @@
                     GstRecord.Gstmblg = MonthlyGst;
                     CurrentPersonLastGstDto.PaidDate = GstRecord.DateP;
                     GstRecord.Pasandaz = MonthlyPas;
+                    if (MonthlyGst > PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo))
+                    {
+                        _snackBar.Add(" مبلغ قسط بیش از مانده وام است ", Severity.Warning);
+                        MonthlyGst = PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo);
+                        return;
+                    }
                     if (MonthlyGst == 0)
                     {
                         GstRecord.DateP = " ";
@@ -492,7 +498,10 @@
                         GstRecord.Gstmblg = 0;
                         CurrentPersonLastGstDto.CurrentGstSaved = false;
                     }
-                    else CurrentPersonLastGstDto.CurrentGstSaved = true;
+                    else 
+                    {
+                        CurrentPersonLastGstDto.CurrentGstSaved = true;
+                    }
                     _Db.Update(GstRecord);
                     _Db.SaveChanges();
                     SandoghMojodi = SandoghService.GetCurrentSandogh();

@@ -103,7 +103,7 @@ namespace VamBlazor.Client.Application.Services
                 var result = connection.ExecuteScalar<long>(ExistCommand, new { ReqNoQuery = ReqNoInput });
 
                 // اگر نتیجه صفر یا منفی باشد
-                if (result <= 0)
+                if (result == 0)
                 {
                     return 0; // مقدار دلخواه در صورت وجود مانده منفی یا صفر
                 }

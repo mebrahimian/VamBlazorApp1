@@ -401,7 +401,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personSelectList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
-                             && TextHelper.SmartContain(c.FullName+" "+c.ShenaseBank.ToString(), value));
+                             && TextHelper.NormalContain(c.FullName+" "+c.ShenaseBank.ToString(), value));
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();
@@ -463,9 +463,13 @@
            + " تاریخ " + CurrentPersonLastGstDto.DateD
            + " مبلغ " + CurrentPersonLastGstDto.MblgVam.ToString("N0");
 
-            var nRemainvam = CurrentPersonLastGstDto.MblgVam - CurrentPersonLastGstDto.PaidVam;
-            cPersonInfoStr = " موجودی حساب " + CurrentPersonLastGstDto.Mojodi.ToString("N0") + "  " +
+            var nRemainvam = PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo);
+            var nMojodi = PersonServices.GetMojodiHesab(CurrentPersonLastGstDto.Code);
+            cPersonInfoStr = " موجودی حساب " + nMojodi.ToString("N0") + "  " +
                              "مانده وام " + nRemainvam.ToString("N0");
+            //var nRemainvam = CurrentPersonLastGstDto.MblgVam - CurrentPersonLastGstDto.PaidVam;
+            //cPersonInfoStr = " موجودی حساب " + CurrentPersonLastGstDto.Mojodi.ToString("N0") + "  " +
+            //                 "مانده وام " + nRemainvam.ToString("N0");
 
 
             //   CurrentAccountNumber = string.Empty; // مقدار شماره‌حساب فعلی را پاک کنید
@@ -514,6 +518,12 @@
                     GstRecord.DateP = DateService.DateShamsiFormat(Paid_Year, Paid_Month, Paid_Day);
                     GstRecord.Gstmblg = MonthlyGst;
                     GstRecord.Pasandaz =   MonthlyPas;
+                    if (MonthlyGst > PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo))
+                    {
+                        _snackBar.Add(" مبلغ قسط بیش از مانده وام است ", Severity.Warning);
+                        MonthlyGst = PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo);
+                        return;
+                    }
                     if (MonthlyGst == 0)
                     {
                         GstRecord.DateP = " ";

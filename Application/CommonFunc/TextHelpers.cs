@@ -33,8 +33,8 @@ namespace VamBlazor.Client.Application.CommonFunc
         public static bool SmartContain(string source, string findstr)
         {
             if (source == null || findstr == null) return false;
-            source = TextHelper.NormalizeString(source);
-            findstr = TextHelper.NormalizeString(findstr);
+            //source = TextHelper.NormalizeString(source);
+            //findstr = TextHelper.NormalizeString(findstr);
 
             if (string.IsNullOrWhiteSpace(findstr))
                 return false;
