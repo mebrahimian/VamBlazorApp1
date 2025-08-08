@@ -48,7 +48,7 @@
                     OnBlur="OnPCodeChanged"
                     MaxItems="50"
                     ShowProgressIndicator="true" />
-
+                    
                 </MudItem>
                 <!-- ردیف دوم: ReqNo & Date -->
 
@@ -343,8 +343,11 @@
 
             Babats = _Db.Babats.OrderBy(p=>p.Sharh).ToList();
 
-            var record = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
-            cDateShamsi = record?.HDate; // اگر record null باشد، cDateShamsi هم null خواهد بود
+            //var record = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
+            //cDateShamsi = record?.HDate; // اگر record null باشد، cDateShamsi هم null خواهد بود
+
+            if (DateService.CurrentOperationDate == "") DateService.CurrentOperationDate = DateService.TodayHDate();
+            cDateShamsi = DateService.CurrentOperationDate;
 
             ShowClearPardarInfo();
         }
@@ -467,7 +470,7 @@
             ShowAddBabat = false;
         }
     }
-    
+
 
     private void OnPCodeChanged()
     {
@@ -589,7 +592,7 @@
     {
         // پرکردن فیلد تاریخ
         CurrentPardarDto.Date = DateService.DateShamsiFormat(CurrentPardarDto.V_Year, CurrentPardarDto.V_Month, CurrentPardarDto.V_Day);
-        //isDataCorrected = false;
+        //if (DateService.CurrentOperationDate.Substring(0, 7) != CurrentPardarDto.Date.Substring(0, 7)) return false;
         // مثال: اعتبارسنجی یک فرم
         if (CurrentPardarDto.Mblg <= 0) return false;
         if (string.IsNullOrEmpty(CurrentPardarDto.Babat)) return false;
@@ -615,25 +618,28 @@
                     editpardar.Mblg = CurrentPardarDto.Mblg;
                     editpardar.Action = CurrentPardarDto.Action;
                     editpardar.Babat = CurrentPardarDto.Babat;
+                    if (editpardar.Action == '2')
+                    {
+                        if (editpardar.Mblg > PersonServices.GetMojodiHesab(CurrentPardarDto.Pcode))
+                        {
+                            _snackBar.Add(" مبلغ برداشت بیش از موجودی است ", Severity.Warning);
+                            CurrentPardarDto.Mblg = PersonServices.GetMojodiHesab(CurrentPardarDto.Pcode);
+                            return;
+                        }
+                    }
                     _Db.Pardars.Update(editpardar);
                 }
             }
             else
             {
                 CurrentPardarDto.FullName = selectedPerson.FullName;
-                if (cDateSaved == "")
-                {
-                    cDateSaved = CurrentPardarDto.Date;
-                    cDateShamsi = CurrentPardarDto.Date;
-                }
-                else
-                {
-                    if (cDateSaved != CurrentPardarDto.Date)
-                    {
-                        _snackBar.Add($"تاریخ مجاز {cDateSaved} می باشد", Severity.Error);
+                if (DateService.CurrentOperationDate.Substring(0, 7) != CurrentPardarDto.Date.Substring(0, 7))
+                  {
+                    CurrentPardarDto.Date = DateService.CurrentOperationDate;
+                    _snackBar.Add($"تاریخ مجاز {DateService.CurrentOperationDate} می باشد", Severity.Error);
                         return;
-                    }
-                }
+                  }
+                
                 var newPardar = Mapper.Map<Pardar>(CurrentPardarDto); // Mapping DTO to Entity
                 _personPardarList.Add(CurrentPardarDto);
                 _Db.Pardars.Add(newPardar);

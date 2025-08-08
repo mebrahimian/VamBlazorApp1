@@ -38,15 +38,15 @@
                     <MudGrid>
                         <MudItem xs="12">
                             <MudAutocomplete T="PersonFullDataDto"
-                            Label="لطفا سپرده گذار را انتخاب کنید ..."
-                            @bind-Value="selectedPerson"
-                            SearchFunc="@SearchPerson"
-                            ToStringFunc="@(_personFullDataList => _personFullDataList?.FullNameWCode ?? "")"
-                            Dense="true" Clearable
-                            OnBlur="OnPCodeChanged"
-                            ItemTemplate="@ItemTemplate"
-                            MaxItems="50"
-                            ShowProgressIndicator="true" />
+                                             Label="لطفا سپرده گذار را انتخاب کنید ..."
+                                             @bind-Value="selectedPerson"
+                                             SearchFunc="@SearchPerson"
+                                             ToStringFunc="@(_personFullDataList => _personFullDataList?.FullNameWCode ?? "")"
+                                             Dense="true" Clearable
+                                             OnBlur="OnPCodeChanged"
+                                             ItemTemplate="@ItemTemplate"
+                                             MaxItems="50"
+                                             ShowProgressIndicator="true" />
 
                         </MudItem>
                         <!-- ردیف دوم: ReqNo & Date -->
@@ -57,12 +57,12 @@
                             </MudBadge> -->
                             <div class="mt-n6" style="display: flex;font-size: 18px; font-weight: bold;">
                                 <MudTextField T="int" Style="justify-content:right;width:65%" @ref="myTextField"
-                                Label="شماره وام"
-                                Required
-                                @bind-Value="@ReqNoSearchable" @bind-Value:after="isDataChanged"
-                                InputType="InputType.Text"
-                                Format="###"
-                                OnBlur="OnReqNoChanged"/>
+                                              Label="شماره وام"
+                                              Required
+                                              @bind-Value="@ReqNoSearchable" @bind-Value:after="isDataChanged"
+                                              InputType="InputType.Text"
+                                              Format="###"
+                                              OnBlur="OnReqNoChanged" />
                             </div>
                         </MudItem>
                         @if (MandehVam != 0 || isEditing)
@@ -72,12 +72,12 @@
                                     @if (MandehVam != 0)
                                     {
                                         <MudNumericField T="long" Label="مانده وام"
-                                        @bind-Value="MandehVam"
-                                        Variant="Variant.Outlined"
-                                        Adornment="Adornment.End" AdornmentText="ریال"
-                                        style="font-size: 20px; font-weight: bold;color:red"
-                                        Format="###,###"
-                                        ReadOnly />
+                                                         @bind-Value="MandehVam"
+                                                         Variant="Variant.Outlined"
+                                                         Adornment="Adornment.End" AdornmentText="ریال"
+                                                         style="font-size: 20px; font-weight: bold;color:red"
+                                                         Format="###,###"
+                                                         ReadOnly />
                                     }
                                     else
                                     {
@@ -98,14 +98,14 @@
                             <div class="mt-n8" style="display: flex;font-size: 16px; font-weight: bold;">
                                 <MudTooltip Text="لطفاً مبلغ وام را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="long?" Label="مبلغ وام"
-                                    @bind-Value="CurrentPersonPVamDto.Mblgvam"
-                                    @bind-Value:after="isDataChanged"
-                                    Variant="Variant.Outlined"
-                                    Adornment="Adornment.End" AdornmentText="ریال"
-                                    For="@(() => CurrentPersonPVamDto.Mblgvam)"
-                                    Format="###,###"
-                                    OnBlur="() => CalculateVaminfo(1)"
-                                    HideSpinButtons="true" />
+                                                     @bind-Value="CurrentPersonPVamDto.Mblgvam"
+                                                     @bind-Value:after="isDataChanged"
+                                                     Variant="Variant.Outlined"
+                                                     Adornment="Adornment.End" AdornmentText="ریال"
+                                                     For="@(() => CurrentPersonPVamDto.Mblgvam)"
+                                                     Format="###,###"
+                                                     OnBlur="() => CalculateVaminfo(1)"
+                                                     HideSpinButtons="true" />
                                 </MudTooltip>
                             </div>
                         </MudItem>
@@ -122,36 +122,36 @@
 
                                 <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="int" Variant="Variant.Outlined"
-                                    @bind-Value="V_DayD"
-                                    @bind-Value:after="isDataChanged"
-                                    Style="font-size:14px"
-                                    Min="1"
-                                    Max="31"
-                                    Immediate="true" />
+                                                     @bind-Value="V_DayD"
+                                                     @bind-Value:after="isDataChanged"
+                                                     Style="font-size:14px"
+                                                     Min="1"
+                                                     Max="31"
+                                                     Immediate="true" />
                                 </MudTooltip>
 
                                 <!-- فیلد ماه -->
 
                                 <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="int" Variant="Variant.Outlined"
-                                    @bind-Value="V_MonthD"
-                                    @bind-Value:after="isDataChanged"
-                                    Style="font-size:14px"
-                                    Min="1"
-                                    Max="12"
-                                    Immediate="true" />
+                                                     @bind-Value="V_MonthD"
+                                                     @bind-Value:after="isDataChanged"
+                                                     Style="font-size:14px"
+                                                     Min="1"
+                                                     Max="12"
+                                                     Immediate="true" />
                                 </MudTooltip>
 
                                 <!-- فیلد سال -->
 
                                 <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="int" Variant="Variant.Outlined"
-                                    @bind-Value="V_YearD"
-                                    @bind-Value:after="isDataChanged"
-                                    Style="width:80px"
-                                    Min="1300"
-                                    Max="1499"
-                                    Immediate="true" />
+                                                     @bind-Value="V_YearD"
+                                                     @bind-Value:after="isDataChanged"
+                                                     Style="width:80px"
+                                                     Min="1300"
+                                                     Max="1499"
+                                                     Immediate="true" />
                                 </MudTooltip>
 
                             </div>
@@ -164,11 +164,11 @@
                         <MudItem xs="2" sm="1" md="1" class="mt-0 ml-4 px-0 mr-n2">
                             <MudPaper Elevation="0" class="ml-n4 mr-1">
                                 <MudTextField T="byte?"
-                                @bind-Value="CurrentPersonPVamDto.GstNo"
-                                @bind-Value:after="isDataChanged"
-                                class="mt-n6 px-n4"
-                                OnBlur="() => CalculateVaminfo(2)"
-                                Variant="Variant.Outlined" />
+                                              @bind-Value="CurrentPersonPVamDto.GstNo"
+                                              @bind-Value:after="isDataChanged"
+                                              class="mt-n6 px-n4"
+                                              OnBlur="() => CalculateVaminfo(2)"
+                                              Variant="Variant.Outlined" />
                             </MudPaper>
                         </MudItem>
                         <MudItem xs="8" sm="2" md="2" class="mt-0 py-0 px-0 ">
@@ -187,36 +187,36 @@
 
                                 <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="int" Variant="Variant.Outlined"
-                                    @bind-Value="V_DayG"
-                                    @bind-Value:after="isDataChanged"
-                                    Style="font-size:14px"
-                                    Min="1"
-                                    Max="31"
-                                    Immediate="true" />
+                                                     @bind-Value="V_DayG"
+                                                     @bind-Value:after="isDataChanged"
+                                                     Style="font-size:14px"
+                                                     Min="1"
+                                                     Max="31"
+                                                     Immediate="true" />
                                 </MudTooltip>
 
                                 <!-- فیلد ماه -->
 
                                 <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="int" Variant="Variant.Outlined"
-                                    @bind-Value="V_MonthG"
-                                    @bind-Value:after="isDataChanged"
-                                    Style="font-size:14px"
-                                    Min="1"
-                                    Max="12"
-                                    Immediate="true" />
+                                                     @bind-Value="V_MonthG"
+                                                     @bind-Value:after="isDataChanged"
+                                                     Style="font-size:14px"
+                                                     Min="1"
+                                                     Max="12"
+                                                     Immediate="true" />
                                 </MudTooltip>
 
                                 <!-- فیلد سال -->
 
                                 <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="int" Variant="Variant.Outlined"
-                                    @bind-Value="V_YearG"
-                                    @bind-Value:after="isDataChanged"
-                                    Min="1300"
-                                    Max="1499"
-                                    Style="width:80px"
-                                    Immediate="true" />
+                                                     @bind-Value="V_YearG"
+                                                     @bind-Value:after="isDataChanged"
+                                                     Min="1300"
+                                                     Max="1499"
+                                                     Style="width:80px"
+                                                     Immediate="true" />
                                 </MudTooltip>
 
                             </div>
@@ -227,13 +227,13 @@
                             <div style="width:100%;">
                                 <MudTooltip Text="لطفاً مبلغ قسط آخر را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="long?" Label="مبلغ قسط آخر"
-                                    @bind-Value="CurrentPersonPVamDto.Gst2"
-                                    @bind-Value:after="isDataChanged"
-                                    Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
-                                    For="@(() => CurrentPersonPVamDto.Gst2)"
-                                    OnBlur="() => CalculateVaminfo(3)"
-                                    Format="###,###"
-                                    HideSpinButtons="true" />
+                                                     @bind-Value="CurrentPersonPVamDto.Gst2"
+                                                     @bind-Value:after="isDataChanged"
+                                                     Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
+                                                     For="@(() => CurrentPersonPVamDto.Gst2)"
+                                                     OnBlur="() => CalculateVaminfo(3)"
+                                                     Format="###,###"
+                                                     HideSpinButtons="true" />
                                 </MudTooltip>
                             </div>
                         </MudItem>
@@ -241,13 +241,13 @@
                             <div style="width:100%;">
                                 <MudTooltip Text="لطفاً مبلغ سایراقساط را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="long?" Label="مبلغ اقساط"
-                                    @bind-Value="CurrentPersonPVamDto.Gst1"
-                                    @bind-Value:after="isDataChanged"
-                                    Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
-                                    For="@(() => CurrentPersonPVamDto.Gst1)"
-                                    OnBlur="() => CalculateVaminfo(4)"
-                                    Format="###,###"
-                                    HideSpinButtons="true" />
+                                                     @bind-Value="CurrentPersonPVamDto.Gst1"
+                                                     @bind-Value:after="isDataChanged"
+                                                     Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
+                                                     For="@(() => CurrentPersonPVamDto.Gst1)"
+                                                     OnBlur="() => CalculateVaminfo(4)"
+                                                     Format="###,###"
+                                                     HideSpinButtons="true" />
                                 </MudTooltip>
                             </div>
                         </MudItem>
@@ -255,12 +255,12 @@
                             <div style="width:100%;">
                                 <MudTooltip Text="لطفاً درصد کارمزد را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="int?" Label="درصد کارمزد" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="درصد"
-                                    For="@(() => CurrentPersonPVamDto.Pkarmozd)"
-                                    @bind-Value="CurrentPersonPVamDto.Pkarmozd"
-                                    @bind-Value:after="isDataChanged"
-                                    OnBlur="() => CalculateVaminfo(5)"
-                                    Format="###,###"
-                                    HideSpinButtons="true" />
+                                                     For="@(() => CurrentPersonPVamDto.Pkarmozd)"
+                                                     @bind-Value="CurrentPersonPVamDto.Pkarmozd"
+                                                     @bind-Value:after="isDataChanged"
+                                                     OnBlur="() => CalculateVaminfo(5)"
+                                                     Format="###,###"
+                                                     HideSpinButtons="true" />
                                 </MudTooltip>
                             </div>
                         </MudItem>
@@ -268,12 +268,12 @@
                             <div style="width:100%;">
                                 <MudTooltip Text="لطفاً مبلغ کارمزد را وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
                                     <MudNumericField T="int?" Label="مبلغ کارمزد" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentText="ریال"
-                                    @bind-Value="CurrentPersonPVamDto.Mkarmozd"
-                                    @bind-Value:after="isDataChanged"
-                                    For="@(() => CurrentPersonPVamDto.Mkarmozd)"
-                                    OnBlur="() => CalculateVaminfo(6)"
-                                    Format="###,###"
-                                    HideSpinButtons="true" />
+                                                     @bind-Value="CurrentPersonPVamDto.Mkarmozd"
+                                                     @bind-Value:after="isDataChanged"
+                                                     For="@(() => CurrentPersonPVamDto.Mkarmozd)"
+                                                     OnBlur="() => CalculateVaminfo(6)"
+                                                     Format="###,###"
+                                                     HideSpinButtons="true" />
                                 </MudTooltip>
                             </div>
                         </MudItem>
@@ -294,19 +294,19 @@
         </MudItem>
         @if (ShowPersonList)
         {
-            <MudTable T="PersonPVamDto" Items="@_personPVamListFiltered" Filter="new Func<PersonPVamDto,bool>(FilterFunction)" Hover=" true" Bordered="true" Striped="true" Dense="true">
+            <MudTable T="PersonPVamDto" Items="@_personPVamListFiltered" Filter="new Func<PersonPVamDto, bool>(FilterFunction)" Hover=" true" Bordered="true" Striped="true" Dense="true">
                 <ToolBarContent>
                     <MudTextField @bind-Value="searchString1" Placeholder="جستجوی سپرده گذار" Immediate="true" OnKeyUp="OnSearchTextChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                 </ToolBarContent>
                 <HeaderContent>
-                    <MudTh Style="width: 250px"><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<PersonPVamDto, object>(x=>x.FullName)"></MudTableSortLabel> نـــام ونام خانوادگی</MudTh>
-                    <MudTh Style="width: 120px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x=>x.HesabNo)"></MudTableSortLabel>حساب</MudTh>
-                    <MudTh Style="width: 110px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x=>x.ReqNo)"></MudTableSortLabel>ش.وام</MudTh>
-                    <MudTh Style="width: 75px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x=>x.DateD)"></MudTableSortLabel>تاریخ</MudTh>
-                    <MudTh Style="width: 75px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x=>x.Mblgvam)"></MudTableSortLabel>مبـلـغ</MudTh>
-                    <MudTh Style="width: 75px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x=>x.GstNo)"></MudTableSortLabel>تعدادقسط</MudTh>
-                    <MudTh Style="width: 75px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x=>x.GstPay)"></MudTableSortLabel>پرداخت</MudTh>
-                    <MudTh Style="width: 75px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x=>x.V_isEditableDesc)"></MudTableSortLabel>وضعیت</MudTh>
+                    <MudTh Style="width: 250px"><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<PersonPVamDto, object>(x => x.FullName)"></MudTableSortLabel> نـــام ونام خانوادگی</MudTh>
+                    <MudTh Style="width: 120px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x => x.HesabNo)"></MudTableSortLabel>حساب</MudTh>
+                    <MudTh Style="width: 110px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x => x.ReqNo)"></MudTableSortLabel>ش.وام</MudTh>
+                    <MudTh Style="width: 75px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x => x.DateD)"></MudTableSortLabel>تاریخ</MudTh>
+                    <MudTh Style="width: 75px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x => x.Mblgvam)"></MudTableSortLabel>مبـلـغ</MudTh>
+                    <MudTh Style="width: 75px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x => x.GstNo)"></MudTableSortLabel>تعدادقسط</MudTh>
+                    <MudTh Style="width: 75px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x => x.GstPay)"></MudTableSortLabel>پرداخت</MudTh>
+                    <MudTh Style="width: 75px;"><MudTableSortLabel SortBy="new Func<PersonPVamDto, object>(x => x.V_isEditableDesc)"></MudTableSortLabel>وضعیت</MudTh>
                     <MudTh>عملیات</MudTh>
                 </HeaderContent>
                 <RowTemplate>
@@ -325,10 +325,10 @@
                 </RowTemplate>
                 <PagerContent>
                     <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, int.MaxValue }"
-                    RowsPerPageString="@rowsPerPageString"
-                    InfoFormat="@infoFormat"
-                    AllItemsText="@allItemsText"
-                    HorizontalAlignment="@horizontalAlignment" />
+                                   RowsPerPageString="@rowsPerPageString"
+                                   InfoFormat="@infoFormat"
+                                   AllItemsText="@allItemsText"
+                                   HorizontalAlignment="@horizontalAlignment" />
                 </PagerContent>
             </MudTable>
         }
@@ -425,37 +425,37 @@
             if (query != null && query.Any())
             {
                 _personPVamList = query.Select(q => new PersonPVamDto
-                    {
-                        FullName = q.FullName,
-                        Pcode = q.Pcode,
-                        HesabNo = q.HesabNo,
-                        ReqNo = q.ReqNoP,
-                        Status = q.Status,
-                        Mblgvam = q.Mblgvam,
-                        Gst1 = q.Gst1,
-                        Gst2 = q.Gst2,
-                        Pkarmozd = q.Pkarmozd,
-                        Mkarmozd = q.Mkarmozd,
-                        GstNo = q.GstNo,
-                        GstPay = q.GstPay,
-                        DateD = q.DateD,
-                        DateG = q.DateG,
-                        isEditable = q.isEditable
-                    }).OrderByDescending(q => q.ReqNo).ToList();
+                {
+                    FullName = q.FullName,
+                    Pcode = q.Pcode,
+                    HesabNo = q.HesabNo,
+                    ReqNo = q.ReqNoP,
+                    Status = q.Status,
+                    Mblgvam = q.Mblgvam,
+                    Gst1 = q.Gst1,
+                    Gst2 = q.Gst2,
+                    Pkarmozd = q.Pkarmozd,
+                    Mkarmozd = q.Mkarmozd,
+                    GstNo = q.GstNo,
+                    GstPay = q.GstPay,
+                    DateD = q.DateD,
+                    DateG = q.DateG,
+                    isEditable = q.isEditable
+                }).OrderByDescending(q => q.ReqNo).ToList();
             }
 
             _personFullDataList = query.Select(q => new PersonFullDataDto
-                {
-                    FullName = q.FullName,
-                    FullNameWCode = q.FullName + " شماره تقاضا " + q.ReqNoQ + " ش.حساب " + q.HesabNo + "",
-                    Code = q.Pcode,
-                    HesabNo = q.HesabNo,
-                    Status = q.Status,
-                    QReqNo = q.ReqNoQ,
-                    PReqNo = q.ReqNoP,
-                    Mblg = q.MblgvamQ,
-                    Type = q.TypeQ
-                }).OrderBy(p => p.FullName).ThenBy(p => p.QReqNo).ToList();
+            {
+                FullName = q.FullName,
+                FullNameWCode = q.FullName + " شماره تقاضا " + q.ReqNoQ + " ش.حساب " + q.HesabNo + "",
+                Code = q.Pcode,
+                HesabNo = q.HesabNo,
+                Status = q.Status,
+                QReqNo = q.ReqNoQ,
+                PReqNo = q.ReqNoP,
+                Mblg = q.MblgvamQ,
+                Type = q.TypeQ
+            }).OrderBy(p => p.FullName).ThenBy(p => p.QReqNo).ToList();
 
             var record = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             cDateShamsi = record?.HDate; // اگر record null باشد، cDateShamsi هم null خواهد بود
@@ -490,7 +490,7 @@
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
         var result = _personFullDataList.Where(c => !string.IsNullOrEmpty(c.FullNameWCode) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullNameWCode, value)).OrderBy(c=>c.HesabNo);
+                             && TextHelper.NormalContain(c.FullNameWCode, value)).OrderBy(c => c.HesabNo);
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();
@@ -608,7 +608,7 @@
                     var newPvam = Mapper.Map<Pvam>(CurrentPersonPVamDto); // Mapping DTO to Entity
                     _personPVamList.Add(CurrentPersonPVamDto);
                     _Db.Pvams.Add(newPvam);
-                    if(CurrentPersonPVamDto.Mkarmozd > 0)
+                    if (CurrentPersonPVamDto.Mkarmozd > 0)
                     {
                         Add2Pardar();
                     }
@@ -708,9 +708,9 @@
         deleteContext = " برای حذف وام " + deleteContext + " مطمئن هستید؟ ";
         // اینجا باید یک دیالوگ برای تایید حذف باز کنیم
         var parameters = new DialogParameters
-    {
-        { nameof(Shared.Dialogs.DeleteConfirmationDialog.ContextText), deleteContext }
-    };
+            {
+                { nameof(Shared.Dialogs.DeleteConfirmationDialog.ContextText), deleteContext }
+            };
 
         var dialog = DialogService.Show<DeleteConfirmationDialog>("حذف وام", parameters);
         var result = await dialog.Result;
@@ -733,6 +733,8 @@
 
                     }
                     _personPVamList.Remove(context);
+                    _personPVamListFiltered.Remove(context);
+                    DelPardar();
                     CancelEdit();
 
                     // await _Db.SaveChangesAsync();  // اطمینان از اجرای غیرهمزمان
@@ -803,7 +805,7 @@
                     isEditing = true;
                 }
             }
-            else 
+            else
             {
                 Mapper.Map(new PersonPVamDto(), CurrentPersonPVamDto);
                 V_YearD = DateService.GetHYear(cDateShamsi);
@@ -1006,7 +1008,7 @@
         isNeedUpdate = false;
         CurrentPersonPVamDto.DateD = DateService.DateShamsiFormat(V_YearD, V_MonthD, V_DayD);
         V_YearG = V_YearD;
-        if(V_DayD > 10)
+        if (V_DayD > 10)
         {
             V_DayG = 10;
             V_MonthG = V_MonthD + 2;
@@ -1088,7 +1090,7 @@
                     {
                         if (CurrentPersonPVamDto.Pkarmozd != 0) CurrentPersonPVamDto.Mkarmozd = (int)((double)CurrentPersonPVamDto.Mblgvam * CurrentPersonPVamDto.Pkarmozd / 100);
                         isNeedUpdate = true;
-                        
+
                     }
                     break;
                 case 6:   // مبلغ کارمزد
@@ -1144,7 +1146,7 @@
         cPardar.Pcode = CurrentPersonPVamDto.Pcode;
         cPardar.Action = '2';
         cPardar.Scode = "01";
-        cPardar.Babat = " کارمزد وام" + " "  + CurrentPersonPVamDto.ReqNo;
+        cPardar.Babat = " کارمزد وام" + " " + CurrentPersonPVamDto.ReqNo;
         cPardar.Mblg = (int)CurrentPersonPVamDto.Mkarmozd;
         cPardar.Date = CurrentPersonPVamDto.DateD;
         cPardar.ReqNo = CurrentPersonPVamDto.ReqNo.ToString().PadLeft(5);
@@ -1154,7 +1156,7 @@
     {
         var cDarGst = new Dargst();
         var cDateGst = CurrentPersonPVamDto.DateG;
-        for (byte i = 1; i < CurrentPersonPVamDto.GstNo+1 ; i ++)
+        for (byte i = 1; i < CurrentPersonPVamDto.GstNo + 1; i++)
         {
             cDarGst.ReqNo = CurrentPersonPVamDto.ReqNo;
             cDarGst.DateG = cDateGst;

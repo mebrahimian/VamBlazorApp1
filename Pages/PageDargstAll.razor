@@ -339,14 +339,14 @@
                                                 CurrentGstSaved = false,
                                                 Mellicode = v.MelliCode,
                                                 ShenaseBank = v.ShenaseBank
-                                                
+
                                             })
                                         .AsNoTracking()
                                         .ToListAsync();
             isLoading = false;  // اتمام بارگذاری داده ها
             StateHasChanged();
 
-           _personSelectList = vwPersonList.Select(v => new PersonLastGstDto
+            _personSelectList = vwPersonList.Select(v => new PersonLastGstDto
                 {
                     Code = v.Code,
                     FullName = v.FullName + "حساب:" + v.HesabNo,
@@ -362,9 +362,10 @@
 
             // var record = _Db.tblDates.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
-            cDateShamsi = DateService.TodayHDate();
-            var _tbldate = DateService.TblDate;
-            cDateShamsi = _tbldate.FirstOrDefault(d => d.GDate == DateTime.Now.Date).HDate; // مقایسه فقط تاریخ بدون زمان
+            if (DateService.CurrentOperationDate == "") DateService.CurrentOperationDate = DateService.TodayHDate();
+            cDateShamsi = DateService.CurrentOperationDate;
+            //   var _tbldate = DateService.TblDate;
+            //   cDateShamsi = _tbldate.FirstOrDefault(d => d.GDate == DateTime.Now.Date).HDate; // مقایسه فقط تاریخ بدون زمان
             Paid_Year = DateService.GetHYear(cDateShamsi);
             Paid_Month = DateService.GetHMonth(cDateShamsi);
             Paid_Day = DateService.GetHDay(cDateShamsi);
@@ -400,8 +401,11 @@
     private Task<IEnumerable<PersonLastGstDto>> SearchPerson(string value, CancellationToken cancellationToken)
     {
         // فیلتر کردن داده‌ها بر اساس ورودی کاربر
+        // var result = _personSelectList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
+        //                      && TextHelper.NormalContain(c.FullName+" "+c.ShenaseBank.ToString(), value));
+
         var result = _personSelectList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
-                             && TextHelper.NormalContain(c.FullName+" "+c.ShenaseBank.ToString(), value));
+                             && TextHelper.NormalContain(c.FullName, value));
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();
@@ -414,7 +418,7 @@
         if (selectedPerson != null && selectedPerson.Code != null && selectedPerson.Code != CurrentPersonLastGstDto.Code)
         {
             PCodeSearchable = selectedPerson.Code;
-          //  CurrentPersonLastGstDto.Code = PCodeSearchable;
+            //  CurrentPersonLastGstDto.Code = PCodeSearchable;
             //   CurrentPersonLastGstDto.Mojodi = selectedPerson.Mojodi;
 
             CurrentIndex = _personOrderdList.FindIndex(p => p.HesabNo == selectedPerson.HesabNo);
@@ -454,9 +458,9 @@
             Gst_Day = DateService.GetHDay(CurrentPersonLastGstDto.CurrentGstDate);
             if (!CurrentPersonLastGstDto.CurrentGstSaved)  // قسط پرداخت نشده
             {
-               // Paid_Year = DateService.GetHYear(cDateShamsi);
-               // Paid_Month = DateService.GetHMonth(cDateShamsi);
-               // Paid_Day = DateService.GetHDay(cDateShamsi);
+                // Paid_Year = DateService.GetHYear(cDateShamsi);
+                // Paid_Month = DateService.GetHMonth(cDateShamsi);
+                // Paid_Day = DateService.GetHDay(cDateShamsi);
             }
 
             cVamInfoStr = "وام شماره " + CurrentPersonLastGstDto.ReqNo
@@ -516,6 +520,19 @@
                 if (GstRecord != null)
                 {
                     GstRecord.DateP = DateService.DateShamsiFormat(Paid_Year, Paid_Month, Paid_Day);
+                    if (GstRecord.DateP.Substring(0, 7) != DateService.CurrentOperationDate.Substring(0,7))
+                    {
+                        GstRecord.DateP = DateService.CurrentOperationDate;
+                        Paid_Year = DateService.GetHYear(GstRecord.DateP);
+                        Paid_Month = DateService.GetHMonth(GstRecord.DateP);
+                        Paid_Day = DateService.GetHDay(GstRecord.DateP);
+                        _snackBar.Add($"تاریخ مجاز {GstRecord.DateP} می باشد", Severity.Error);
+                        return;
+                    }
+                    else
+                    {
+                        DateService.CurrentOperationDate = GstRecord.DateP;
+                    }
                     GstRecord.Gstmblg = MonthlyGst;
                     GstRecord.Pasandaz =   MonthlyPas;
                     if (MonthlyGst > PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo))

@@ -16,7 +16,7 @@ namespace VamBlazor.Client.Application.Services
         private readonly IMapper _mapper;
 
         public  List<tblDate> TblDate { get; private set; }
-
+        public string? CurrentOperationDate { get; set; } = "";
         public DateService(IConfiguration configuration, IMapper mapper)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
