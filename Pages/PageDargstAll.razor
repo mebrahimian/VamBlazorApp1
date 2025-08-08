@@ -359,7 +359,6 @@
             ///         بخاطر باگ Autocomplete دو لیست ساختیم یکی برای Autocomplete یکی هم کنترل عملیات
             _personOrderdList = vwPersonList.OrderBy(p => p.HesabNo).ToList();// تبدیل به لیست;
 
-
             // var record = _Db.tblDates.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
             if (DateService.CurrentOperationDate == "") DateService.CurrentOperationDate = DateService.TodayHDate();

@@ -634,11 +634,15 @@
             {
                 CurrentPardarDto.FullName = selectedPerson.FullName;
                 if (DateService.CurrentOperationDate.Substring(0, 7) != CurrentPardarDto.Date.Substring(0, 7))
-                  {
+                {
                     CurrentPardarDto.Date = DateService.CurrentOperationDate;
                     _snackBar.Add($"تاریخ مجاز {DateService.CurrentOperationDate} می باشد", Severity.Error);
-                        return;
-                  }
+                    return;
+                }
+                else
+                {
+                    DateService.CurrentOperationDate = CurrentPardarDto.Date;
+                }
                 
                 var newPardar = Mapper.Map<Pardar>(CurrentPardarDto); // Mapping DTO to Entity
                 _personPardarList.Add(CurrentPardarDto);
