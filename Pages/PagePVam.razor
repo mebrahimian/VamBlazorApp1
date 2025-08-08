@@ -566,6 +566,8 @@
 
         try
         {
+            if (CurrentPersonPVamDto.Pkarmozd == null) CurrentPersonPVamDto.Pkarmozd = 0;
+            if (CurrentPersonPVamDto.Mkarmozd == null) CurrentPersonPVamDto.Mkarmozd = 0;
             if (CurrentPersonPVamDto.isEditable == true)
             {
                 if (isEditing)
@@ -582,15 +584,15 @@
                         editpvam.Gst2 = CurrentPersonPVamDto.Gst2;
                         editpvam.GstNo = CurrentPersonPVamDto.GstNo;
                         editpvam.GstPay = CurrentPersonPVamDto.GstPay;
-                        editpvam.Pkarmozd = CurrentPersonPVamDto.Pkarmozd;
-                        editpvam.Mkarmozd = CurrentPersonPVamDto.Mkarmozd;
+                        editpvam.Pkarmozd = CurrentPersonPVamDto.Pkarmozd ;
+                        editpvam.Mkarmozd = CurrentPersonPVamDto.Mkarmozd ;
                         editpvam.Sabtdate = cDateShamsi;
                         editpvam.Status = ' ';
                         editpvam.Lastdate = cDateShamsi;
                         if (OriginalPVam.Mkarmozd != CurrentPersonPVamDto.Mkarmozd)
                         {
                             DelPardar();
-                            Add2Pardar();
+                            if (CurrentPersonPVamDto.Mkarmozd != 0) Add2Pardar();
                         }
                         if (CurrentPersonPVamDto.GstNo != OriginalPVam.GstNo || CurrentPersonPVamDto.DateG != OriginalPVam.DateG)
                         {
@@ -835,8 +837,8 @@
                 CurrentPersonPVamDto.Pcode = PCodeSearchable;
                 CurrentPersonPVamDto.FullName = selectedPerson.FullName;
                 CurrentPersonPVamDto.ReqNo = ReqNoSearchable;
-                CurrentPersonPVamDto.Mblgvam = personQVam.Mblg;
-                CurrentPersonPVamDto.Mblgmain = (int)personQVam.Mblg;
+                CurrentPersonPVamDto.Mblgvam = PersonServices.GetMojodiHesab(PCodeSearchable) * 2;
+                CurrentPersonPVamDto.Mblgmain = (int)CurrentPersonPVamDto.Mblgvam;
                 CurrentPersonPVamDto.GstNo = 30;
                 CurrentPersonPVamDto.GstPay = 0;
                 CurrentPersonPVamDto.Gst1 = (int)(CurrentPersonPVamDto.Mblgvam / 30 / 10000 * 10000);
@@ -849,6 +851,7 @@
                 isNeedUpdate = true;
                 isEditing = false;
                 MandehVam = 0;
+                OriginalPVam = Mapper.Map<Pvam>(CurrentPersonPVamDto);
             }
         }
         else
@@ -981,7 +984,7 @@
         CurrentPersonPVamDto.Gst2 = 0;
         CurrentPersonPVamDto.GstNo = 0;
         CurrentPersonPVamDto.GstPay = 0;
-        CurrentPersonPVamDto.Pkarmozd = 3;
+        CurrentPersonPVamDto.Pkarmozd = 0;
         CurrentPersonPVamDto.Mkarmozd = 0;
         CurrentPersonPVamDto.ReqNo = ReqNoSearchable;
         OriginalPVam = Mapper.Map<Pvam>(CurrentPersonPVamDto);
@@ -1040,6 +1043,8 @@
     {
         if (CurrentPersonPVamDto.isEditable == true)
         {
+            if (CurrentPersonPVamDto.Pkarmozd == null) CurrentPersonPVamDto.Pkarmozd = 0;
+            if (CurrentPersonPVamDto.Mkarmozd == null) CurrentPersonPVamDto.Mkarmozd = 0;
             switch (nNo)
             {
                 case 1:  // مبلغ وام
@@ -1089,6 +1094,10 @@
                     if (OriginalPVam.Pkarmozd != CurrentPersonPVamDto.Pkarmozd)
                     {
                         if (CurrentPersonPVamDto.Pkarmozd != 0) CurrentPersonPVamDto.Mkarmozd = (int)((double)CurrentPersonPVamDto.Mblgvam * CurrentPersonPVamDto.Pkarmozd / 100);
+                        else
+                        {
+                            CurrentPersonPVamDto.Mkarmozd = 0;
+                        }
                         isNeedUpdate = true;
 
                     }
@@ -1096,6 +1105,7 @@
                 case 6:   // مبلغ کارمزد
                     var nkar = (double)CurrentPersonPVamDto.Mkarmozd / CurrentPersonPVamDto.Mblgvam * 100.0;
                     CurrentPersonPVamDto.Pkarmozd = (int)nkar;
+                    if (nkar == 0) CurrentPersonPVamDto.Pkarmozd = 0;
                     isNeedUpdate = true;
                     break;
                 default:

@@ -38,9 +38,9 @@ namespace VamBlazor.Client.Application.Dtos
 
         public string? Sabtdate { get; set; }
 
-        public int? Pkarmozd { get; set; }
+        public int? Pkarmozd { get; set; } = 0;
 
-        public int? Mkarmozd { get; set; }
+        public int? Mkarmozd { get; set; } = 0;
 
         public string? Lastdate { get; set; }
 

@@ -307,8 +307,8 @@
 
             // var record = _Db.tblDates.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
-            if (DateService.CurrentOperationDate == "") DateService.CurrentOperationDate = DateService.TodayHDate();
-            cDateShamsi = DateService.CurrentOperationDate;
+            
+            cDateShamsi = DateService.TodayHDate();
             Paid_Year = DateService.GetHYear(cDateShamsi);
             Paid_Month = DateService.GetHMonth(cDateShamsi);
             Paid_Day = DateService.GetHDay(cDateShamsi);
@@ -486,6 +486,7 @@
                 if (GstRecord != null)
                 {
                     GstRecord.DateP = DateService.DateShamsiFormat(Paid_Year, Paid_Month, Paid_Day);
+                    if (DateService.CurrentOperationDate == "") DateService.CurrentOperationDate = GstRecord.DateP;
                     if (GstRecord.DateP.Substring(0, 7) != DateService.CurrentOperationDate.Substring(0, 7))
                     {
                         GstRecord.DateP = DateService.CurrentOperationDate;

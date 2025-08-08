@@ -346,8 +346,7 @@
             //var record = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             //cDateShamsi = record?.HDate; // اگر record null باشد، cDateShamsi هم null خواهد بود
 
-            if (DateService.CurrentOperationDate == "") DateService.CurrentOperationDate = DateService.TodayHDate();
-            cDateShamsi = DateService.CurrentOperationDate;
+            cDateShamsi = DateService.TodayHDate();
 
             ShowClearPardarInfo();
         }
@@ -480,7 +479,7 @@
             {
                 PCodeSearchable = selectedPerson.Code;
                 CurrentPardarDto.Pcode = PCodeSearchable;
-                CurrentPardarDto.Mojodi = GetMojodi(PCodeSearchable);
+                CurrentPardarDto.Mojodi = PersonServices.GetMojodiHesab(PCodeSearchable);
                 CurrentPardarDto.FullName = selectedPerson.FullName;
 
                 _personPardarList = (from Pardar in _Db.Pardars
@@ -633,6 +632,7 @@
             else
             {
                 CurrentPardarDto.FullName = selectedPerson.FullName;
+                if (DateService.CurrentOperationDate == "") DateService.CurrentOperationDate = CurrentPardarDto.Date;
                 if (DateService.CurrentOperationDate.Substring(0, 7) != CurrentPardarDto.Date.Substring(0, 7))
                 {
                     CurrentPardarDto.Date = DateService.CurrentOperationDate;
@@ -650,7 +650,7 @@
                 _snackBar.Add($"عملیات {CurrentPardarDto.FullName} ثبت شد", Severity.Success);
             }
             _Db.SaveChanges();
-            CurrentPardarDto.Mojodi = GetMojodi(CurrentPardarDto.Pcode);
+            CurrentPardarDto.Mojodi = PersonServices.GetMojodiHesab(CurrentPardarDto.Pcode);
             SandoghMojodi = SandoghService.GetCurrentSandogh();
             SandoghMojodiStr = SandoghMojodi.ToString("N0");
            // isNeedUpdate = false;
@@ -716,7 +716,7 @@
                 _snackBar.Add($" عملیات واریز/برداشت حذف شد ", Severity.Warning);
                 _Db.SaveChanges();
                 CurrentPardarDto = _personPardarList.Where(p => p.Pcode == PCodeSearchable).OrderByDescending(p => p.Date).FirstOrDefault() ?? new PardarDto();
-                CurrentPardarDto.Mojodi = GetMojodi(context.Pcode);
+                CurrentPardarDto.Mojodi = PersonServices.GetMojodiHesab(context.Pcode);
                 SandoghMojodi = SandoghService.GetCurrentSandogh();
                 SandoghMojodiStr = SandoghMojodi.ToString("N0");
             }
@@ -813,7 +813,7 @@
 
     }
 
-    private long GetMojodi(string cPcode)
+    private long GetMojodi_(string cPcode)
     {
         var ExistCommand = "SELECT FirstQty + CurQty AS Mojidi FROM Hesab WHERE Pcode = @Pcode";
         using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
