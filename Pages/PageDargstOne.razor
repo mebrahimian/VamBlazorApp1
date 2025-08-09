@@ -18,6 +18,26 @@
 
 
 <MudContainer MaxWidth="MaxWidth.False" Class="mt-n2" Style="background-color:white">
+    @if (isLoading)
+    {
+        <div style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(255,255,255,0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            ">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+            <div class="text-center mt-2">⏳ لطفاً منتظر بمانید...</div>
+        </div>
+    }
+
     <MudForm @ref="DarGstForm" Model="@CurrentPersonLastGstDto" @bind-IsValid="isDataCorrected" Spacing="4" Class="p-4">
         <MudText Typo="Typo.body2" Align="Align.Center" Style="width:70%;height:25px;color:white; background-color:cadetblue" Class="mt-2">@titrPage</MudText>
         <MudGrid Class="mr-n10 pr-10" Style="width:100%;background-color:white">
@@ -256,6 +276,7 @@
     private bool isValidGst = false;                                                                                   //   private List<PersonFullDataDto> _personFullDataList = new List<PersonFullDataDto>();
     private bool isNeedUpdate { get; set; } = false;
     private bool isDataCorrected { get; set; } = false;
+    private bool isLoading { get; set; } = true;
 
     private string cDateShamsi = "";
     private PersonLastGstDto selectedPerson = new PersonLastGstDto();
@@ -285,6 +306,10 @@
             {
                 // isFormValid = form.IsValid;
             }
+
+            isLoading = true;    ///// کنترل بارگذاری داده ها
+            StateHasChanged();
+
             if (ParamTypeVam == "1") titrPage = titrPage + ""; else titrPage = titrPage + " وامهای ضروری ";
             var query = await _Db.vwPersonLastGst
                                         .Where(v => v.Type == ParamTypeVam[0])
@@ -300,6 +325,8 @@
                                         .AsNoTracking()
                                         .ToListAsync();
 
+            isLoading = false;  // اتمام بارگذاری داده ها
+            StateHasChanged();
             // تبدیل به لیست;
             ///         بخاطر باگ Autocomplete دو لیست ساختیم یکی برای Autocomplete یکی هم کنترل عملیات
             //  _personOrderdList = vwPersonList.OrderBy(p => p.HesabNo).ToList();// تبدیل به لیست;
@@ -316,12 +343,13 @@
             //     cDateShamsi = _tbldate.FirstOrDefault(d => d.GDate == DateTime.Now.Date).HDate; // مقایسه فقط تاریخ بدون زمان
             var cper = _personSelectList.First().FullName;
             selectedPerson = new PersonLastGstDto();
+            /*
             selectedPerson.FullName = cper;
             selectedPerson.Code = _personSelectList.First().Code;
             selectedPerson.HesabNo = _personSelectList.First().HesabNo;
             selectedPerson.ReqNo = _personSelectList.First().ReqNo;
             CurrentIndex = 0; // اول لیست
-
+            */
             _personOrderdList = MakeVamRecordSet();
             CurrentIndex = _personOrderdList.FindIndex(p => p.ReqNo == selectedPerson.ReqNo && string.IsNullOrWhiteSpace(p.PaidDate));
 

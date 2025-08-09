@@ -1,5 +1,5 @@
 ﻿@page "/pagedargstall/{ParamTypeVam}"
-@inject DatabaseContext _Db
+@inject DatabaseContext _Db 
 @inject DateService DateService
 @inject SandoghService SandoghService
 @inject ILogger<PageDargstAll> _logger
@@ -361,7 +361,7 @@
 
             // var record = _Db.tblDates.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
-            
+
             cDateShamsi = DateService.TodayHDate();
             //   var _tbldate = DateService.TblDate;
             //   cDateShamsi = _tbldate.FirstOrDefault(d => d.GDate == DateTime.Now.Date).HDate; // مقایسه فقط تاریخ بدون زمان
@@ -371,12 +371,13 @@
 
             var cper = _personOrderdList.First().FullName + "حساب:" + _personOrderdList.First().HesabNo ;
             selectedPerson = new PersonLastGstDto();
+            /*
             selectedPerson.FullName = cper;
             selectedPerson.Code = _personOrderdList.First().Code;
             selectedPerson.HesabNo = _personOrderdList.First().HesabNo;
-
-            CurrentIndex = 0; // اول لیست
-            LoadCurrentPerson();
+            */
+           // CurrentIndex = 0; // اول لیست
+            //  LoadCurrentPerson();
             //   ShowClearPersonLastGstInfo();
         }
         catch (SqlException ex)
@@ -408,7 +409,7 @@
 
         // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
         cancellationToken.ThrowIfCancellationRequested();
-
+        
         // بازگشت نتایج به صورت AsEnumerable
         return Task.FromResult(result.AsEnumerable());
     }
@@ -417,9 +418,7 @@
         if (selectedPerson != null && selectedPerson.Code != null && selectedPerson.Code != CurrentPersonLastGstDto.Code)
         {
             PCodeSearchable = selectedPerson.Code;
-            //  CurrentPersonLastGstDto.Code = PCodeSearchable;
-            //   CurrentPersonLastGstDto.Mojodi = selectedPerson.Mojodi;
-
+            
             CurrentIndex = _personOrderdList.FindIndex(p => p.HesabNo == selectedPerson.HesabNo);
 
             if (CurrentIndex != -1)
