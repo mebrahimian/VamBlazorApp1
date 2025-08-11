@@ -345,8 +345,9 @@
 
             //var record = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             //cDateShamsi = record?.HDate; // اگر record null باشد، cDateShamsi هم null خواهد بود
-
             cDateShamsi = DateService.TodayHDate();
+            if (DateService.CurrentOperationDate != "") cDateShamsi = DateService.CurrentOperationDate;
+            
 
             ShowClearPardarInfo();
         }
@@ -594,6 +595,7 @@
         //if (DateService.CurrentOperationDate.Substring(0, 7) != CurrentPardarDto.Date.Substring(0, 7)) return false;
         // مثال: اعتبارسنجی یک فرم
         if (CurrentPardarDto.Mblg <= 0) return false;
+        if (CurrentPardarDto.FullName == "") return false;
         if (string.IsNullOrEmpty(CurrentPardarDto.Babat)) return false;
         if (!_tblDate.Any(d => d.HDate == CurrentPardarDto.Date)) return false;
         isDataCorrected = ValidateModel();
@@ -645,6 +647,15 @@
                 }
                 
                 var newPardar = Mapper.Map<Pardar>(CurrentPardarDto); // Mapping DTO to Entity
+                if (newPardar.Action == '2')
+                {
+                    if (newPardar.Mblg > PersonServices.GetMojodiHesab(CurrentPardarDto.Pcode))
+                    {
+                        _snackBar.Add(" مبلغ برداشت بیش از موجودی است ", Severity.Warning);
+                        CurrentPardarDto.Mblg = PersonServices.GetMojodiHesab(CurrentPardarDto.Pcode);
+                        return;
+                    }
+                }
                 _personPardarList.Add(CurrentPardarDto);
                 _Db.Pardars.Add(newPardar);
                 _snackBar.Add($"عملیات {CurrentPardarDto.FullName} ثبت شد", Severity.Success);

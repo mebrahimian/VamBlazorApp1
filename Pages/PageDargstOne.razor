@@ -336,6 +336,7 @@
             //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
             
             cDateShamsi = DateService.TodayHDate();
+            if (DateService.CurrentOperationDate != "") cDateShamsi = DateService.CurrentOperationDate;
             Paid_Year = DateService.GetHYear(cDateShamsi);
             Paid_Month = DateService.GetHMonth(cDateShamsi);
             Paid_Day = DateService.GetHDay(cDateShamsi);
@@ -535,6 +536,7 @@
                     {
                         _snackBar.Add(" مبلغ قسط بیش از مانده وام است ", Severity.Warning);
                         MonthlyGst = PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo);
+                        CurrentPersonLastGstDto.CurrentGstSaved = false;
                         return;
                     }
                     if (MonthlyGst == 0)

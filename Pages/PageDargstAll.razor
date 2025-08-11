@@ -363,6 +363,7 @@
             //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
 
             cDateShamsi = DateService.TodayHDate();
+            if (DateService.CurrentOperationDate != "") cDateShamsi = DateService.CurrentOperationDate;
             //   var _tbldate = DateService.TblDate;
             //   cDateShamsi = _tbldate.FirstOrDefault(d => d.GDate == DateTime.Now.Date).HDate; // مقایسه فقط تاریخ بدون زمان
             Paid_Year = DateService.GetHYear(cDateShamsi);
