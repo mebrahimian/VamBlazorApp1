@@ -123,8 +123,9 @@ namespace VamBlazor.Client.Application.Services
             var cDay = Day.ToString();
             if (cMonth.Length == 1) cMonth = "0" + cMonth;
             if (cDay.Length == 1) cDay = "0" + cDay;
-            var cDate = TblDate.FirstOrDefault(date => date.HDate == cYear + "/" + cMonth + "/" + cDay).HDate;
-            return cDate ?? " ";
+            var cDateRecord = TblDate.FirstOrDefault(date => date.HDate == cYear + "/" + cMonth + "/" + cDay);
+            if (cDateRecord == null)  return cYear + "/" + cMonth + "/" + cDay;
+            else return cDateRecord.HDate;
         }
         public string YrMthShamsiFormat(int Year, int Month)
         {
