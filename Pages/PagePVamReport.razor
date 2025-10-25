@@ -1,0 +1,428 @@
+﻿@page "/pagepvamreport/{ParamTypeVam}"
+@layout MainLayout
+@inject DatabaseContext _Db
+@inject NavigationManager Navigation
+@inject NavigationManager NavigationManager
+@inject VamBlazor.Client.Application.Services.PersonServices PersonServices
+@inject EmailService _emailService
+@inject SandoghService SandoghService
+@inject DateService DateService
+
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using MudBlazor
+@using VamBlazor.Client.Application.CommonFunc
+@using VamBlazor.Client.Application.Dtos
+@using VamBlazor.Client.Application.Services
+@inject IJSRuntime JSRuntime
+
+<MudContainer style="font-family:'VazirUI'">
+    <MudGrid Justify="Justify.Center" AlignItems="Center" Style="height: 100vh;">
+        <MudItem xs="12" sm="6">
+            <MudText Typo="Typo.body2" Align="Align.Center" Style="width:100%;height:25px;background-color:cadetblue" Class="mt-2">@titrPage</MudText>
+            <MudPaper Elevation="3" Style="padding: 20px;">
+                <MudGrid>
+                    <MudItem xs="3" sm="1">
+                        <MudPaper Elevation="0" class="mt-n3 ml-0">
+                            <MudText Style="text-align:center;">از تاریخ</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="7" sm="5">
+                        <div class="mt-n3" style="display: flex; font-size: 16px; font-weight: bold; justify-content: space-between;">
+
+                            <!-- فیلد روز -->
+                            <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                @bind-Value="V_DayFrom"
+                                @bind-Value:after="isDataChanged"
+                                Style="font-size:14px"
+                                Min="1"
+                                Max="31"
+                                Immediate="true"/>
+                            </MudTooltip>
+
+                            <!-- فیلد ماه -->
+                            <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                @bind-Value="V_MonthFrom"
+                                @bind-Value:after="isDataChanged"
+                                Style="font-size:14px"
+                                Min="1"
+                                Max="12"
+                                Immediate="true"/>
+                            </MudTooltip>
+
+                            <!-- فیلد سال -->
+                            <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                @bind-Value="V_YearFrom"
+                                @bind-Value:after="isDataChanged"
+                                Style="width:80px"
+                                Min="1300"
+                                Max="1499"
+                                Immediate="true"/>
+                            </MudTooltip>
+
+                        </div>
+                    </MudItem>
+
+
+                    <MudItem xs="3" sm="1" >
+                        <MudPaper Elevation="0" class="mt-n3 ml-0">
+                            <MudText Style="text-align:center;">تا تاریخ</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="7" sm="5">
+                        <div class="mt-n3" style="display: flex; font-size: 16px; font-weight: bold; justify-content: space-between;">
+
+                            <!-- فیلد روز -->
+                            <MudTooltip Text="لطفاً یک روز معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                @bind-Value="V_DayTo"
+                                @bind-Value:after="isDataChanged"
+                                Style="font-size:14px"
+                                Min="1"
+                                Max="31"
+                                Immediate="true" />
+                            </MudTooltip>
+
+                            <!-- فیلد ماه -->
+                            <MudTooltip Text="لطفاً یک ماه معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                @bind-Value="V_MonthTo"
+                                @bind-Value:after="isDataChanged"
+                                Style="font-size:14px"
+                                Min="1"
+                                Max="12"
+                                Immediate="true" />
+                            </MudTooltip>
+
+                            <!-- فیلد سال -->
+                            <MudTooltip Text="لطفاً یک سال معتبر وارد کنید" Placement="Placement.Top" Color="Color.Tertiary" Delay="1000">
+                                <MudNumericField T="int" Variant="Variant.Outlined"
+                                @bind-Value="V_YearTo"
+                                @bind-Value:after="isDataChanged"
+                                Style="width:80px"
+                                Min="1300"
+                                Max="1499"
+                                Immediate="true" />
+                            </MudTooltip>
+
+                        </div>
+                    </MudItem>
+                    
+                    <MudItem xs="12" sm="12">
+                        <MudButton class="mt-2" 
+                        @onclick="PrintReport" Variant="Variant.Filled"
+                        StartIcon="@Icons.Material.Filled.Print"
+                        IconColor="Color.Primary"
+                        style="width:100%">
+                            چاپ گزارش
+                        </MudButton>
+                    </MudItem>
+                    <!--
+                    <MudItem xs="12" sm="12">
+                        <MudButton class="mt-2"
+                        @onclick="EmailReport" Variant="Variant.Filled"
+                        StartIcon="@Icons.Material.Filled.Print"
+                        IconColor="Color.Primary"
+                        style="width:100%">
+                            ایمیل گزارش
+                        </MudButton>
+                    </MudItem>
+                    -->
+                    @if (AlertMessage != null)   
+                    {
+                        <div class="alert alert-warning">
+                            @AlertMessage
+                        </div>
+                    }
+                </MudGrid>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+
+@code {
+    [Parameter] public string? ParamTypeVam { get; set; }
+    private string titrPage = "گزارش وامهای پرداختی ";
+    private string AlertMessage { get; set; }
+    private string cDateShamsi = ""; private string cBeginOfYear = "";
+    private int V_YearFrom; private int V_MonthFrom; private int V_DayFrom;
+    private int V_YearTo; private int V_MonthTo; private int V_DayTo;
+    private bool isNeedUpdate;
+    private List<PersonAccountDto> _personFullDataList = new List<PersonAccountDto>();
+    private PersonAccountDto selectedPersonFrom; private PersonAccountDto selectedPersonTo;
+    private long? Hesab1Searchable = 0;
+    private long? Hesab2Searchable = 0;
+    private List<PersonReportStatusDto> ReportRecords { get; set; }
+    private List<IGrouping<long, PersonReportStatusDto>> groupedRecords { get; set; }
+         
+    protected override async Task OnInitializedAsync()
+
+    {
+        if (ParamTypeVam == "1") titrPage = titrPage + " عادی "; else titrPage = titrPage + " ضروری ";
+        cDateShamsi = DateService.TodayHDate();   // تاریخ امروز
+        cBeginOfYear = DateService.DateBeginOfYearShamsi(cDateShamsi);
+        V_YearFrom = DateService.GetHYear(cBeginOfYear);
+        V_MonthFrom = DateService.GetHMonth(cBeginOfYear);
+        V_DayFrom = DateService.GetHDay(cBeginOfYear);
+        V_YearTo = DateService.GetHYear(cDateShamsi);
+        V_MonthTo = DateService.GetHMonth(cDateShamsi);
+        V_DayTo = DateService.GetHDay(cDateShamsi);
+        var query = (from person in _Db.Persons
+                     join account in _Db.Hesabs on person.Code equals account.Pcode
+                     orderby account.HesabNo
+                     select new PersonAccountDto
+                         {
+                             FullName = person.FullName + " ش.حساب " + account.HesabNo + " معرف " + (account.IdDi == 0 ? account.HesabNo : account.IdDi) ,
+                             Family = person.Family,
+                             MelliCode = person.Mellicode,
+                             Name = person.Name,
+                             Father = person.Father,
+                             Scode = account.Scode,
+                             Pcode = (string.IsNullOrEmpty(account.Pcode) ? "" : account.Pcode),
+                             HesabNo = account.HesabNo,
+                             Date = account.Date,
+                             Firstqty = account.Firstqty,
+                             Monthqty = account.Monthqty,
+                             Curqty = account.Curqty,
+                             P = account.P,
+                             P1 = account.P1,
+                             Moaref = (account.IdDi == 0 ? account.HesabNo : account.IdDi),
+                             V_Day = account.V_Day,
+                             V_Month = account.V_Month,
+                             V_Year = account.V_Year,
+                             V_Mojodi = account.V_Mojodi
+
+                         })
+           .ToList();  // تبدیل ب
+
+        if (query != null && query.Any())
+        {
+            _personFullDataList = query;
+        }
+
+
+    }
+    private Task<IEnumerable<PersonAccountDto>> SearchPerson(string value, CancellationToken cancellationToken)
+    {
+        // فیلتر کردن داده‌ها بر اساس ورودی کاربر
+        var result = _personFullDataList.Where(c => !string.IsNullOrEmpty(c.FullName) && !string.IsNullOrEmpty(value)
+                             && (TextHelper.NormalContain(c.FullName, value))).OrderBy(c=>c.HesabNo);
+
+        // با توجه به CancellationToken می‌توانیم عملیات لغو را کنترل کنیم
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // بازگشت نتایج به صورت AsEnumerable
+        return Task.FromResult(result.AsEnumerable());
+    }
+    private void OnPCodeChangedFrom()
+    {
+        if (selectedPersonFrom != null && selectedPersonFrom.Pcode != null)
+        {
+            Hesab1Searchable = selectedPersonFrom.HesabNo;
+
+        }
+        //  isValid = ValidateForm();
+    }
+    private void OnPCodeChangedTo()
+    {
+        if (selectedPersonTo != null && selectedPersonTo.Pcode != null)
+        {
+            Hesab2Searchable = selectedPersonTo.HesabNo;
+        }
+        //  isValid = ValidateForm();
+    }
+
+
+    // دستور چاپ با استفاده از JSInterop
+    private void  PrintReport()
+    {
+        if (isValidParameters())
+        {
+            NavigationManager.NavigateTo($"/pvamreport?date1={cBeginOfYear}&date2={cDateShamsi}");
+        }
+    }
+    private async Task EmailReport()
+    {
+        if (isValidParameters())
+        {
+            // ایجاد قالب HTML برای ایمیل
+            var emailHtmlContent = GenerateEmailHtmlContent();
+
+            // ارسال ایمیل
+            await _emailService.SendEmailAsync("ebrahimian_4585@hotmail.com", "گزارش وضعیت سپرده گذار", emailHtmlContent);
+        }
+    }
+    private bool isValidParameters()
+    {
+        if (Hesab1Searchable == 0 || Hesab2Searchable == 0)
+        {
+            _snackBar.Add("لطفا سپرده گذار را انتخاب کنید ...", Severity.Warning);
+            return false;
+        }
+        cBeginOfYear = DateService.DateShamsiFormat(V_YearFrom, V_MonthFrom, V_DayFrom);
+        cDateShamsi = DateService.DateShamsiFormat(V_YearTo, V_MonthTo, V_DayTo);
+
+        if (string.Compare(cDateShamsi, cBeginOfYear) < 0)
+        {
+            var cdate = cDateShamsi;
+            cDateShamsi = cBeginOfYear;
+            cBeginOfYear = cdate;
+        }
+        if (Hesab1Searchable > Hesab2Searchable)
+        {
+            var nHes = Hesab2Searchable;
+            Hesab2Searchable = Hesab1Searchable;
+            Hesab1Searchable = nHes;
+        }
+        // تعداد رکوردهای بین 2 تاریخ
+        var recordCount = _Db.vwReportPersonStatus
+                             .Where(t => t.HesabNo >= Hesab1Searchable && t.HesabNo <= Hesab2Searchable
+                                     && string.Compare(t.Date, cBeginOfYear) >= 0 && string.Compare(t.Date, cDateShamsi) <= 0)
+                             .Count();
+        // تعداد رکوردهای قبل تاریخ 1 برای هر حساب 1 رکورد
+        var openingCount = _Db.Hesabs
+                              .Where(t => t.HesabNo >= Hesab1Searchable && t.HesabNo <= Hesab2Searchable)
+                              .Count();
+        // تعداد رکوردهای بعد تاریخ 2 برای هر حساب 1 رکورد
+
+
+        recordCount = recordCount + (2 * openingCount);
+
+
+        // اگر تعداد رکوردها بیشتر از حد مجاز بود، به کاربر آلارم می‌دهیم
+        if (recordCount > 500) // این عدد را به مقدار دلخواه تغییر دهید
+        {
+            AlertMessage = "تعداد رکوردهای بازیابی شده بسیار زیاد است. لطفاً بازه جستجو را محدودتر کنید.";
+            return false; // در این حالت دیگر ادامه نمی‌دهیم و رکوردها را نمایش نمی‌دهیم
+        }
+        else
+        {
+            AlertMessage = null; // در صورتی که تعداد رکوردها مناسب بود، آلارم را پاک می‌کنیم
+            return true;
+        }
+       
+    }
+    private string GenerateEmailHtmlContent()
+    {
+        var balanceBeforeDate1 = _Db.vwReportPersonStatus
+            .Where(t => t.HesabNo >= Hesab1Searchable && t.HesabNo <= Hesab2Searchable && string.Compare(t.Date, cBeginOfYear) < 0)
+            .GroupBy(t => t.HesabNo)
+            .Select(g => new PersonReportStatusDto
+                {
+                    Pcode = g.Max(t => t.Pcode),
+                    FullName = g.Max(t => t.FullName),
+                    HesabNo = g.Max(t => t.HesabNo),
+                    Date = null,
+                    RecordType = "1BalanceBeforeDate1",
+                    Vam = g.Sum(t => t.Vam - t.GstPaid),
+                    GstPaid = 0,
+                    Pasandaz = g.Sum(t => t.Pasandaz - t.Karmozd),
+                    Karmozd = 0,
+                    ColPasandaz = g.Sum(t => t.ColPasandaz),
+                    ColVamGst = -g.Sum(t => t.ColVamGst),
+                    Sharh = "مانده قبل"
+                })
+            .ToList();
+        // محاسبه رکوردها برای "Transaction Between Date1 and Date2"
+        var transactionsBetweenDates = _Db.vwReportPersonStatus
+               .Where(t => t.HesabNo >= Hesab1Searchable && t.HesabNo <= Hesab2Searchable
+                                     && string.Compare(t.Date, cBeginOfYear) >= 0 && string.Compare(t.Date, cDateShamsi) <= 0)
+               .Select(g => new PersonReportStatusDto
+                   {
+                       Pcode = g.Pcode,
+                       FullName = g.FullName,
+                       HesabNo = g.HesabNo,
+                       Date = g.Date,
+                       RecordType = "2TransactionBetweenDate1andDate2",
+                       Vam = g.Vam,
+                       GstPaid = g.GstPaid,
+                       Pasandaz = g.Pasandaz,
+                       Karmozd = g.Karmozd,
+                       ColPasandaz = g.ColPasandaz,
+                       ColVamGst = g.ColVamGst,
+                       Sharh = g.Sharh
+
+                   })
+               .OrderBy(t => t.Date)
+               .ToList();
+        // محاسبه رکوردها برای "Balance At Date2"
+        var balanceAtDate2 = _Db.vwReportPersonStatus
+               .Where(t => t.HesabNo >= Hesab1Searchable && t.HesabNo <= Hesab2Searchable && string.Compare(t.Date, cDateShamsi) <= 0)
+               .GroupBy(t => t.HesabNo)
+               .Select(g => new PersonReportStatusDto
+                   {
+                       Pcode = g.Max(t => t.Pcode),
+                       FullName = g.Max(t => t.FullName),
+                       HesabNo = g.Max(t => t.HesabNo),
+                       Date = null,
+                       RecordType = "3BalanceAfterDate2",
+                       Vam = g.Sum(t => t.Vam - t.GstPaid),
+                       GstPaid = (long)0,
+                       Pasandaz = g.Sum(t => t.Pasandaz - t.Karmozd),
+                       Karmozd = (long)0,
+                       ColPasandaz = g.Sum(t => t.ColPasandaz),
+                       ColVamGst = -g.Sum(t => t.ColVamGst),
+                       Sharh = "مانده فعلی "
+                   })
+               .ToList();
+
+        // ترکیب همه رکوردها
+        ReportRecords = balanceBeforeDate1
+            .Concat(transactionsBetweenDates)
+            .Concat(balanceAtDate2)
+            .OrderBy(r => r.HesabNo)
+            .ThenBy(r => r.RecordType)
+            .ThenBy(r => r.Date)
+            .ToList();
+
+        groupedRecords = ReportRecords
+            .GroupBy(r => r.HesabNo) // گروه‌بندی بر اساس PersonId و PersonName
+            .ToList();  // تبدیل به لیست
+         var SandoghName = SandoghService.GetSandoghName();
+         var htmlContent = "";
+
+        // اینجا می‌توانید به‌جای HTML تگ‌های موجود برای پرینت، از HTML ساده برای ایمیل استفاده کنید
+        foreach (var group in groupedRecords)
+        {
+            if (group.Any())
+            {
+                var firstRow = group.First();
+                var CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(firstRow.Pcode);
+
+                htmlContent += $"<div style='width: 55%; margin-left:0;margin-right:45%'>{SandoghName}</div>";
+
+                htmlContent += $"<div class='content-section'>" +
+                               $"<div style='display: flex; width: 55%; margin-left:0;margin-right:45%'>" +
+                               $"<div style='width:75%;'>" +
+                               $"<p style='font-size:12px; text-align: right;'>{firstRow.FullName}</p>" +
+                               $"<p style='font-size:8px;text-align: right;'>باســلام وعــرض احتــــــــــرام</p>" +
+                               $"<p style='font-size:8px;text-align: right;'>بمنظور اطلاع از عملکرد حسابتان گزارشی از فعالیت‌های جنابعالی از تاریخ {TextHelper.ConvertNumbersInStringToPersian(cBeginOfYear)} لغایت {TextHelper.ConvertNumbersInStringToPersian(cDateShamsi)} بشرح ذیل ارائه میگردد.</p>" +
+                               $"</div>" +
+                               $"<div style='width:20%;'>" +
+                               $"<img src='{CurrentPersonPictureAddress}' alt='محل عکس' style='width: 85px; height: 90px;' />" +
+                               $"</div>" +
+                               $"</div>" +
+                               $"</div>";
+
+                // اضافه کردن رکوردها به HTML ایمیل
+                foreach (var record in group)
+                {
+                    htmlContent += $"<p>{TextHelper.ConvertNumbersInStringToPersian(record.Date)} - {record.Sharh}</p>";
+                }
+
+                // در اینجا می‌توانید ادامه محتوای HTML را برای هر گروه اضافه کنید
+            }
+        }
+
+        return htmlContent;
+    }
+    
+    private void isDataChanged()
+    {
+        isNeedUpdate = false;
+    }
+}

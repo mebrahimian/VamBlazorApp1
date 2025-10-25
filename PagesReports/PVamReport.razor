@@ -1,4 +1,4 @@
-﻿@page "/transaction-rep"
+﻿@page "/pvamreport"
 @inject DatabaseContext _Db
 @inject SandoghService SandoghService
 @inject VamBlazor.Client.Application.Services.PersonServices PersonServices
@@ -102,15 +102,15 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
                     <MudTd>@TextHelper.ConvertNumbersInStringToPersian(context.Date)</MudTd>
                     <MudTd>@context.Sharh</MudTd>
                     <MudTd>
-                        @if (context.ColPasandaz != 0)
+                        @if (context.Pasandaz != 0)
                         {
-                            @if (context.ColPasandaz < 0)
+                            @if (context.Pasandaz < 0)
                             {
-                                @($"({TextHelper.ConvertToPersian(Math.Abs(context.ColPasandaz).ToString("N0"))})")
+                                @($"({TextHelper.ConvertToPersian(Math.Abs(context.Pasandaz).ToString("N0"))})")
                             }
                             else
                             {
-                                @TextHelper.ConvertToPersian(context.ColPasandaz.ToString("N0"))
+                                @TextHelper.ConvertToPersian(context.Pasandaz.ToString("N0"))
                             }
                         }
                         else
@@ -182,28 +182,6 @@ Style="@($"display:{(isButtonVisible ? "flex" : "none")};width:100px")">
 
         cDate1 = GetQueryStringValue(uri, "date1");
         cDate2 = GetQueryStringValue(uri, "date2");
-
-        // بررسی و تبدیل پارامتر hesab1 به long
-        var hesab1Value = GetQueryStringValue(uri, "hesab1");
-        if (!string.IsNullOrEmpty(hesab1Value) && long.TryParse(hesab1Value, out var hesab1Parsed))
-        {
-            nHesab1 = hesab1Parsed;
-        }
-        else
-        {
-            nHesab1 = 0; // مقدار پیش‌فرض در صورت ناتوانی در تبدیل
-        }
-
-        // بررسی و تبدیل پارامتر hesab2 به long
-        var hesab2Value = GetQueryStringValue(uri, "hesab2");
-        if (!string.IsNullOrEmpty(hesab2Value) && long.TryParse(hesab2Value, out var hesab2Parsed))
-        {
-            nHesab2 = hesab2Parsed;
-        }
-        else
-        {
-            nHesab2 = 0; // مقدار پیش‌فرض در صورت ناتوانی در تبدیل
-        }
 
         // محاسبه رکوردها برای "Balance Before Date1"
         var balanceBeforeDate1 = _Db.vwReportPersonStatus

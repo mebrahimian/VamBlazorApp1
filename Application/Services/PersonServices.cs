@@ -119,7 +119,7 @@ namespace VamBlazor.Client.Application.Services
             if (!string.IsNullOrEmpty(PCode))
             {
                 // دریافت اطلاعات بر اساس personCode
-                var ExistCommand = @"SELECT * FROM vwPersonLastGst WHERE (Code = @PersonCode)";
+                var ExistCommand = @"SELECT * FROM vwPersonLastGst WHERE (Code = @PersonCode) Order by ReqNo Desc";
                 using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
                     connection.Open();  // باز کردن اتصال به پایگاه داده به صورت همزمان

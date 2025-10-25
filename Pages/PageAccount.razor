@@ -388,7 +388,7 @@
         {
             if (_personAccount.FullName != null && TextHelper.NormalContain(_personAccount.FullName, searchString))
                 return true;
-            if ($"{_personAccount.MelliCode} {_personAccount.HesabNo} {_personAccount.Moaref}".Contains(searchString))
+            if ($"{_personAccount.HesabNo} {_personAccount.Moaref}".Contains(searchString))
                 return true;
         }
         return false;
