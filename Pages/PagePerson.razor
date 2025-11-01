@@ -794,12 +794,12 @@
                          SUM(ISNULL(dbo.vwPersonLastVamStatus.gst_pay, 0)) AS GstPay, MAX(ISNULL(dbo.vwPersonLastVamStatus.pkarmozd, 0)) AS PKarmozd, SUM(ISNULL(dbo.vwPersonLastVamStatus.mkarmozd, 0)) AS MKarmozd,
                          SUM(ISNULL(dbo.vwPersonLastVamStatus.PaidVam, 0)) AS PaidVam, MAX(ISNULL(dbo.vwPersonLastVamStatus.CurrentGstNo, 0)) AS CurrentGstNo, SUM(ISNULL(dbo.vwPersonLastVamStatus.CurrentGstMblg, 0))
                          AS CurrentGstMblg, MAX(ISNULL(dbo.vwPersonLastVamStatus.CurrentGstDate, ' ')) AS CurrentGstDate, SUM(ISNULL(dbo.vwPersonLastVamStatus.DelayGst, 0)) AS DelayGst,
-                         SUM(ISNULL(dbo.vwPersonLastVamStatus.mblgvam, 0) - ISNULL(dbo.vwPersonLastVamStatus.PaidVam, 0)) AS RemainVam
+                         SUM(ISNULL(dbo.vwPersonLastVamStatus.mblgvam, 0) - ISNULL(dbo.vwPersonLastVamStatus.PaidVam, 0)) AS RemainVam, isnull(dbo.vwPersonLastVamStatus.type, ' ') As Type
                   FROM dbo.PERSON INNER JOIN
                          dbo.HESAB ON dbo.PERSON.code = dbo.HESAB.pcode LEFT OUTER JOIN
                          dbo.vwPersonLastVamStatus ON dbo.HESAB.pcode = dbo.vwPersonLastVamStatus.PCODE
                   GROUP BY dbo.PERSON.code, LTRIM(RTRIM(dbo.PERSON.family)) + ' ' + LTRIM(RTRIM(dbo.PERSON.name)) + CASE WHEN father IS NULL THEN ' ' ELSE '(' + RTRIM(LTRIM(father)) + ')' END, dbo.PERSON.sex, dbo.PERSON.city,
-                         dbo.HESAB.hesab_no, dbo.HESAB.id___di
+                         dbo.HESAB.hesab_no, dbo.HESAB.id___di, isnull(dbo.vwPersonLastVamStatus.type, ' ')
                   HAVING  (MAX(dbo.HESAB.firstqty + dbo.HESAB.curqty) > 0)";
 
         using (var connection = new SqlConnection(Configuration.GetConnectionString("DefaultConnection")))
