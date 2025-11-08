@@ -347,7 +347,7 @@
             //cDateShamsi = record?.HDate; // اگر record null باشد، cDateShamsi هم null خواهد بود
             cDateShamsi = DateService.TodayHDate();
             if (DateService.CurrentOperationDate != "") cDateShamsi = DateService.CurrentOperationDate;
-            
+
 
             ShowClearPardarInfo();
         }
@@ -609,6 +609,17 @@
 
         try
         {
+            if (DateService.CurrentOperationDate == "") DateService.CurrentOperationDate = CurrentPardarDto.Date;
+            if (DateService.CurrentOperationDate.Substring(0, 7) != CurrentPardarDto.Date.Substring(0, 7))
+            {
+                CurrentPardarDto.Date = DateService.CurrentOperationDate;
+                _snackBar.Add($"تاریخ مجاز {DateService.CurrentOperationDate} می باشد", Severity.Error);
+                return;
+            }
+            else
+            {
+                DateService.CurrentOperationDate = CurrentPardarDto.Date;
+            }
             if (isEditing)
             {
                 var editpardar = _Db.Pardars.FirstOrDefault(p => p.IdDi == CurrentPardarDto.IdDi);
@@ -645,7 +656,7 @@
                 {
                     DateService.CurrentOperationDate = CurrentPardarDto.Date;
                 }
-                
+
                 var newPardar = Mapper.Map<Pardar>(CurrentPardarDto); // Mapping DTO to Entity
                 if (newPardar.Action == '2')
                 {
@@ -664,7 +675,7 @@
             CurrentPardarDto.Mojodi = PersonServices.GetMojodiHesab(CurrentPardarDto.Pcode);
             SandoghMojodi = SandoghService.GetCurrentSandogh();
             SandoghMojodiStr = SandoghMojodi.ToString("N0");
-           // isNeedUpdate = false;
+            // isNeedUpdate = false;
             var curr = _personFullDataList.FirstOrDefault(p => p.Code == selectedPerson.Code);
             int index = _personFullDataList.IndexOf(curr);
             if (index < _personFullDataList.Count -1 )
@@ -675,7 +686,7 @@
                 OnPCodeChanged();
 
             }
-          
+
 
         }
         catch (DbUpdateException ex)
@@ -793,6 +804,7 @@
         CurrentPardarDto.FullName = "";
         CurrentPardarDto.Action = '1';
         CurrentPardarDto.Mblg = 0;
+        CurrentPardarDto.Babat = "";
         //ReqNoSearchable = _personPardarList.Max(p => p.ReqNo) + 1;
         //  CurrentPardarDto.ReqNo = ReqNoSearchable;
         selectedPerson = null;

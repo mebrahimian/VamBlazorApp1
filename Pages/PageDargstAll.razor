@@ -363,12 +363,14 @@
             //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
 
             cDateShamsi = DateService.TodayHDate();
-            if (DateService.CurrentOperationDate != "") cDateShamsi = DateService.CurrentOperationDate;
-            //   var _tbldate = DateService.TblDate;
-            //   cDateShamsi = _tbldate.FirstOrDefault(d => d.GDate == DateTime.Now.Date).HDate; // مقایسه فقط تاریخ بدون زمان
             Paid_Year = DateService.GetHYear(cDateShamsi);
             Paid_Month = DateService.GetHMonth(cDateShamsi);
             Paid_Day = DateService.GetHDay(cDateShamsi);
+
+            if (DateService.CurrentOperationDate != "") cDateShamsi = DateService.CurrentOperationDate;
+            //   var _tbldate = DateService.TblDate;
+            //   cDateShamsi = _tbldate.FirstOrDefault(d => d.GDate == DateTime.Now.Date).HDate; // مقایسه فقط تاریخ بدون زمان
+            
 
             var cper = _personOrderdList.First().FullName + "حساب:" + _personOrderdList.First().HesabNo ;
             selectedPerson = new PersonLastGstDto();
@@ -535,7 +537,7 @@
                     }
                     GstRecord.Gstmblg = MonthlyGst;
                     GstRecord.Pasandaz =   MonthlyPas;
-                    if (MonthlyGst > PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo))
+                    if (MonthlyGst > PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo) + PersonServices.GetCurrentGstVam(CurrentPersonLastGstDto.ReqNo, CurrentPersonLastGstDto.GstNo))
                     {
                         _snackBar.Add(" مبلغ قسط بیش از مانده وام است ", Severity.Warning);
                         MonthlyGst = PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo);
@@ -551,6 +553,8 @@
                     else CurrentPersonLastGstDto.CurrentGstSaved = true;
                     _Db.Update(GstRecord);
                     _Db.SaveChanges();
+                    _personOrderdList[CurrentIndex].MonthQty = GstRecord.Pasandaz;
+                    _personOrderdList[CurrentIndex].CurrentGstMblg = GstRecord.Gstmblg;
                     SandoghMojodi = SandoghService.GetCurrentSandogh();
                     SandoghMojodiStr = SandoghMojodi.ToString("N0");
                 }

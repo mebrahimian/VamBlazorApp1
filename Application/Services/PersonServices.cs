@@ -112,6 +112,28 @@ namespace VamBlazor.Client.Application.Services
                 return result; // تبدیل نتیجه به long (در صورت نیاز)
             }
         }
+        public long GetCurrentGstVam(int? ReqNoInput, int? GstNoInput)
+        {
+            if (ReqNoInput == null || GstNoInput == null) return Convert.ToInt64(0);
+            var ExistCommand = @"SELECT GstMblg AS CurGst
+                                 FROM DARGST WHERE (req_no = @ReqNoQuery And gst_no = @GstNoQuery )";
+            using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                connection.Open();  // باز کردن اتصال به پایگاه داده به صورت همزمان
+
+                // اجرای کوئری به صورت همزمان
+                var result = connection.ExecuteScalar<long>(ExistCommand, new { ReqNoQuery = ReqNoInput, GstNoQuery = GstNoInput });
+
+                // اگر نتیجه صفر یا منفی باشد
+                if (result == 0)
+                {
+                    return 0; // مقدار دلخواه در صورت وجود مانده منفی یا صفر
+                }
+
+                // بازگشت نتیجه به عنوان long
+                return result; // تبدیل نتیجه به long (در صورت نیاز)
+            }
+        }
         public AccountInfoDto GetAccountInfo(string PCode = null, long HesabNo = 0)
         {
             var AccInfo = new vwPersonLastGst();

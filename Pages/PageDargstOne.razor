@@ -334,7 +334,7 @@
 
             // var record = _Db.tblDates.FirstOrDefault(d => d.GDate == DateTime.Now.Date); // مقایسه فقط تاریخ بدون زمان
             //   cDateShamsi = _tblDate.FirstOrDefault(d => d.GDate == DateTime.Now.Date)?.HDate ?? "1403/01/01"; // اگر record null باشد، cDateShamsi هم null خواهد بود
-            
+
             cDateShamsi = DateService.TodayHDate();
             if (DateService.CurrentOperationDate != "") cDateShamsi = DateService.CurrentOperationDate;
             Paid_Year = DateService.GetHYear(cDateShamsi);
@@ -351,7 +351,7 @@
             selectedPerson.ReqNo = _personSelectList.First().ReqNo;
             CurrentIndex = 0; // اول لیست
             */
-            _personOrderdList = MakeVamRecordSet();
+                                    _personOrderdList = MakeVamRecordSet();
             CurrentIndex = _personOrderdList.FindIndex(p => p.ReqNo == selectedPerson.ReqNo && string.IsNullOrWhiteSpace(p.PaidDate));
 
             if (CurrentIndex < _personOrderdList.Count - 1)
@@ -532,7 +532,7 @@
                     GstRecord.Gstmblg = MonthlyGst;
                     CurrentPersonLastGstDto.PaidDate = GstRecord.DateP;
                     GstRecord.Pasandaz = MonthlyPas;
-                    if (MonthlyGst > PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo))
+                    if (MonthlyGst > PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo) + PersonServices.GetCurrentGstVam(CurrentPersonLastGstDto.ReqNo, CurrentPersonLastGstDto.GstNo))
                     {
                         _snackBar.Add(" مبلغ قسط بیش از مانده وام است ", Severity.Warning);
                         MonthlyGst = PersonServices.GetRemainVam(CurrentPersonLastGstDto.ReqNo);
@@ -552,6 +552,8 @@
                     }
                     _Db.Update(GstRecord);
                     _Db.SaveChanges();
+                    _personOrderdList[CurrentIndex].Pasandaz = GstRecord.Pasandaz;
+                    _personOrderdList[CurrentIndex].GstMblg = GstRecord.Gstmblg;
                     SandoghMojodi = SandoghService.GetCurrentSandogh();
                     SandoghMojodiStr = SandoghMojodi.ToString("N0");
                 }
