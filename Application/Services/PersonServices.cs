@@ -195,8 +195,8 @@ namespace VamBlazor.Client.Application.Services
                               LastReqDate = AccInfo.DateD,
                               LastMblgVam = AccInfo.MblgVam,
                               LastRemain = AccInfo.MblgVam - AccInfo.PaidVam,
-                              PictureAddress = GetPersonPictureAddress(AccInfo.Code)
-                          };
+                              PictureAddress = GetPersonPictureAddress(AccInfo.Code) + "?v={DateTime.Now.Ticks}"
+            };
         }
     }
 }

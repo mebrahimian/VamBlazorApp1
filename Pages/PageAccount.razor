@@ -439,7 +439,7 @@
             var selPer = _Db.Hesabs.FirstOrDefault(p => p.Pcode == PCodeSearchable);
             if (selPer != null)
             {
-                CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable);
+                CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable) + "?v={DateTime.Now.Ticks}";
                 CurrentPersonAccountDto = _personAccountList.FirstOrDefault(p => p.Pcode == PCodeSearchable);
                 OriginalAccount = selPer;
                 HesabNoSearchable = CurrentPersonAccountDto.HesabNo;

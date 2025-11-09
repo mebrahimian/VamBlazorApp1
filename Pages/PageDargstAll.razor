@@ -442,7 +442,7 @@
         if (CurrentIndex < _personOrderdList.Count)
         {
             CurrentPersonLastGstDto = _personOrderdList[CurrentIndex];
-            CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(CurrentPersonLastGstDto.Code);
+            CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(CurrentPersonLastGstDto.Code) + "?v={DateTime.Now.Ticks}";
 
             MonthlyGst = CurrentPersonLastGstDto.CurrentGstMblg;
             MonthlyPas = CurrentPersonLastGstDto.MonthQty;

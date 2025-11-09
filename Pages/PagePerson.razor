@@ -392,7 +392,8 @@
 
         CurrentPersonId = person.IdDi;
         PCodeSearchable = CurrentPersonDto.Code;
-        CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(person.Code);
+        CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(person.Code) + "?v={DateTime.Now.Ticks}";
+
         myTextField.FocusAsync();
         IsEditing = true;
         isNeedUpdate = false;
@@ -860,7 +861,7 @@
     /*
     private void OnBlurFnc()
     {
-        CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable);
+        CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable) + "?v={DateTime.Now.Ticks}";
         if (_Db.Persons.Any(p => p.Code == PCodeSearchable))   // کد سپرده گذار ثبت شده در صفحه وب اگر موجود بود پرشود
         {
             var personToEdit = Persons.FirstOrDefault(p => p.Code == PCodeSearchable);
@@ -893,7 +894,7 @@
             if (PCodeSearchable.All(char.IsDigit))    /// کنترل عددی بودن کد
             {
 
-                CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable);
+                CurrentPersonPictureAddress = PersonServices.GetPersonPictureAddress(PCodeSearchable) + "?v={DateTime.Now.Ticks}";
                 if (_Db.Persons.Any(p => p.Code == PCodeSearchable))   // کد سپرده گذار ثبت شده در صفحه وب اگر موجود بود پرشود
                 {
                     var personToEdit = _Db.Persons.FirstOrDefault(p => p.Code == PCodeSearchable);
