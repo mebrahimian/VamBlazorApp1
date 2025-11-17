@@ -514,23 +514,8 @@
     {
         ShowPersonList = !ShowPersonList;
     }
-    private void SortTableByName()
-    {
-        currentSortBy = p => p.Name ?? "";
-        ToggleSortDirection();
-    }
-    private void ToggleSortDirection()
-    {
-        if (currentSortDirection == SortDirection.Ascending)
-        {
-            currentSortDirection = SortDirection.Descending;
-        }
-        else
-        {
-            currentSortDirection = SortDirection.Ascending;
-        }
-
-    }
+    
+    
 
     private async Task AdjustDB()
     {    /// View vwPersonFullData
